@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<contexts>
+  <context name="ctx1" description="Context One" root="ctx1">
+
+    <repositories>
+      <access name="stable_2.12" description="Stable 2.12" baseurl="http://ftp.Freedom-ecm.org/frdom/webinst/2_12" />
+      <access name="maintenance_2.10" description="Maintenance 2.10" baseurl="http://ftp.Freedom-ecm.org/frdom/webinst/2_10" />
+    </repositories>
+
+    <modules>
+      <module name="freedom-core" version="2.12.2" release="1" />
+    </modules>
+
+  </context>
+</contexts>

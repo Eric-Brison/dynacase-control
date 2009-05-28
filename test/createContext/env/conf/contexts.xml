@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<contexts>
+  <context name="test1" description="Test One" root="/tmp"/>
+  <context name="test2" description="Test One" root="/tmp"/>
+</contexts>

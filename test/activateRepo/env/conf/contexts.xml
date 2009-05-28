@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<contexts>
+    <context name="ctx1" description="Context One" root="ctx1">
+        <repositories>
+			<access name="repo1" baseurl="http://repo1"/>
+			<access name="repo2" baseurl="http://repo2"/>
+		</repositories>
+    </context>
+</contexts>

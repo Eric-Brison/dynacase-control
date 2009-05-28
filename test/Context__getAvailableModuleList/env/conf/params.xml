@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="GPL2" lang="fr|en">
+
+  <repositories>
+    <access name="stable_2.12" description="Stable 2.12" baseurl="http://ftp.freedom-ecm.org/frdom/webinst/2_12" />
+  </repositories>
+
+  <parameters>
+    <param name="use-proxy" value="no" />
+    <param name="proxy-host" value="" />
+    <param name="proxy-port" value="" />
+    <param name="proxy-username" value="" />
+    <param name="proxy-password" value="" />
+  </parameters>
+  
+</wiff>

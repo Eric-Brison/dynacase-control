@@ -1,0 +1,4 @@
+
+- Add missing module comparison operators in Context->getDependencies().
+- Add support for <group/> nodes for parameters in Module->getParameterList().
+- 

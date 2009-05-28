@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<contexts>
+  <context name="ctx1" description="Context One" root="ctx1">
+
+    <repositories>
+      <access name="stable_2.12" description="Stable 2.12" baseurl="http://ftp.Freedom-ecm.org/frdom/webinst/2_12" />
+      <access name="maintenance_2.10" description="Maintenance 2.10" baseurl="http://ftp.Freedom-ecm.org/frdom/webinst/2_10" />
+    </repositories>
+
+    <modules>
+      <module name="freedom" version="6.6.6" release="1" author="Jean Martin &lt;jean.martin@anakeen.com@gt;" license="GPL2" status="installed">
+
+	<parameters>
+	  <param name="foo" label="Foo" default="0x0f00" type="integer" />
+	  <param name="bar" label="Bar" default="Baz" type="text" />
+	</parameters>
+
+	<parameters-value>
+	  <param name="bar" value="Buz" />
+	</parameters-value>
+
+      </module>
+    </modules>
+
+  </context>
+</contexts>

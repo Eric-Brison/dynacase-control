@@ -1,0 +1,472 @@
+<?php
+
+/**
+ * Context Class
+ */
+class Context
+{
+
+    public $name;
+    public $description;
+    public $root;
+    public $repo;
+
+    private $errorMessage = '';
+
+    public function __construct($name, $desc, $root, $repo)
+    {
+        $this->name = $name;
+        $this->description = $desc;
+        $this->root = $root;
+        $this->repo = $repo;
+        foreach ($this->repo as $repository)
+        {
+            $repository->context = $this;
+        }
+    }
+
+    public function __set($property, $value)
+    {
+        $this->$property = $value;
+    }
+
+    public function __get($property)
+    {
+        return $this->$property;
+    }
+
+    /**
+     * Activate repository for Context
+     * @return boolean success
+     * @param string $name repository name
+     * @param string $url repository url
+     */
+    public function activateRepo($name)
+    {
+
+        $paramsXml = new DOMDocument();
+        $paramsXml->load(WIFF::params_filepath);
+
+        $paramsXPath = new DOMXPath($paramsXml);
+
+        $contextsXml = new DOMDocument();
+        $contextsXml->load(WIFF::contexts_filepath);
+
+        $contextsXPath = new DOMXPath($contextsXml);
+
+        // Get this context
+        $contextList = $contextsXPath->query("/contexts/context[@name='".$this->name."']");
+        if ($contextList->length != 1)
+        {
+            // If more than one context with name
+            $this->errorMessage = "Duplicate contexts with same name";
+            return false;
+        }
+
+        // Add a repositories list if context does not have one
+        $contextRepo = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories");
+        if ($contextRepo->length != 1)
+        {
+            // if repositories node does not exist, create one
+            $contextList->item(0)->appendChild($contextsXml->createElement('repositories'));
+
+        }
+
+        // Check this repository is not already in context
+        $contextRepoList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories/access[@name='".$name."']");
+        if ($contextRepoList->length > 0)
+        {
+            // If more than zero repository with name
+            $this->errorMessage = "Repository already activated";
+            return false;
+        }
+
+        // Get repository with this name from WIFF repositories
+        $wiffRepoList = $paramsXPath->query("/wiff/repositories/access[@name='".$name."']");
+        if ($wiffRepoList->length != 1)
+        {
+            // If different than one repository with name
+            $this->errorMessage = "Duplicate repository with same name";
+            return false;
+        }
+
+        // Add repository to this context
+
+        $repository = $contextsXml->importNode($wiffRepoList->item(0), true); // Node must be imported from params document.
+
+        $repository = $contextList->item(0)->getElementsByTagName('repositories')->item(0)->appendChild($repository);
+
+        $ret = $contextsXml->save(WIFF::contexts_filepath);
+        if ($ret === false)
+        {
+            $this->errorMessage = sprintf("Error writing file '%s'.", WIFF::contexts_filepath);
+            return false;
+        }
+
+        //Update Context object accordingly
+        $this->repo[] = new Repository($repository->getAttribute('name'), $repository->getAttribute('baseurl'), $repository->getAttribute('description'), $this);
+
+        return true;
+
+    }
+
+    /**
+     * Deactivate repository for Context
+     * @return boolean success
+     * @param string $name repository name
+     */
+    public function deactivateRepo($name)
+    {
+
+        $xml = new DOMDocument();
+        $xml->load(WIFF::contexts_filepath);
+
+        $xpath = new DOMXPath($xml);
+
+        // Check this repository exists
+        $contextRepoList = $xpath->query("/contexts/context[@name='".$this->name."']/repositories/access[@name='".$name."']");
+        if ($contextRepoList->length == 1)
+        {
+            $contextRepo = $xpath->query("/contexts/context[@name='".$this->name."']/repositories")->item(0)->removeChild($contextRepoList->item(0));
+            $xml->save(WIFF::contexts_filepath);
+
+            foreach ($this->repo as $repo)
+            {
+                if ($repo->name == $name)
+                {
+                    unset ($this->repo[array_search($repo, $this->repo)]);
+                }
+            }
+
+            return true;
+        } else
+        {
+            $this->errorMessage = sprintf("Could not find active repository '%s' in context '%s'.", $name, $this->name);
+            return false;
+        }
+
+    }
+
+    /**
+     * Get Module list
+     * @return array of object Module or boolean false
+     */
+    public function getModuleList()
+    {
+
+        $moduleList = array ();
+
+        $availableModuleList = $this->getAvailableModuleList();
+        $installedModuleList = $this->getInstalledModuleList();
+
+        $moduleList = array_merge($availableModuleList, $installedModuleList); // TODO appropriate merge
+
+        return $moduleList;
+    }
+
+    /**
+     * Get installed Module list
+     * @return array of object Module
+     */
+    public function getInstalledModuleList()
+    {
+
+        $xml = new DOMDocument();
+        $xml->load(WIFF::contexts_filepath);
+
+        $xpath = new DOMXPath($xml);
+
+        $moduleList = array ();
+
+        $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module");
+
+        foreach ($moduleDom as $module)
+        {
+            $moduleList[] = new Module($this, null, $module, true);
+        }
+
+        return $moduleList;
+
+    }
+
+    /**
+     * Get the list of available module Objects in the repositories of the context
+     * @return array of module Objects
+     */
+    public function getAvailableModuleList()
+    {
+        $moduleList = array ();
+        foreach ($this->repo as $repository)
+        {
+            $repoModuleList = $repository->getModuleList();
+            if ($repoModuleList === false)
+            {
+                $this->errorMessage = sprintf("Error fetching index for repository '%s'.", $repository->name);
+                continue ;
+            }
+            $moduleList = $this->mergeModuleList($moduleList, $repoModuleList);
+            if ($moduleList === false)
+            {
+                $this->errorMessage = sprintf("Error merging module list.");
+                return false;
+            }
+        }
+
+        return $moduleList;
+    }
+
+    /**
+     * Merge two module lists, sort and keep modules with highest version-release
+     *   (kinda sort|uniq).
+     * @return an array containing unique module Objects
+     * @param first array of module Objects
+     * @param second array of module Objects
+     */
+    public function mergeModuleList( & $list1, & $list2)
+    {
+        $tmp = array_merge($list1, $list2);
+        $ret = usort($tmp, array ($this, 'cmpModuleByVersionReleaseDesc'));
+        if ($ret === false)
+        {
+            $this->errorMessage = sprintf("Error sorting module list.");
+            return false;
+        }
+
+        $seen = array ();
+        $list = array ();
+        foreach ($tmp as $module)
+        {
+            if (array_key_exists($module->name, $seen))
+            {
+                continue ;
+            }
+            array_push($list, $module);
+            $seen[$module->name]++;
+        }
+
+        return $list;
+    }
+
+    /**
+     * Compare (str_v1, str_r1, str_v2, str_r2) versions/releases
+     * @return < 0 if v1-r1 is less than v2-r2, > 0 if v1-r1 is greater than v2-r2
+     *         and 0 if they are equal
+     * @param string version #1
+     * @param string release #1
+     * @param string version #2
+     * @param string release #2
+     */
+    public function cmpVersionReleaseAsc($v1, $r1, $v2, $r2)
+    {
+        $ver1 = preg_split('/\./', $v1, 3);
+        $rel1 = $r1;
+        $ver2 = preg_split('/\./', $v2, 3);
+        $rel2 = $r2;
+
+        $str1 = sprintf("%03d%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2], $rel1);
+        $str2 = sprintf("%03d%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2], $rel2);
+
+        return strcmp($str1, $str2);
+    }
+
+    /**
+     * Compare two module Objects by ascending version-release
+     * @return < 0 if mod1 is less than mod2, > 0 if mod1 is greater than mod2,
+     *         and 0 if they are equal
+     * @param module Object 1
+     * @param module Object 2
+     */
+    public function cmpModuleByVersionReleaseAsc( & $module1, & $module2)
+    {
+        return $this->cmpVersionReleaseAsc($module1->version,
+        $module1->release,
+        $module2->version,
+        $module2->release);
+    }
+
+    /**
+     * Compare two module Objects by descending version-release
+     * @return > 0 if mod1 is less than mod2, < 0 if mod1 is greater than mod2,
+     *         and 0 if they are equal
+     * @param module Object 1
+     * @param module Object 2
+     */
+    public function cmpModuleByVersionReleaseDesc( & $module1, & $module2)
+    {
+        $ret = $this->cmpModuleByVersionReleaseAsc($module1, $module2);
+        if ($ret > 0)
+        {
+            return -1;
+        } else if ($ret < 0)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Get Module by name
+     * @return object Module or boolean false
+     * @param object $name Module name
+     */
+    public function getModule($name)
+    {
+        $xml = new DOMDocument();
+        $xml->load(WIFF::contexts_filepath);
+
+        $xpath = new DOMXPath($xml);
+
+        $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$name."']");
+
+        if ($moduleDom->length <= 0)
+        {
+            $this->errorMessage = sprintf("Could not find a module named '%s' in context '%s'.", $name, $this->name);
+            return false;
+        }
+
+        return new Module($this, null, $moduleDom->item(0), true);
+    }
+
+    public function getModuleAvail($name)
+    {
+        $modAvails = $this->getAvailableModuleList();
+        if ($modAvails === false)
+        {
+            return false;
+        }
+
+        foreach ($modAvails as $mod)
+        {
+            if ($mod->name == "$name")
+            {
+                return $mod;
+            }
+        }
+
+        $this->errorMessage = sprintf("Could not find module '%s' in context '%s'.", $name, $this->name);
+        return false;
+    }
+
+    /**
+     * Get module dependencies from repositories indexes
+     * @return array containing a list of Module objects ordered by their
+     *         install order, or false in case of error
+     * @param the module name
+     */
+    public function getModuleDependencies($name)
+    {
+        $modsAvail = $this->getAvailableModuleList();
+        if ($modsAvail === false)
+        {
+            return false;
+        }
+
+        $module = $this->getModuleAvail($name);
+        if ($module === false)
+        {
+            return false;
+        }
+
+        $depsList = array ();
+        array_push($depsList, $module);
+
+        $i = 0;
+        while ($i < count($depsList))
+        {
+            $mod = $depsList[$i];
+            $reqList = $mod->getRequiredModules();
+            foreach ($reqList as $req)
+            {
+                $reqModName = $req['name'];
+                $reqModVersion = $req['version'];
+                $reqModComp = $req['comp'];
+
+                $reqMod = $this->getModuleAvail($reqModName);
+
+                switch($reqModComp)
+                {
+                    case '':
+                        break;
+                    case 'ge':
+                        if ($this->cmpVersionRelease($reqModVersion, 0, $reqMod->version, 0) < 0)
+                        {
+                            $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.");
+                            return false;
+                        }
+                    break;
+                    default:
+                        $this->errorMessage = sprintf("Operator of module comparison '%s' is not yet implemented.", $reqModComp);
+                        return false;
+                }
+
+                // Check if a version of this module is already installed
+                if ($this->moduleIsInstalledAndUpToDateWith($reqMod))
+                {
+                    continue ;
+                }
+
+                // Prevent duplicates module in dependencies list
+                if (!$this->depsListContains($depsList, $reqMod->name))
+                {
+                    array_push($depsList, $reqMod);
+                }
+            }
+            $i++;
+        }
+        return $depsList;
+    }
+
+    /**
+     * Check if a Module object with this name already exists a a list of
+     * Module objects
+     * @return true if the module with the given name is found, false if not found
+     * @param array( Module object 1, [...], Module object N )
+     */
+    private function depsListContains( & $depsList, $name)
+    {
+        foreach ($depsList as $mod)
+        {
+            if ($mod->name == $name)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if a module is installed
+     */
+    private function moduleIsInstalled( & $module)
+    {
+        $installedModule = $this->getModule($module->name);
+        if ($instaledModule === false)
+        {
+            return false;
+        }
+        return $installedModule;
+    }
+
+    /**
+     * Check if the given module Object is already installed and up-to-date
+     */
+    private function moduleIsInstalledAndUpToDateWith( & $targetModule)
+    {
+        $installedModule = $this->moduleIsInstalled($targetModule);
+        if ($installedModule === false)
+        {
+            return false;
+        }
+
+        $cmp = $this->cmpModuleByVersionReleaseAsc($installedModule, $targetModule);
+
+        if ($cmp < 0)
+        {
+            return false;
+        }
+        return true;
+    }
+
+}
+
+?>

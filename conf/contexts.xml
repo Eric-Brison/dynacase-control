@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<contexts>
+  <context name="Production" description="This is test context one" root="ctx1">
+    <repositories>
+      <access name="stable_2.12" description="Stable 2.12" baseurl="http://ftp.freedom-ecm.org/frdom/webinst/2_12"/>
+    </repositories>
+    <modules>
+      <module name="core" version="2.13.4">
+        <description lang="en">Hosting Application Toolkit for freedom ECM</description>
+        <description lang="fr">Serveur d'application pour freedom ECM</description>
+      </module>
+      <module name="Module Test 2">
+            </module>
+      <module name="Module Test 3">
+            </module>
+      <module name="Module Test 4">
+            </module>
+      <module name="Module Test 5">
+            </module>
+    </modules>
+  </context>
+  <context name="Integration" description="This is test context two" root="ctx2">
+    </context>
+  <context name="Essai 1" root="/home/clement/anakeen/clement/wiff/essai" description="Ceci est un essai..."/>
+  <context name="Essai2" root="/home/clement/anakeen/clement/wiff/essai2" description="Essai 2 ... Again"/>
+  <context name="Essai 3" root="/home/clement/anakeen/clement/wiff/essai3" description="Essai 3 ..."><repositories><access name="test" description="Stable 2.12" baseurl="http://ftp.freedom-ecm.org/frdom/webinst/2_12"/></repositories></context>
+</contexts>

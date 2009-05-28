@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<contexts>
+  <context name="ctx1" description="Context One" root="ctx1" />
+</contexts>

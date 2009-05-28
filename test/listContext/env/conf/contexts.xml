@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<contexts>
+  <context name="test1" description="Test One" root="/tmp" >
+  	<repositories>
+      <access name="repo1" baseurl="http://repo1" />
+	  <access name="repo2" baseurl="http://repo2" />
+	</repositories>
+	<modules>
+	  
+	</modules>
+  </context>
+  <context name="test2" description="Test One" root="/tmp"/>
+</contexts>
