@@ -99,6 +99,7 @@ if ( isset ($_POST['createContext']))
 
     if (!$wiff->errorMessage)
     {
+		
         $repoList = $wiff->getRepoList();
 
         foreach ($repoList as $repo)
@@ -110,7 +111,7 @@ if ( isset ($_POST['createContext']))
             if ( isset ($_POST[$postcode]))
             {
                 $context->activateRepo($repo->name);
-                if (!$context->errorMessage)
+                if ($context->errorMessage)
                 {
                     answer(null, $context->errorMessage);
                 }
@@ -123,6 +124,33 @@ if ( isset ($_POST['createContext']))
     {
         answer(null, $wiff->errorMessage);
     }
+}
+
+// Request to get dependency module list for a module
+if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['getModuleDependencies']))
+{
+	$context = $wiff->getContext($_POST['context']);
+	
+	$dependencyList = $context->getModuleDependencies($_POST['module']);
+	
+	answer(json_encode($dependencyList));
+	
+}
+
+// Request to download module to temporary dir
+if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['download']) )
+{
+	$context = $wiff->getContext($_POST['context']);
+	
+	$module = $context->getModuleAvail($_POST['module']);
+	
+	if ($module->download())
+	{
+		answer(true);
+	} else {
+		answer(null,$module->errorMessage);
+	}
+	
 }
 
 
@@ -277,21 +305,20 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['pha
 
 }
 
-// Client requests module parameters
+// Request to get module parameters
 if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['getParameterList']))
 {
     $context = $wiff->getContext($_POST['context']);
 
     $module = $context->getModule($_POST['module']);
+	if(!$module)
+	{
+		$module = $context->getModuleAvail($_POST['module']);
+	}
 
     $parameterList = $module->getParameterList();
 
-    $answer = "";
-    foreach ($parameterList as $parameter)
-    {
-        $answer .= json_encode($parameter);
-    }
-    answer($answer);
+	answer(json_encode($parameterList));
 
 }
 

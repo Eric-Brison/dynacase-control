@@ -169,7 +169,7 @@ Ext.onReady(function(){
                         iconCls: 'x-icon-context',
                         tabTip: data[i].description,
                         style: 'padding:10px;',
-						layout: 'fit',
+                        layout: 'fit',
                         listeners: {
                             activate: function(panel){
                             
@@ -186,7 +186,7 @@ Ext.onReady(function(){
                             title: data[i].name,
                             iconCls: 'x-icon-context',
                             id: data[i].name,
-							bodyStyle: 'overflow-y:auto;',
+                            bodyStyle: 'overflow-y:auto;',
                             //layout: 'column',
                             items: [{
                                 id: data[i].name + '-installed',
@@ -213,7 +213,7 @@ Ext.onReady(function(){
                                             }, {
                                                 iconCls: 'x-icon-remove',
                                                 tooltip: 'Remove',
-                                                hideIndex: "(name=='core')"
+                                                hideIndex: "(name=='freedom-core')"
                                             }]
                                         });
                                         
@@ -245,8 +245,7 @@ Ext.onReady(function(){
                                                     params: {
                                                         context: context,
                                                         module: module,
-                                                        operation: operation,
-                                                        getPhaseList: true
+                                                        getAvailableModuleList: true
                                                     },
                                                     success: function(responseObject){
                                                     
@@ -259,16 +258,40 @@ Ext.onReady(function(){
                                                         
                                                         for (var i = 0; i < data.length; i++) {
                                                             console.log(data[i]);
-                                                            
                                                         }
                                                         
-                                                    },
-                                                    failure: function(){
-                                                        Ext.Msg.alert('Error', 'Could not retrieve phase list');
                                                     }
-                                                    
                                                 });
                                                 
+                                                //                                                Ext.Ajax.request({
+                                                //                                                    url: 'wiff.php',
+                                                //                                                    params: {
+                                                //                                                        context: context,
+                                                //                                                        module: module,
+                                                //                                                        operation: operation,
+                                                //                                                        getPhaseList: true
+                                                //                                                    },
+                                                //                                                    success: function(responseObject){
+                                                //                                                    
+                                                //                                                        var response = eval('(' + responseObject.responseText + ')');
+                                                //                                                        if (response.error) {
+                                                //                                                            Ext.Msg.alert('Server Error', response.error);
+                                                //                                                        }
+                                                //                                                        
+                                                //                                                        var data = response.data;
+                                                //                                                        
+                                                //                                                        for (var i = 0; i < data.length; i++) {
+                                                //                                                            console.log(data[i]);
+                                                //                                                            
+                                                //                                                        }
+                                                //                                                        
+                                                //                                                    },
+                                                //                                                    failure: function(){
+                                                //                                                        Ext.Msg.alert('Error', 'Could not retrieve phase list');
+                                                //                                                    }
+                                                //                                                    
+                                                //                                                });
+                                            
                                             }
                                         });
                                         
@@ -295,7 +318,7 @@ Ext.onReady(function(){
                                                 id: 'name',
                                                 header: 'Module',
                                                 dataIndex: 'name',
-                                                width: '140px'
+                                                width: 140
                                             }, {
                                                 id: 'installed-version',
                                                 header: 'Installed Version',
@@ -359,35 +382,41 @@ Ext.onReady(function(){
                                                         break;
                                                 }
                                                 
-                                                Ext.Ajax.request({
-                                                    url: 'wiff.php',
-                                                    params: {
-                                                        context: context,
-                                                        module: module,
-                                                        operation: operation,
-                                                        getPhaseList: true
-                                                    },
-                                                    success: function(responseObject){
-                                                    
-                                                        var response = eval('(' + responseObject.responseText + ')');
-                                                        if (response.error) {
-                                                            Ext.Msg.alert('Server Error', response.error);
-                                                        }
-                                                        
-                                                        var data = response.data;
-                                                        
-                                                        for (var i = 0; i < data.length; i++) {
-                                                            console.log(data[i]);
-                                                            
-                                                        }
-                                                        
-                                                    },
-                                                    failure: function(){
-                                                        Ext.Msg.alert('Error', 'Could not retrieve phase list');
-                                                    }
-                                                    
-                                                });
+                                                if (operation == 'install') {
                                                 
+                                                    install(context, module);
+                                                    
+                                                }
+                                                
+                                                //                                                Ext.Ajax.request({
+                                                //                                                    url: 'wiff.php',
+                                                //                                                    params: {
+                                                //                                                        context: context,
+                                                //                                                        module: module,
+                                                //                                                        operation: operation,
+                                                //                                                        getPhaseList: true
+                                                //                                                    },
+                                                //                                                    success: function(responseObject){
+                                                //                                                    
+                                                //                                                        var response = eval('(' + responseObject.responseText + ')');
+                                                //                                                        if (response.error) {
+                                                //                                                            Ext.Msg.alert('Server Error', response.error);
+                                                //                                                        }
+                                                //                                                        
+                                                //                                                        var data = response.data;
+                                                //                                                        
+                                                //                                                        for (var i = 0; i < data.length; i++) {
+                                                //                                                            console.log(data[i]);
+                                                //                                                            
+                                                //                                                        }
+                                                //                                                        
+                                                //                                                    },
+                                                //                                                    failure: function(){
+                                                //                                                        Ext.Msg.alert('Error', 'Could not retrieve phase list');
+                                                //                                                    }
+                                                //                                                    
+                                                //                                                });
+                                            
                                             }
                                         });
                                         
@@ -410,7 +439,7 @@ Ext.onReady(function(){
                                                 id: 'name',
                                                 header: 'Module',
                                                 dataIndex: 'name',
-                                                width: '140px'
+                                                width: 140
                                             }, {
                                                 id: 'available-version',
                                                 header: 'Available Version',
@@ -444,9 +473,140 @@ Ext.onReady(function(){
             
         });
         
-        
+    }
+    
+    function install(context, module){
+    
+        Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+                context: context,
+                module: module,
+                getModuleDependencies: true
+            },
+            success: function(responseObject){
+            
+                var response = eval('(' + responseObject.responseText + ')');
+                if (response.error) {
+                    Ext.Msg.alert('Server Error', response.error);
+                }
+                
+                var data = response.data;
+                
+                toDownload = data;
+                toInstall = data.slice();
+                
+                htmlModuleList = '<ul>';
+                for (var i = 0; i < toDownload.length; i++) {
+                    htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b></li>';
+                }
+                htmlModuleList = htmlModuleList + '</ul>';
+                
+                Ext.Msg.show({
+                    title: 'Freedom Web Installer',
+                    msg: 'Installer will download and install following module(s) : <br/>' + htmlModuleList,
+                    buttons: {
+                        ok: true,
+                        cancel: true
+                    },
+                    fn: function(btn){
+                        switch (btn) {
+                            case 'ok':
+                                for (var i = 0; i < toDownload.length; i++) {
+                                    download(context, toDownload[i]);
+                                }
+                                break;
+                            case 'cancel':
+                                // Do nothing. Will simply close message window.
+                                break;
+                        }
+                    }
+                });
+                
+            }
+        });
         
     }
+    
+    function download(context, module){
+    
+        Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+                context: context,
+                module: module.name,
+                download: true
+            },
+            success: function(responseObject){
+                toDownload.remove(module);
+                if (toDownload.length == 0) {
+                    askParameter(toInstall[toInstall.length - 1]);
+                }
+            }
+            
+        });
+        
+    }
+    
+    function askParameter(module){
+    
+        console.log('Time to ask parameters and install ' + module.name);
+        
+        var context = currentContext;
+        
+        var module = module;
+        
+        Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+                context: context,
+                module: module.name,
+                getParameterList: true
+            },
+            success: function(responseObject){
+                var response = eval('(' + responseObject.responseText + ')');
+                if (response.error) {
+                    Ext.Msg.alert('Server Error', response.error);
+                }
+                
+                var data = response.data;
+                
+				if (data.length > 0) {
+				
+					var form = new Ext.form.FormPanel({
+						labelWidth: 200,
+						border: false,
+						frame: true,
+						bodyStyle: 'padding:15px;'
+					});
+					
+					for (var i = 0; i < data.length; i++) {
+					
+						form.add({
+							xtype: 'textfield',
+							fieldLabel: data[i].label,
+							value: data[i].value ? data[i].value : data[i].default
+						});
+						
+					}
+					
+					var parameterWindow = new Ext.Window({
+						title: 'Parameters for ' + module.name
+					});
+					
+					parameterWindow.add(form);
+					
+					parameterWindow.show();
+					
+				} else {
+					console.log('No parameter to give, should proceed to getPhaseList');
+				}
+                
+            }
+        })
+        
+    }
+    
     
     //	Ext.Ajax.request({
     //		url:'wiff.php',

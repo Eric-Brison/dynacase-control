@@ -11,7 +11,7 @@ class Context
     public $root;
     public $repo;
 
-    private $errorMessage = '';
+    private $errorMessage = null;
 
     public function __construct($name, $desc, $root, $repo)
     {
@@ -339,6 +339,8 @@ class Context
         {
             if ($mod->name == "$name")
             {
+            	$mod->context = $this ;
+				
                 return $mod;
             }
         }

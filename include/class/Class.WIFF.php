@@ -107,14 +107,14 @@ class WIFF
 
                 $repoList = array ();
 
-                $repositories = $context->getElementsByTagName('repositories');
+                $repositories = $context->getElementsByTagName('access');
 
                 foreach ($repositories as $repository)
                 {
                     $repoList[] = new Repository($repository->getAttribute('name'), $repository->getAttribute('baseurl'), $repository->getAttribute('description'));
                 }
 
-                $contextList[] = new Context($context->getAttribute('name'), $context->getAttribute('description'), $context->getAttribute('root'), $repoList);
+                $contextList[] = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
 
             }
 
@@ -157,7 +157,8 @@ class WIFF
                 $repoList[] = new Repository($repository->getAttribute('name'), $repository->getAttribute('baseurl'), $repository->getAttribute('description'), null);
             }
 
-            return new Context($context->item(0)->getAttribute('name'), $context->item(0)->getAttribute('root'), $context->item(0)->getAttribute('description'), $repoList);
+            $this->errorMessage = null;
+            return new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList);
         }
 
         $this->errorMessage = sprintf("Context '%s' not found.", $name);
@@ -224,7 +225,11 @@ class WIFF
 
         $context->setAttribute('root', $root);
 
-        $context->setAttribute('description', $desc);
+        $descriptionNode = $xml->createElement('description', $desc);
+        $context->appendChild($descriptionNode);
+		
+		$moduleNode = $xml->createElement('modules');
+		$context->appendChild($moduleNode);
 
         // Save XML to file
         $ret = $xml->save(WIFF::contexts_filepath);
@@ -385,10 +390,11 @@ class WIFF
         include_once ('lib/Lib.System.php');
 
         $tmpfile = tempnam(null, 'WIFF_downloadHttpUrlWget');
-      if( $tmpfile === false ) {
-	      $this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Error creating temporary file.");
-	      return false;
-      }
+        if ($tmpfile === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
+            return false;
+        }
 
         $envs = array ();
         if ($this->getParam('use-proxy') === 'yes')
@@ -408,42 +414,47 @@ class WIFF
             $envs['ftp_proxy'] = $http_proxy;
         }
 
-       $wget_path = LibSystem::getCommandPath('wget');
-      if( $wget_path === false ) {
-	unlink($tmpfile);
-        $this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Command '%s' not found in PATH.", 'wget');
-	return false;
-      }
+        $wget_path = LibSystem::getCommandPath('wget');
+        if ($wget_path === false)
+        {
+            unlink($tmpfile);
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Command '%s' not found in PATH.", 'wget');
+            return false;
+        }
 
-        $wget_opts = array();
-      $wget_opts[] = $wget_path;
-      $wget_opts[] = '--no-check-certificate';
-      $wget_opts[] = "-q";
-      $wget_opts[] = "-O";
-      $wget_opts[] = escapeshellarg($tmpfile);
-      $proxy_username = $this->getParam('proxy-username');
-      if( $proxy_username !== false && $proxy_username != '' ) {
-	$wget_opts[] = '--proxy-user='.escapeshellarg($proxy_username);
-      }
-      $proxy_password = $this->getParam('proxy-password');
-      if( $proxy_password !== false && $proxy_password != '' ) {
-	$wget_opts[] = '--proxy-password='.escapeshellarg($proxy_password);
-      }
-      $wget_opts[] = escapeshellarg($url);
+        $wget_opts = array ();
+        $wget_opts[] = $wget_path;
+        $wget_opts[] = '--no-check-certificate';
+        $wget_opts[] = "-q";
+        $wget_opts[] = "-O";
+        $wget_opts[] = escapeshellarg($tmpfile);
+        $proxy_username = $this->getParam('proxy-username');
+        if ($proxy_username !== false && $proxy_username != '')
+        {
+            $wget_opts[] = '--proxy-user='.escapeshellarg($proxy_username);
+        }
+        $proxy_password = $this->getParam('proxy-password');
+        if ($proxy_password !== false && $proxy_password != '')
+        {
+            $wget_opts[] = '--proxy-password='.escapeshellarg($proxy_password);
+        }
+        $wget_opts[] = escapeshellarg($url);
 
-      foreach( $envs as $var => $value ) {
-	putenv(sprintf("%s=%s", $var, $value));
-      }
+        foreach ($envs as $var=>$value)
+        {
+            putenv(sprintf("%s=%s", $var, $value));
+        }
 
-      $cmd = join(' ', $wget_opts);
-      $out = system("$cmd > /dev/null", $ret);
-      if( ($out === false) || ($ret != 0) ) {
-	unlink($tmpfile);
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Error fetching '%s' with '%s'.", $url, $cmd);
-	return false;
-      }
+        $cmd = join(' ', $wget_opts);
+        $out = system("$cmd > /dev/null", $ret);
+        if (($out === false) || ($ret != 0))
+        {
+            unlink($tmpfile);
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error fetching '%s' with '%s'.", $url, $cmd);
+            return false;
+        }
 
-      return $tmpfile;
+        return $tmpfile;
     }
 
     public function downloadHttpUrlFopen($url)

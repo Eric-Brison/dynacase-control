@@ -137,6 +137,28 @@ class Module
 			$this->errorMessage = sprintf("Could not download '%s'.", $modUrl);
 			return false;
 		}
+		
+		// Register downloaded module in context xml
+		$info = $this->getInfoXml();
+		
+		$infoXML = new DOMDocument();
+		$ret = $infoXML->loadXML($info);
+		
+		$module = $infoXML->firstChild;
+		
+		$contextsXML = new DOMDocument();
+		$contextsXML->load(WIFF::contexts_filepath);
+		$contextsXPath = new DOMXPath($contextsXML);
+		
+		$modules = $contextsXPath->query("/contexts/context[@name = '".$this->context->name."']/modules");
+		
+		$module = $contextsXML->importNode($module,true); // Import module to contexts xml document
+		$module->setAttribute('status','downloaded');
+		$module->setAttribute('tmpfile',$this->tmpfile);
+		
+		$modules->item(0)->appendChild($module);
+
+		$contextsXML->save(WIFF::contexts_filepath);
 
 		return $this->tmpfile;
 	}
