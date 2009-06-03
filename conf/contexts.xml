@@ -1,18 +1,24 @@
 <?xml version="1.0"?>
 <contexts>
   <context name="Production" root="/home/clement/anakeen/clement/wiff/production">
-    <description>Contexte Production</description>
+    <description>
+            Contexte Production
+        </description>
     <repositories>
       <access name="repository-test-installer" description="Repository Test Installer" baseurl="http://localhost/ftp.freedom-ecm.org/frdom/webinst/test"/>
     </repositories>
-	<modules>
-
-</modules>
-</context>
+    <modules>
+      
+    </modules>
+  </context>
   <context name="Integration" root="/home/clement/anakeen/clement/wiff/integration">
-    <description>Contexte Integration</description>
-  <repositories><access name="repository-test-installer" description="Repository Test Installer" baseurl="http://localhost/ftp.freedom-ecm.org/frdom/webinst/test"/></repositories>
-  <modules>
-  	</modules>
+    <description>
+            Contexte Integration
+        </description>
+    <repositories>
+      <access name="repository-test-installer" description="Repository Test Installer" baseurl="http://localhost/ftp.freedom-ecm.org/frdom/webinst/test"/>
+    </repositories>
+    <modules>
+        </modules>
   </context>
 </contexts>

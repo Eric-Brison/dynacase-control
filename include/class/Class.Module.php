@@ -16,6 +16,8 @@ class Module
 	public $basecomponent;
 	public $src;
 	
+	public $availableversion;
+	
 	public $description;
 
 	private $context;
@@ -73,7 +75,9 @@ class Module
 				 'author',
 				 'license',
 				 'basecomponent',
-				 'src'
+				 'src',
+				 'tmpfile',
+				 'errorstatus'
 				 ) as $attrName ) {
 			$this->$attrName = $xmlNode->getAttribute($attrName);
 		}
@@ -117,6 +121,24 @@ class Module
 	 */
 	public function checkDependency(){
 		
+	}
+	
+	/**
+	 * Set error status
+	 * @param string new error status of module
+	 * @return boolean method success
+	 */
+	public function setErrorStatus($newErrorStatus)
+	{
+		$xml = new DOMDocument();
+		$xml->load(WIFF::contexts_filepath);
+		$xpath = new DOMXPath($xml);
+		
+		$modules = $xpath->query("/contexts/context[@name = '".$this->context->name."']/modules/module[@name = '".$this->name."']");
+		$modules->item(0)->setAttribute('errorstatus',$newErrorStatus);
+		$xml->save(WIFF::contexts_filepath);
+		
+		return true ;
 	}
 	
 	/**
@@ -248,7 +270,6 @@ class Module
 		}
 
 		$cmd = 'tar -zxOf '.escapeshellarg($this->tmpfile).' content.tar.gz | tar '.(($destDir!='')?'-C '.escapeshellarg($destDir):'').' -zxf -';
-		echo "$cmd\n";
 		
 		$ret = null;
 		system($cmd, $ret);
@@ -409,13 +430,13 @@ class Module
 	public function getPhaseList($operation){
 	  switch($operation) {
 	  case 'install':
-	    return array('pre-install', 'unpack', 'register-xml', 'post-install');
+	    return array('pre-install', 'unpack', 'post-install');
 	    break;
 	  case 'upgrade':
-	    return array('pre-upgrade', 'unpack', 'register-xml', 'post-upgrade');
+	    return array('pre-upgrade', 'unpack', 'post-upgrade');
 	    break;
 	  case 'uninstall':
-	    return array('pre-remove', 'remove', 'unregister-xml', 'post-remove');
+	    return array('pre-remove', 'remove', 'post-remove');
 	    break;
 	  case 'parameter':
 	    return array('param', 'post-param');
@@ -430,7 +451,7 @@ class Module
 	 * @param string $name Phase name and XML tag
 	 */
 	public function getPhase($name){
-		return new Phase($name, $this->xmlNode);
+		return new Phase($name, $this->xmlNode, $this);
 	}
 
 	/**

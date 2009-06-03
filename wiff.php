@@ -153,6 +153,22 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['dow
 	
 }
 
+// Request to unpack module in context
+if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['unpack']) )
+{
+	$context = $wiff->getContext($_POST['context']);
+	
+	$module = $context->getModule($_POST['module']);
+	
+	if ($module->unpack($context->root))
+	{
+		answer(true);
+	} else {
+		answer(null,$module->errorMessage);
+	}
+	
+}
+
 
 // Request to activate a repo list in context
 // TODO Unused
@@ -214,7 +230,7 @@ if ( isset ($_POST['context']) && isset ($_POST['getInstalledModuleList']))
     if (!$wiff->errorMessage)
     {
 
-        $moduleList = $context->getInstalledModuleList();
+        $moduleList = $context->getInstalledModuleList(true);
         if ($context->errorMessage)
         {
             answer(null, $context->errorMessage);
@@ -237,7 +253,7 @@ if ( isset ($_POST['context']) && isset ($_POST['getAvailableModuleList']))
     if (!$wiff->errorMessage)
     {
 
-        $moduleList = $context->getAvailableModuleList();
+        $moduleList = $context->getAvailableModuleList(true);
         if ($context->errorMessage)
         {
             answer(null, $context->errorMessage);
@@ -292,7 +308,7 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['pha
 
     $phase = $module->getPhase($_POST['phase']);
 
-    $process = $phase->getProcess($_POST['process']);
+    $process = $phase->getProcess(intval($_POST['process']));
 
     $result = $process->execute();
     if ($result)
@@ -300,7 +316,7 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['pha
         answer($result);
     } else
     {
-        answer(null, $process->getErrorMessage());
+        answer(null, $process->help);
     }
 
 }
@@ -321,6 +337,33 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['get
 	answer(json_encode($parameterList));
 
 }
+
+// Request to save module parameters
+if (isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['storeParameter']))
+{
+	$context = $wiff->getContext($_POST['context']);
+	
+	$module = $context->getModule($_POST['module']);
+	if(!$module)
+	{
+		$module = $context->getModuleAvail($_POST['module']);
+	}
+	
+	$parameterList = $module->getParameterList();
+	
+	foreach ($parameterList as $parameter)
+	{
+		if(isset($_POST[$parameter->name]))
+		{
+			$parameter->value = $_POST[$parameter->name];
+			$module->storeParameter($parameter);
+		}
+	}
+	
+	answer(true);
+	
+}
+
 
 answer(null, "Unrecognized Call");
 

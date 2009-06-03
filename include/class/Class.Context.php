@@ -166,9 +166,10 @@ class Context
 
     /**
      * Get installed Module list
+     * @param boolean withAvailableVersion returned objects will have last available version from Repository attribute populated
      * @return array of object Module
      */
-    public function getInstalledModuleList()
+    public function getInstalledModuleList($withAvailableVersion = false)
     {
 
         $xml = new DOMDocument();
@@ -184,16 +185,42 @@ class Context
         {
             $moduleList[] = new Module($this, null, $module, true);
         }
-
+		
+		//Process for with available version option
+		if($withAvailableVersion)
+		{
+			$availableModuleList = $this->getAvailableModuleList();
+			
+			foreach ($availableModuleList as $availableKey => $availableModule)
+			{
+				foreach ($moduleList as $moduleKey => $module)
+				{
+					if($availableModule->name == $module->name)
+					{
+						$module->availableversion = $availableModule->version ;
+						$cmp = $this->cmpModuleByVersionReleaseAsc($module, $availableModule);
+						if($cmp < 0)
+						{
+							$module->canUpdate = true ;
+						}
+					}
+				}
+			}
+			
+		}
+		
+		
+		
         return $moduleList;
 
     }
 
     /**
      * Get the list of available module Objects in the repositories of the context
+     * @param boolean onlyNotInstalled only return available and not installed modules
      * @return array of module Objects
      */
-    public function getAvailableModuleList()
+    public function getAvailableModuleList($onlyNotInstalled = false)
     {
         $moduleList = array ();
         foreach ($this->repo as $repository)
@@ -211,6 +238,25 @@ class Context
                 return false;
             }
         }
+		
+		// Process for only not installed option
+		if($onlyNotInstalled)
+		{
+			$installedModuleList = $this->getInstalledModuleList();
+			
+			foreach ($installedModuleList as $installedKey => $installedModule)
+			{
+				foreach ($moduleList as $moduleKey => $module)
+				{
+					if($installedModule->name == $module->name)
+					{
+						unset($moduleList[$moduleKey]);
+						$moduleList = array_values($moduleList);
+					}
+				}
+			}
+			
+		}
 
         return $moduleList;
     }

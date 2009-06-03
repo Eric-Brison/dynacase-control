@@ -1,4 +1,6 @@
 
 - Add missing module comparison operators in Context->getDependencies().
 - Add support for <group/> nodes for parameters in Module->getParameterList().
-- 
+- Install a module from any given url
+- Implement update of installer
+- Write installer install instructions
