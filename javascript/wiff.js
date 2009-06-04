@@ -5,6 +5,21 @@ Ext.onReady(function(){
 
     Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
     Ext.QuickTips.init();
+	
+	installedStore = {};
+	availableStore = {};
+	
+	function reloadModuleStore()
+	{
+		if(installedStore[currentContext])
+		{
+		installedStore[currentContext].load();
+		}
+		if(availableStore[currentContext])
+		{
+		availableStore[currentContext].load();
+		}
+	}
     
     var view = new Ext.Viewport({
         layout: 'fit',
@@ -17,20 +32,16 @@ Ext.onReady(function(){
                 mainItem: 0,
                 items: [{
                     title: 'Freedom <br/> Web Installer'
-                }, {
-                    title: 'Parameters',
-                    iconCls: 'x-icon-setup',
-                    tabTip: 'Set WIFF parameters',
-                    layout: 'fit',
-                    style: 'padding:10px;',
-                    items: [{
-                        xtype: 'panel',
-                        title: 'Test',
-                        items: [{
-                            label: 'name'
-                        }]
-                    }]
-                }, {
+                }, 
+//				{
+//                    title: 'Parameters',
+//                    iconCls: 'x-icon-setup',
+//                    tabTip: 'Set WIFF parameters',
+//                    layout: 'fit',
+//                    style: 'padding:10px;',
+//                    items: []
+//                },
+				 {
                     title: 'Create Context',
                     iconCls: 'x-icon-create',
                     tabTip: 'Create new context',
@@ -98,7 +109,7 @@ Ext.onReady(function(){
                                     repoStore.each(function(record){
                                     
                                         repoBoxList.push({
-                                            boxLabel: record.get('name') + ' (' + record.get('baseurl') + ')',
+                                            boxLabel: record.get('description') + ' <i>(' + record.get('baseurl') + ')</i>',
                                             name: 'repo-' + record.get('name')
                                         });
                                         
@@ -137,7 +148,6 @@ Ext.onReady(function(){
     
     /**
      * Update context list
-     * @param {Object} data JSON context list
      */
     function updateContextList(){
     
@@ -173,6 +183,7 @@ Ext.onReady(function(){
                         listeners: {
                             activate: function(panel){
                                 currentContext = panel.title;
+								reloadModuleStore();
                             }
                         },
                         items: [{
@@ -189,6 +200,8 @@ Ext.onReady(function(){
                                 style: 'padding:10px;',
                                 listeners: {
                                     render: function(panel){
+										
+										currentContext = panel.title;
 										                                    
                                         var status = new Ext.ux.grid.RowActions({
                                             header: 'Status',
@@ -240,9 +253,7 @@ Ext.onReady(function(){
                                         
                                         actions.on({
                                             action: function(grid, record, action, row, col){
-                                            
-                                                var context = currentContext;
-                                                
+                                                                                            
                                                 currentModule = {
                                                     name: record.get('name')
                                                 };
@@ -267,16 +278,16 @@ Ext.onReady(function(){
                                                     askParameter(currentModule,operation);
                                                 }
                                                 if (operation == 'upgrade') {
-                                                    upgrade(context, currentModule);
+                                                    upgrade(currentModule);
                                                 }
                                                 if (operation == 'remove') {
-                                                    remove(context, currentModule);
+                                                    remove(currentModule);
                                                 }
                                                 
                                             }
                                         });
                                         
-                                        installedStore = new Ext.data.JsonStore({
+                                        installedStore[currentContext] = new Ext.data.JsonStore({
                                             url: 'wiff.php',
                                             baseParams: {
                                                 context: this.ownerCt.id,
@@ -292,7 +303,7 @@ Ext.onReady(function(){
                                         
                                         var grid = new Ext.grid.GridPanel({
                                             border: false,
-                                            store: installedStore,
+                                            store: installedStore[currentContext],
                                             stripeRows: true,
                                             columns: [actions, {
                                                 id: 'name',
@@ -318,7 +329,7 @@ Ext.onReady(function(){
                                         });
                                         
                                         grid.getView().getRowClass = function(record, index){
-                                            return (record.data.errorstatus ? 'red-row' : 'green-row') ;
+                                            return (record.data.errorstatus ? 'red-row' : '') ;
                                         };
                                         
                                         grid.getView().emptyText = 'No installed modules';
@@ -337,7 +348,7 @@ Ext.onReady(function(){
                                     render: function(panel){
                                     
                                         var actions = new Ext.ux.grid.RowActions({
-                                            header: '',
+                                            header: 'Actions',
                                             autoWidth: false,
                                             actions: [{
                                                 iconCls: 'x-icon-install',
@@ -353,8 +364,6 @@ Ext.onReady(function(){
                                         actions.on({
                                             action: function(grid, record, action, row, col){
                                             
-                                                var context = currentContext;
-                                                
                                                 var module = record.get('name');
                                                 
                                                 switch (action) {
@@ -368,14 +377,14 @@ Ext.onReady(function(){
                                                 
                                                 if (operation == 'install') {
                                                 
-                                                    install(context, module);
+                                                    install(module);
                                                     
                                                 }
                                                 
                                             }
                                         });
                                         
-                                        availableStore = new Ext.data.JsonStore({
+                                        availableStore[currentContext] = new Ext.data.JsonStore({
                                             url: 'wiff.php',
                                             baseParams: {
                                                 context: this.ownerCt.id,
@@ -388,7 +397,7 @@ Ext.onReady(function(){
                                         
                                         var grid = new Ext.grid.GridPanel({
                                             border: false,
-                                            store: availableStore,
+                                            store: availableStore[currentContext],
                                             stripeRows: true,
                                             columns: [actions, {
                                                 id: 'name',
@@ -430,11 +439,11 @@ Ext.onReady(function(){
         
     }
     
-    function upgrade(context, module){
+    function upgrade(module){
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
-                context: context,
+                context: currentContext,
                 module: module,
                 getModuleDependencies: true
             },
@@ -467,7 +476,7 @@ Ext.onReady(function(){
                         switch (btn) {
                             case 'ok':
                                 for (var i = 0; i < toDownload.length; i++) {
-                                    download(context, toDownload[i]);
+                                    download(toDownload[i]);
                                 }
                                 break;
                             case 'cancel':
@@ -479,16 +488,47 @@ Ext.onReady(function(){
                 
             }
         });
-    }
-    
-    function install(context, module){
-    
-		
+    };
 	
+	function remove(module){
+        
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
-                context: context,
+                context: currentContext,
+                module: module.name,
+                operation: operation,
+                getPhaseList: true
+            },
+            success: function(responseObject){
+            
+                var response = eval('(' + responseObject.responseText + ')');
+                if (response.error) {
+                    Ext.Msg.alert('Server Error', response.error);
+                }
+                
+                var data = response.data;
+                
+                currentPhaseList = data;
+                currentPhaseIndex = 0;
+                
+                executePhaseList();
+                
+            },
+            failure: function(){
+                Ext.Msg.alert('Error', 'Could not retrieve phase list');
+            }
+            
+        });
+
+    };
+    
+    function install(module){
+    
+        Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+                context: currentContext,
                 module: module,
                 getModuleDependencies: true
             },
@@ -500,19 +540,19 @@ Ext.onReady(function(){
                 }
                 
                 var data = response.data;
-                
+				                
                 toDownload = data;
                 toInstall = data.slice();
                 
                 htmlModuleList = '<ul>';
                 for (var i = 0; i < toDownload.length; i++) {
-                    htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b></li>';
+                    htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(Version ' + toDownload[i].version + ' )</i></li>';
                 }
                 htmlModuleList = htmlModuleList + '</ul>';
                 
                 Ext.Msg.show({
                     title: 'Freedom Web Installer',
-                    msg: 'Installer will download and install following module(s) : <br/>' + htmlModuleList,
+                    msg: 'Installer will download and install following module(s) : <br/><br/>' + htmlModuleList,
                     buttons: {
                         ok: true,
                         cancel: true
@@ -521,7 +561,7 @@ Ext.onReady(function(){
                         switch (btn) {
                             case 'ok':
                                 for (var i = 0; i < toDownload.length; i++) {
-                                    download(context, toDownload[i]);
+                                    download(toDownload[i]);
                                 }
                                 break;
                             case 'cancel':
@@ -536,12 +576,12 @@ Ext.onReady(function(){
         
     }
     
-    function download(context, module){
+    function download(module){
     
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
-                context: context,
+                context: currentContext,
                 module: module.name,
                 download: true
             },
@@ -557,15 +597,11 @@ Ext.onReady(function(){
     }
     
     function askParameter(module,operation){
-    
-        var context = currentContext;
         
-        var module = module;
-        
-        Ext.Ajax.request({
+		Ext.Ajax.request({
             url: 'wiff.php',
             params: {
-                context: context,
+                context: currentContext,
                 module: module.name,
                 getParameterList: true
             },
@@ -601,7 +637,7 @@ Ext.onReady(function(){
                                         Ext.Msg.alert('Failure', 'Failure');
                                     },
                                     params: {
-                                        context: context,
+                                        context: currentContext,
                                         module: module.name,
                                         storeParameter: true
                                     },
@@ -642,7 +678,13 @@ Ext.onReady(function(){
                     
                 }
                 else {
-					Ext.Msg.alert('Freedom Web Installer', '<b>' + module.name + '</b> does not have parameters to define.') ;
+					Ext.Msg.alert('Freedom Web Installer', '<b>' + module.name + '</b> does not have parameters to define.', function(btn){
+						if(operation == 'install')
+						{
+							getPhaseList(module,operation);
+						}
+					}) ;
+					
                 }
                 
             }
@@ -651,15 +693,13 @@ Ext.onReady(function(){
     }
     
     function getPhaseList(module, operation){
-    
-        var context = currentContext;
         
         currentModule = module;
         
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
-                context: context,
+                context: currentContext,
                 module: module.name,
                 operation: operation,
                 getPhaseList: true
@@ -689,186 +729,219 @@ Ext.onReady(function(){
     
     function executePhaseList(){
     
-        var context = currentContext;
         var module = currentModule;
         
         var phase = currentPhaseList[currentPhaseIndex];
-        
+		
         if (!phase) {
+			// Phase execution is over
+			// Proceed to next module to install
             installedStore.load();
             availableStore.load();
-            return;
+			
+			// Remove last module to install
+			toInstall.remove(toInstall[toInstall.length-1]);
+			
+			// Start installing next module in list
+			if (toInstall[toInstall.length - 1]) {
+				askParameter(toInstall[toInstall.length - 1], 'install');
+			}
+
+				return;
         }
-        
-        switch (phase) {
-        
-            case 'unpack':
-                
-                Ext.Ajax.request({
-                    url: 'wiff.php',
-                    params: {
-                        context: context,
-                        module: module.name,
-                        unpack: true
-                    },
-                    success: function(responseObject){
-                    
-                        var response = eval('(' + responseObject.responseText + ')');
-                        if (response.error) {
-                            Ext.Msg.alert('Server Error', response.error);
-                        }
-                        
-                        var data = response.data;
-                        
-                        Ext.Msg.alert('Module Unpack', 'Module unpacked successfully in context directory', function(btn){
-                            currentPhaseIndex++;
-                            executePhaseList();
-                        });
-                        
-                    }
-                });
-                
-                break;
-                
-            default:
-                
-                Ext.Ajax.request({
-                    url: 'wiff.php',
-                    params: {
-                        context: context,
-                        module: module.name,
-                        phase: phase,
-                        getProcessList: true
-                    },
-                    success: function(responseObject){
-                    
-                        var response = eval('(' + responseObject.responseText + ')');
-                        if (response.error) {
-                            Ext.Msg.alert('Server Error', response.error);
-                        }
-                        
-                        var data = response.data;
-                        
-                        processwin = null;
-                        currentProcessList = data;
-                        executeProcessList(currentModule, phase);
-                        
-                    }
-                });
-                
-                break;
-        }
-        
+		
+		
+		
+			switch (phase) {
+			
+				case 'unpack':
+					
+					Ext.Ajax.request({
+						url: 'wiff.php',
+						params: {
+							context: currentContext,
+							module: module.name,
+							unpack: true
+						},
+						success: function(responseObject){
+						
+							var response = eval('(' + responseObject.responseText + ')');
+							if (response.error) {
+								Ext.Msg.alert('Server Error', response.error);
+							}
+							
+							var data = response.data;
+							
+							Ext.Msg.alert('Module Unpack', 'Module <b>' + module.name + '</b> unpacked successfully in context directory', function(btn){
+								currentPhaseIndex++;
+								executePhaseList();
+							});
+							
+						}
+					});
+					
+					break;
+					
+				default:
+					
+					Ext.Ajax.request({
+						url: 'wiff.php',
+						params: {
+							context: currentContext,
+							module: module.name,
+							phase: phase,
+							getProcessList: true
+						},
+						success: function(responseObject){
+						
+							var response = eval('(' + responseObject.responseText + ')');
+							if (response.error) {
+								Ext.Msg.alert('Server Error', response.error);
+							}
+							
+							var data = response.data;
+							
+							processwin = null;
+							currentProcessList = data;
+							executeProcessList(currentModule, phase);
+							
+						}
+					});
+					
+					break;
+			}        
         
     }
     
     function executeProcessList(module, phase){
-    
+	
         processList = currentProcessList;
-        
-        if (!processwin) {
-            processwin = new Ext.Window({
-                title: 'Executing ' + phase,
-                id: 'process-window',
-                resizable: true
-            });
-            
-            processpanel = new Ext.Panel({
-                border: false,
-                height: 300,
-                width: 300,
-                bodyStyle: 'overflow:auto;'
-            });
-            
-            processwin.add(processpanel);
-            
-            var processbutton = new Ext.Button({
-                text: 'Continue',
-                style: 'padding:5px;',
-                handler: function(button, event){
-                    processwin.destroy();
-                    currentPhaseIndex++;
-                    executePhaseList();
-                }
-            });
-            
-            processwin.add(processbutton);
-            
-            processwin.show();
-        }
-        
-        var context = currentContext;
-        var module = module;
-        
-        for (var i = 0; i < processList.length; i++) {
-        
-            if (i == (processList.length - 1) && processList[i].executed) {
-                return;
-            }
-            
-            process = i;
-            
-            if (!processList[i].executed) {
-                break;
-            }
-            
-        }
-        
-        Ext.Ajax.request({
-            url: 'wiff.php',
-            params: {
-                context: context,
-                module: module.name,
-                phase: phase,
-                process: process + '',
-                execute: true
-            },
-            success: function(responseObject){
-            
-                var response = eval('(' + responseObject.responseText + ')');
-                
-                var data = response.data;
-                
-                var success = data;
-                
-                var optional = processList[process].attributes.optional == 'yes' ? true : false;
-                
-                var label = processList[process].label ? processList[process].label : 'Process ' + process;
-                
-                iconCls = success ? 'x-icon-ok' : optional ? 'x-icon-warning' : 'x-icon-ko';
-                
-                
-                
-                var panel = new Ext.Panel({
-                    title: label,
-                    iconCls: iconCls,
-                    html: '<p>' + response.error + '</p>',
-                    border: false,
-                    style: 'padding-left:5px;padding-right:5px;padding-top:5px;padding-bottom:0px;'
-                });
-                
-                processpanel.add(panel);
-                
-                processwin.doLayout();
-                
-                if (success || optional) {
-                    processList[i].executed = true;
-                    executeProcessList(module, phase, processList);
-                }
-                else {
-                    //Ext.Msg.alert('Error',response.error);
-                }
-                
-            },
-            failure: function(){
-                Ext.Msg.alert('Error', 'Error when executing a process.');
-            }
-            
-            
-        });
-        
-        
+		
+		if (processList.length != 0) {
+		
+			if (!processwin) {
+				processwin = new Ext.Window({
+					title: 'Executing ' + phase,
+					id: 'process-window',
+					resizable: true
+				});
+				
+				processpanel = new Ext.Panel({
+					border: false,
+					height: 300,
+					width: 300,
+					bodyStyle: 'overflow:auto;'
+				});
+				
+				processwin.add(processpanel);
+				
+				var processbutton = new Ext.Button({
+					text: 'Continue',
+					handler: function(button, event){
+						processwin.destroy();
+						processwin = null;
+						currentPhaseIndex++;
+						executePhaseList();
+					}
+				});
+				
+				var retrybutton = new Ext.Button({
+					text: 'Retry',
+					scope: this,
+					handler: function(button, event){
+						processwin.destroy();
+						processwin = null;
+						for (var i = 0; i < processList.length; i++) {
+							processList[i].executed = false;
+						}
+						executeProcessList(module, phase);
+					}
+				});
+				
+				var toolbar = new Ext.Toolbar({});
+				
+				toolbar.add(processbutton);
+				toolbar.add(retrybutton);
+				
+				processwin.add(toolbar);
+				
+			}
+			
+			processwin.show();
+			
+			var module = module;
+			
+			for (var i = 0; i < processList.length; i++) {
+			
+				if (i == (processList.length - 1) && processList[i].executed) {
+					return;
+				}
+				
+				process = i;
+				
+				if (!processList[i].executed) {
+					break;
+				}
+				
+			}
+			
+			Ext.Ajax.request({
+				url: 'wiff.php',
+				params: {
+					context: currentContext,
+					module: module.name,
+					phase: phase,
+					process: process + '',
+					execute: true
+				},
+				success: function(responseObject){
+				
+					var response = eval('(' + responseObject.responseText + ')');
+					
+					var data = response.data;
+					
+					var success = data;
+					
+					var optional = processList[process].attributes.optional == 'yes' ? true : false;
+					
+					var label = processList[process].label ? processList[process].label : 'Process ' + process;
+					
+					iconCls = success ? 'x-icon-ok' : optional ? 'x-icon-warning' : 'x-icon-ko';
+					
+					var panel = new Ext.Panel({
+						title: label,
+						iconCls: iconCls,
+						html: '<p>' + response.error + '</p>',
+						border: false,
+						style: 'padding-left:5px;padding-right:5px;padding-top:5px;padding-bottom:0px;'
+					});
+					
+					processpanel.add(panel);
+					
+					processwin.doLayout();
+					
+					if (success || optional) {
+						processList[i].executed = true;
+						executeProcessList(module, phase);
+					}
+					else {
+					//Ext.Msg.alert('Error',response.error);
+					}
+					
+				},
+				failure: function(){
+					Ext.Msg.alert('Error', 'Error when executing a process.');
+				}
+				
+				
+			});
+			
+		} else {
+			// if there is no process to execute in this phase go on to next phase.
+			currentPhaseIndex++;
+            executePhaseList();
+		}
+		
     }
-    
     
 });

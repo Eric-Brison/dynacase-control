@@ -2,7 +2,7 @@
 <wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="GPL2" lang="fr|en">
 
   <repositories>
-    <access name="repository-test-installer" description="Repository Test Installer" baseurl="http://localhost/ftp.freedom-ecm.org/frdom/webinst/test" />
+	<access name="repository-installer" description="Online Repository Installer" baseurl="http://ftp.freedom-ecm.org/frdom/wiff/webinst/test" />
   </repositories>
 
   <parameters>

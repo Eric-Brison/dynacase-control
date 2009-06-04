@@ -58,11 +58,21 @@ class Process
     public function execute()
     {
         include_once ('lib/Lib.Wcontrol.php');
+		
+		$wiff = WIFF::getInstance();
+		
+		putenv("WIFF_CONTEXT_NAME=". $this->phase->module->context->name);
+		putenv("WIFF_CONTEXT_ROOT=". $this->phase->module->context->root);
+		
 		$return = wcontrol_eval_process($this);
+		
 		if(!$return && !$this->attributes['optional'] == 'yes')
 		{
 			$this->phase->module->setErrorStatus($this->phase->name);
+		} else {
+			$this->phase->module->setErrorStatus('');
 		}
+		
         return $return ;
     }
 

@@ -11,6 +11,7 @@
 header('Content-type: text/html; charset=UTF-8');
 
 set_include_path(get_include_path().PATH_SEPARATOR.getcwd().'/include');
+putenv('WIFF_ROOT = '.getcwd());
 
 function __autoload($class_name)
 {
@@ -364,8 +365,31 @@ if (isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['stor
 	
 }
 
+// Call to get a param value
+if (isset($argv))
+{
+	
+	if(stripos($argv[1],'--getValue=') === 0)
+	{
+		$paramName =  substr($argv[1], 11);
+	}
+	
+	$xml = new DOMDocument();
+	$xml->load(WIFF::contexts_filepath);
+	
+	$xpath = new DOMXPath($xml);
+	
+	$parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", getenv('WIFF_CONTEXT_NAME'), $paramName))->item(0);
+	if($parameterNode)
+	{
+	$parameterValue = $parameterNode->getAttribute('value');
+	return $parameterValue ;
+	} else {
+		return false ;
+	}
+	
+}
 
 answer(null, "Unrecognized Call");
-
 
 ?>

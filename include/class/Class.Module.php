@@ -329,7 +329,7 @@ class Module
 	      $p->$attr = $param->getAttribute($attr);
 	    }
 
-	    $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/modules/module[@name='".$this->name."']/parameters-value/param[@name='".$p->name."']");
+	    $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$p->name."' and @modulename='". $this->name ."']");
 	    if( $storedParamValue->length <= 0 ) {
 		    $p->value = "";
 	    } else {
@@ -379,26 +379,26 @@ class Module
 	  }
 
 	  $contextsXpath = new DOMXPath($xml);
-	  $moduleNodeList = $contextsXpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->context->name, $this->name));
-	  if( $moduleNodeList->length <= 0 ) {
+	  $contextNodeList = $contextsXpath->query(sprintf("/contexts/context[@name='%s']", $this->context->name));
+	  if( $contextNodeList->length <= 0 ) {
 		  $this->errorMessage = sprintf("Could not find the module node.");
 		  return false;
 	  }
-	  $moduleNode = $moduleNodeList->item(0);
+	  $contextNode = $contextNodeList->item(0);
 
-	  $parametersValueList = $contextsXpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']/parameters-value", $this->context->name, $this->name));
+	  $parametersValueList = $contextsXpath->query(sprintf("/contexts/context[@name='%s']/parameters-value", $this->context->name));
 	  if( $parametersValueList->length <= 0 ) {
 		  $parametersValueNode = $xml->createElement('parameters-value');
 		  if( $parametersValueNode === false ) {
 			  $this->errorMessage = sprintf("Could not create parameters-value element.");
 			  return false;
 		  }
-		  $moduleNode->appendChild($parametersValueNode);
+		  $contextNode->appendChild($parametersValueNode);
 	  } else {
 		  $parametersValueNode = $parametersValueList->item(0);
 	  }
 
-	  $paramList = $contextsXpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']/parameters-value/param[@name='%s']", $this->context->name, $this->name, $parameter->name));
+	  $paramList = $contextsXpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@modulename='%s' and @name='%s']", $this->context->name, $this->name, $parameter->name));
 	  if( $paramList->length <= 0 ) {
 		  $param = $xml->createElement('param');
 		  if( $param === false ) {
@@ -411,6 +411,7 @@ class Module
 	  }
 
 	  $param->setAttribute('name', $parameter->name);
+	  $param->setAttribute('modulename', $this->name);
 	  $param->setAttribute('value', $parameter->value);
 
 	  $ret = $xml->save(WIFF::contexts_filepath);
