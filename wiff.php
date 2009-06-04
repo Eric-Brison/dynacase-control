@@ -13,7 +13,7 @@ header('Content-type: text/html; charset=UTF-8');
 set_include_path(get_include_path().PATH_SEPARATOR.getcwd().'/include');
 
 ini_set('error_reporting', 'E_ALL & ~E_NOTICE');
-ini_set('display_errors', 'Off');`
+ini_set('display_errors', 'Off');
 ini_set('max_execution_time', 3600);
 
 putenv('WIFF_ROOT = '.getcwd());
