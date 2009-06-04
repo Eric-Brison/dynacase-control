@@ -54,7 +54,6 @@ class Phase
             if (!($process instanceof DomComment))
             {
                 $xmlStr = $process->ownerDocument->saveXML($process);
-                error_log("[[[".$xmlStr."]]]");
 
                 $xmlStr = ltrim($xmlStr); // @TODO While making this loop, there are occurencies of $xmlStr composed of spaces only. Check why. The ltrim correct this but should not by required.
                 if ($xmlStr != '')
