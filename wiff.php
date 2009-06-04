@@ -11,6 +11,10 @@
 header('Content-type: text/html; charset=UTF-8');
 
 set_include_path(get_include_path().PATH_SEPARATOR.getcwd().'/include');
+
+ini_set('error_reporting', 'E_ALL & ~E_NOTICE');
+ini_set('display_errors', 'Off');
+
 putenv('WIFF_ROOT = '.getcwd());
 
 function __autoload($class_name)
@@ -29,10 +33,10 @@ function answer($data, $error = null)
 {
     if (!$data)
     {
-        echo "{error:'".$error."',data:'',success:'false'}";
+      echo "{error:'".addslashes($error)."',data:'',success:'false'}";
     } else
     {
-        echo "{error:'".$error."',data:".$data.",success:'true'}";
+      echo "{error:'".addslashes($error)."',data:".$data.",success:'true'}";
     }
     exit ();
 }
