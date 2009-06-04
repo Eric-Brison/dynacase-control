@@ -16,7 +16,7 @@ ini_set('error_reporting', 'E_ALL & ~E_NOTICE');
 ini_set('display_errors', 'Off');
 ini_set('max_execution_time', 3600);
 
-putenv('WIFF_ROOT = '.getcwd());
+putenv('WIFF_ROOT='.getcwd());
 
 function __autoload($class_name)
 {
