@@ -4,3 +4,4 @@
 - Install a module from any given url
 - Implement update of installer
 - Write installer install instructions
+- Afficher les messages d'erreurs JSON {error='xxx',[...]}
