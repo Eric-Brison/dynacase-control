@@ -736,8 +736,8 @@ Ext.onReady(function(){
         if (!phase) {
 			// Phase execution is over
 			// Proceed to next module to install
-            installedStore.load();
-            availableStore.load();
+            installedStore[currentContext].load();
+            availableStore[currentContext].load();
 			
 			// Remove last module to install
 			toInstall.remove(toInstall[toInstall.length-1]);
