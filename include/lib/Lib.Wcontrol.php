@@ -7,19 +7,25 @@ require_once ('lib/Lib.System.php');
  */
 function wcontrol_eval_process($process)
 {
-    if ($process->getName() == "check")
+  if ($process->getName() == "check")
     {
-        if (function_exists("wcontrol_check_".$process->getAttribute('type')))
+      if (function_exists("wcontrol_check_".$process->getAttribute('type')))
         {
-            eval ("\$ret = wcontrol_check_".$process->getAttribute('type')."(\$process);");
-            return $ret;
+	  eval ("\$ret = wcontrol_check_".$process->getAttribute('type')."(\$process);");
+	  return array(
+		       'ret' => $ret,
+		       'output' => ''
+		       );
         }
     } elseif ($process->getName() == "process")
-    {
-    	return wcontrol_process($process);
-    }
-
-    return false;
+      {
+	return wcontrol_process($process);
+      }
+  
+  return array(
+	       'ret' => false,
+	       'output' => ''
+	       );
 }
 
 /**
@@ -28,17 +34,56 @@ function wcontrol_eval_process($process)
  * @param object $process
  */
 function wcontrol_process($process) {
-	
-	// Here we need to add the root folder to the commande path
-	// $command = 'online/'.$process->getAttribute('command');
-	
-	// echo $command."\n" ;
-	
-	$out = system($command." 2>&1", $ret);
-	
-	// echo "ret=($ret)\n" ;
-	
-	return ($ret === 0)?true:false;
+  $cmd = $process->getAttribute('command');
+
+  if( ! preg_match('|^\s*/|', $cmd) ) {
+    $ctx_root = getenv('WIFF_CONTEXT_ROOT');
+    if( $ctx_root === false ) {
+      return array(
+		   'ret' => false,
+		   'output' => ''
+		   );
+    }
+    $cmd = sprintf("%s/%s", $ctx_root, $cmd);
+  }
+
+  /*
+  $cmd = sprintf("( %s ) 2>&1 3>/dev/null; echo $? >&3", $cmd);
+
+  $proc = proc_open($cmd,
+		    array(
+			  0 => array('pipe', 'r'),
+			  1 => array('pipe', 'w'),
+			  2 => array('pipe', 'w'),
+			  3 => array('pipe', 'w')
+			  ),
+		    $pipes,
+		    null,
+		    null
+		    );
+  if( $proc === false ) {
+  $ret = proc_close($proc);
+  */
+
+  $tmpfile = tempnam(null, 'wcontrol_process');
+  if( $tmpfile === false ) {
+    return array(
+		 'ret' => false,
+		 'output' => ''
+		 );
+  }
+
+  $cmd = sprintf('( %s ) 2>&1 > "%s"', $cmd, escapeshellcmd($tmpfile));
+  error_log($cmd);
+  system($cmd, $ret);
+
+  $output = file_get_contents($tmpfile);
+  unlink($tmpfile);
+  
+  return array(
+	       'ret' => ($ret === 0)?true:false,
+	       'output' => $output
+	       );
 }
 
 /**

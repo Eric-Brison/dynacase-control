@@ -66,7 +66,7 @@ class Process
 		
 		$return = wcontrol_eval_process($this);
 		
-		if(!$return && !$this->attributes['optional'] == 'yes')
+		if(!$return['ret'] && !$this->attributes['optional'] == 'yes')
 		{
 			$this->phase->module->setErrorStatus($this->phase->name);
 		} else {
