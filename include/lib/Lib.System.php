@@ -85,6 +85,13 @@ class LibSystem {
     pcntl_exec($cmd, $args, $envs);
   }
 
+  function getAbsolutePath($path) {
+    if( is_link($path) ) {
+      $path = readlink($path);
+    }
+    return realpath($path);
+  }
+
 }
 
 ?>
