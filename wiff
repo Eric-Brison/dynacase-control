@@ -1,0 +1,93 @@
+#!/usr/bin/env php
+<?php
+
+$mypath = array_shift($argv);
+$wiff_root = getenv('WIFF_ROOT');
+if( $wiff_root === false ) {
+  if( is_link($mypath) ) {
+    $mypath = readlink($mypath);
+  }
+  $realpath = realpath($mypath);
+  $wiff_root = dirname($realpath);
+}
+set_include_path(get_include_path().PATH_SEPARATOR.$wiff_root.'/include');
+putenv('WIFF_ROOT='.$wiff_root);
+
+$ret = 0;
+switch( $argv[0] ) {
+case 'param':
+  $ret = wiff_param($argv);
+  break;
+case 'show':
+  $ret = wiff_show($argv);
+  break;
+case 'context':
+  $ret = wiff_context($argv);
+  break;
+case 'help':
+  $ret = wiff_help($argv);
+  break;
+default:
+  $ret = wiff_default($argv);
+  break;
+}
+
+exit( $ret );
+
+function __autoload($class_name) {
+  require_once 'class/Class.'.$class_name.'.php';
+}
+
+function wiff_help(&$argv) {
+  echo "\n";
+  echo "Usage\n";
+  echo "-----\n";
+  echo "\n";
+  echo "  wiff help [get|set|param|context]\n";
+  echo "  wiff param get <param_name>\n";
+  echo "  wiff param set <param_name> <param_value>\n";
+  echo "\n";
+  return 0;
+}
+
+function wiff_param(&$argv) {
+  echo "'param' not yet implemented.\n";
+  return 0;
+}
+
+function wiff_show(&$argv) {
+  echo "'show' not yet implemented.\n";
+  return 0;
+}
+
+function wiff_context(&$argv) {
+  echo "'context' not yet implemented.\n";
+  return 0;
+}
+
+function wiff_default(&$argv) {
+  if( stripos($argv[0], '--getValue=') !== false ) {
+    return wiff_default_getValue(&$argv);
+  }
+  return wiff_help($argv);
+}
+
+function wiff_default_getValue(&$argv) {
+  $paramName =  substr($argv[0], 11);
+  
+  $xml = new DOMDocument();
+  $xml->load(WIFF::contexts_filepath);
+  
+  $xpath = new DOMXPath($xml);
+  
+  $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", getenv('WIFF_CONTEXT_NAME'), $paramName))->item(0);
+  if( $parameterNode ) {
+    $parameterValue = $parameterNode->getAttribute('value');
+    echo $parameterValue."\n";
+    return 0;
+  }
+  echo "";
+  return 0;
+}
+
+?>
