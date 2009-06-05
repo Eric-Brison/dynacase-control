@@ -905,13 +905,16 @@ Ext.onReady(function(){
 					var optional = processList[process].attributes.optional == 'yes' ? true : false;
 					
 					var label = processList[process].label ? processList[process].label : 'Process ' + process;
-					
+				        var help = ( !response.success ) ? processList[process].help : '';
+
 					iconCls = success ? 'x-icon-ok' : optional ? 'x-icon-warning' : 'x-icon-ko';
 					
 					var panel = new Ext.Panel({
+   					        collapsible: help || response.error,
+					        collapsed: true,
 						title: label,
 						iconCls: iconCls,
-						html: '<p>' + response.error + '</p>',
+						html: '<p class="help">' + help + '</p><pre class="console">' + response.error + '</pre>',
 						border: false,
 						style: 'padding-left:5px;padding-right:5px;padding-top:5px;padding-bottom:0px;'
 					});
