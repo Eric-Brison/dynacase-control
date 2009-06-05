@@ -21,6 +21,7 @@ dist:
 	tar -cf - \
 		--exclude Makefile \
 		--exclude tmp \
+		--exclude test \
 		--exclude $(TAR_DIST_NAME)-*-*.tar.gz \
 		--exclude "*~" \
 		. | tar -C tmp/$(TAR_DIST_DIR) -xf -
