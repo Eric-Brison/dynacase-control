@@ -32,12 +32,12 @@ function __autoload($class_name)
  */
 function answer($data, $error = null)
 {
-    if (!$data)
+    if( $data === null )
     {
       echo "{error:'".addslashes($error)."',data:'',success:'false'}";
     } else
     {
-      echo "{error:'".addslashes($error)."',data:".$data.",success:'true'}";
+      echo "{error:'".addslashes($error)."',data:'".addslashes($data)."',success:'true'}";
     }
     exit ();
 }
@@ -324,14 +324,21 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
     $process = $phase->getProcess(intval($_REQUEST['process']));
 
     $result = $process->execute();
-    if ($result)
-    {
-        answer($result);
-    } else
-    {
-        answer(null, $process->help);
+    error_log(sprintf("result = %s", print_r($result, true)));
+    if( $result['ret'] === true ) {
+      error_log("It's OK!");
+      $module->setErrorStatus('');
+      $answer = new JSONAnswer($result['output'], null, true);
+      echo $answer->encode();
+      exit( 1 );
+    } else {
+      error_log("It's NOT OK!");
+      $module->setErrorStatus($phase->name);
+      // answer(null, $result['output']);
+      $answer = new JSONAnswer($result['output'], null, false);
+      echo $answer->encode();
+      exit( 1 );
     }
-
 }
 
 // Request to get module parameters

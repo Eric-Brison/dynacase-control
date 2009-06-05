@@ -900,7 +900,7 @@ Ext.onReady(function(){
 					
 					var data = response.data;
 					
-					var success = data;
+					var success = response.success;
 					
 					var optional = processList[process].attributes.optional == 'yes' ? true : false;
 					

@@ -58,22 +58,26 @@ class Process
     public function execute()
     {
         include_once ('lib/Lib.Wcontrol.php');
-		
-		$wiff = WIFF::getInstance();
-		
-		putenv("WIFF_CONTEXT_NAME=". $this->phase->module->context->name);
-		putenv("WIFF_CONTEXT_ROOT=". $this->phase->module->context->root);
-		
-		$return = wcontrol_eval_process($this);
-		
-		if(!$return['ret'] && !$this->attributes['optional'] == 'yes')
-		{
-			$this->phase->module->setErrorStatus($this->phase->name);
-		} else {
-			$this->phase->module->setErrorStatus('');
-		}
-		
-        return $return ;
+	
+	$wiff = WIFF::getInstance();
+	
+	putenv("WIFF_CONTEXT_NAME=". $this->phase->module->context->name);
+	putenv("WIFF_CONTEXT_ROOT=". $this->phase->module->context->root);
+	
+	$result = wcontrol_eval_process($this);
+
+	/*
+	  if( $result['ret'] === false && $this->attributes['optional'] != 'yes')
+	  {
+	  $this->phase->module->setErrorStatus($this->phase->name);
+	  } else {
+	  $this->phase->module->setErrorStatus('');
+	  }
+	*/
+
+	error_log(sprintf("%s ret = %s", __FUNCTION__, print_r($result, true)));
+	
+        return $result;
     }
 
     public function getName()

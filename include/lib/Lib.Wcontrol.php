@@ -7,20 +7,18 @@ require_once ('lib/Lib.System.php');
  */
 function wcontrol_eval_process($process)
 {
-  if ($process->getName() == "check")
-    {
-      if (function_exists("wcontrol_check_".$process->getAttribute('type')))
-        {
-	  eval ("\$ret = wcontrol_check_".$process->getAttribute('type')."(\$process);");
-	  return array(
-		       'ret' => $ret,
-		       'output' => ''
-		       );
-        }
-    } elseif ($process->getName() == "process")
-      {
-	return wcontrol_process($process);
-      }
+  if( $process->getName() == "check" ) {
+    if( function_exists( "wcontrol_check_".$process->getAttribute('type') ) ) {
+      error_log(sprintf("%s Running wcontrol_check_%s()", __FUNCTION__, $process->getAttribute('type')));
+      eval( "\$ret = wcontrol_check_".$process->getAttribute('type')."(\$process);" );
+      return array(
+		   'ret' => $ret,
+		   'output' => ''
+		   );
+    }
+  } else if( $process->getName() == "process" ) {
+    return wcontrol_process($process);
+  }
   
   return array(
 	       'ret' => false,
@@ -41,7 +39,7 @@ function wcontrol_process($process) {
     if( $ctx_root === false ) {
       return array(
 		   'ret' => false,
-		   'output' => ''
+		   'output' => 'WIFF_CONTEXT_ROOT env variable is not defined.'
 		   );
     }
     $cmd = sprintf("%s/%s", $ctx_root, $cmd);
@@ -69,12 +67,12 @@ function wcontrol_process($process) {
   if( $tmpfile === false ) {
     return array(
 		 'ret' => false,
-		 'output' => ''
+		 'output' => 'Error creating temporary file.'
 		 );
   }
 
   $cmd = sprintf('( %s ) 2>&1 > "%s"', $cmd, escapeshellcmd($tmpfile));
-  error_log($cmd);
+  error_log(sprintf("%s %s", __FUNCTION__, $cmd));
   system($cmd, $ret);
 
   $output = file_get_contents($tmpfile);
