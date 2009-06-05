@@ -6,3 +6,4 @@
 - Write installer install instructions
 - Afficher les messages d'erreurs JSON {error='xxx',[...]}
 - Reprise d'install d'un module installé mais en rouge/erreur
+- Quand on annule la phase de param, le module apparait comme étant correctement installé et finalisé
