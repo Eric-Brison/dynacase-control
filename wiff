@@ -10,7 +10,7 @@ if( $wiff_root === false ) {
   $realpath = realpath($mypath);
   $wiff_root = dirname($realpath);
 }
-ini_set('include_path', get_include_path().PATH_SEPARATOR."$wiff_root".DIRECTORY_SEPARATOR.'include');
+set_include_path(get_include_path().PATH_SEPARATOR."$wiff_root".DIRECTORY_SEPARATOR.'include');
 putenv('WIFF_ROOT='.$wiff_root);
 
 $ret = 0;

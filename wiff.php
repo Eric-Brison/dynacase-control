@@ -10,7 +10,7 @@
  
 header('Content-type: text/html; charset=UTF-8');
 
-set_include_path(get_include_path().PATH_SEPARATOR.getcwd().'/include');
+set_include_path(get_include_path().PATH_SEPARATOR.getcwd().DIRECTORY_SEPARATOR.'include');
 
 ini_set('error_reporting', 'E_ALL & ~E_NOTICE');
 ini_set('display_errors', 'Off');
