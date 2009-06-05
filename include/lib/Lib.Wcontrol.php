@@ -71,7 +71,7 @@ function wcontrol_process($process) {
 		 );
   }
 
-  $cmd = sprintf('( %s ) 2>&1 > "%s"', $cmd, escapeshellcmd($tmpfile));
+  $cmd = sprintf('( %s ) 1> "%s" 2>&1', $cmd, escapeshellcmd($tmpfile));
   error_log(sprintf("%s %s", __FUNCTION__, $cmd));
   system($cmd, $ret);
 
