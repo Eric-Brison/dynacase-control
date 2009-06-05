@@ -46,7 +46,7 @@ function answer($data, $error = null)
 $wiff = WIFF::getInstance();
 
 // Request if installer need update
-if ( isset ($_POST['needUpdate']))
+if ( isset ($_REQUEST['needUpdate']))
 {
     $needUpdate = $wiff->needUpdate();
     if (!$wiff->errorMessage)
@@ -59,7 +59,7 @@ if ( isset ($_POST['needUpdate']))
 }
 
 // Request to update installer
-if ( isset ($_POST['update']))
+if ( isset ($_REQUEST['update']))
 {
     $wiff->update();
     if (!$wiff->errorMessage)
@@ -72,7 +72,7 @@ if ( isset ($_POST['update']))
 }
 
 // Request to get global repository list
-if ( isset ($_POST['getRepoList']))
+if ( isset ($_REQUEST['getRepoList']))
 {
     $repoList = $wiff->getRepoList();
     if (!$wiff->errorMessage)
@@ -85,7 +85,7 @@ if ( isset ($_POST['getRepoList']))
 }
 
 // Request to get context list
-if ( isset ($_POST['getContextList']))
+if ( isset ($_REQUEST['getContextList']))
 {
     $contextList = $wiff->getContextList();
 	
@@ -99,9 +99,9 @@ if ( isset ($_POST['getContextList']))
 }
 
 // Request to create new context
-if ( isset ($_POST['createContext']))
+if ( isset ($_REQUEST['createContext']))
 {
-    $context = $wiff->createContext($_POST['name'], $_POST['root'], $_POST['desc']);
+    $context = $wiff->createContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc']);
 
     if (!$wiff->errorMessage)
     {
@@ -114,7 +114,7 @@ if ( isset ($_POST['createContext']))
 			
 			str_replace('.','_',$postcode); // . characters in variables are replace by _ characters during POST requesting
 
-            if ( isset ($_POST[$postcode]))
+            if ( isset ($_REQUEST[$postcode]))
             {
                 $context->activateRepo($repo->name);
                 if ($context->errorMessage)
@@ -133,22 +133,22 @@ if ( isset ($_POST['createContext']))
 }
 
 // Request to get dependency module list for a module
-if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['getModuleDependencies']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getModuleDependencies']))
 {
-	$context = $wiff->getContext($_POST['context']);
+	$context = $wiff->getContext($_REQUEST['context']);
 	
-	$dependencyList = $context->getModuleDependencies($_POST['module']);
+	$dependencyList = $context->getModuleDependencies($_REQUEST['module']);
 	
 	answer(json_encode($dependencyList));
 	
 }
 
 // Request to download module to temporary dir
-if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['download']) )
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['download']) )
 {
-	$context = $wiff->getContext($_POST['context']);
+	$context = $wiff->getContext($_REQUEST['context']);
 	
-	$module = $context->getModuleAvail($_POST['module']);
+	$module = $context->getModuleAvail($_REQUEST['module']);
 	
 	if ($module->download())
 	{
@@ -160,11 +160,11 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['dow
 }
 
 // Request to unpack module in context
-if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['unpack']) )
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['unpack']) )
 {
-	$context = $wiff->getContext($_POST['context']);
+	$context = $wiff->getContext($_REQUEST['context']);
 	
-	$module = $context->getModule($_POST['module']);
+	$module = $context->getModule($_REQUEST['module']);
 	
 	if ($module->unpack($context->root))
 	{
@@ -178,13 +178,13 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['unp
 
 // Request to activate a repo list in context
 // TODO Unused
-if ( isset ($_POST['context']) && isset ($_POST['activateRepo']) && isset ($_POST['repo']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['activateRepo']) && isset ($_REQUEST['repo']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
     if (!$wiff->errorMessage)
     {
-        foreach ($_POST['repo'] as $repo)
+        foreach ($_REQUEST['repo'] as $repo)
         {
             $context->activateRepo($repo);
             if (!$context->errorMessage)
@@ -204,13 +204,13 @@ if ( isset ($_POST['context']) && isset ($_POST['activateRepo']) && isset ($_POS
 
 // Request to deactivate a repo list in context
 // TODO Unused
-if ( isset ($_POST['context']) && isset ($_POST['deactivateRepo']) && isset ($_POST['repo']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['deactivateRepo']) && isset ($_REQUEST['repo']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
     if (!$wiff->errorMessage)
     {
-        foreach ($_POST['repo'] as $repo)
+        foreach ($_REQUEST['repo'] as $repo)
         {
             $context->deactivateRepo($repo);
             if (!$context->errorMessage)
@@ -229,9 +229,9 @@ if ( isset ($_POST['context']) && isset ($_POST['deactivateRepo']) && isset ($_P
 }
 
 // Request to get a context installed module list
-if ( isset ($_POST['context']) && isset ($_POST['getInstalledModuleList']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getInstalledModuleList']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
     if (!$wiff->errorMessage)
     {
@@ -252,9 +252,9 @@ if ( isset ($_POST['context']) && isset ($_POST['getInstalledModuleList']))
 }
 
 // Request to get a context available module list
-if ( isset ($_POST['context']) && isset ($_POST['getAvailableModuleList']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getAvailableModuleList']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
     if (!$wiff->errorMessage)
     {
@@ -275,30 +275,30 @@ if ( isset ($_POST['context']) && isset ($_POST['getAvailableModuleList']))
 }
 
 // Request to get phase list for a given operation
-if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['getPhaseList']) && isset ($_POST['operation']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getPhaseList']) && isset ($_REQUEST['operation']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
-    $module = $context->getModule($_POST['module']);
+    $module = $context->getModule($_REQUEST['module']);
 	
 	if(!$module) // If no module was found in installed modules by previous method, then try to get module from available modules
 	{
-		$module = $context->getModuleAvail($_POST['module']);
+		$module = $context->getModuleAvail($_REQUEST['module']);
 	}
 
-    $phaseList = $module->getPhaseList($_POST['operation']);
+    $phaseList = $module->getPhaseList($_REQUEST['operation']);
 
     answer(json_encode($phaseList));
 }
 
 // Request to get process list for a given phase
-if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['phase']) && isset ($_POST['getProcessList']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['getProcessList']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
-    $module = $context->getModule($_POST['module']);
+    $module = $context->getModule($_REQUEST['module']);
 
-    $phase = $module->getPhase($_POST['phase']);
+    $phase = $module->getPhase($_REQUEST['phase']);
 
     $processList = $phase->getProcessList();
 
@@ -306,15 +306,15 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['pha
 }
 
 // Request to execute process
-if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['phase']) && isset ($_POST['process']) && isset ($_POST['execute']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['process']) && isset ($_REQUEST['execute']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
-    $module = $context->getModule($_POST['module']);
+    $module = $context->getModule($_REQUEST['module']);
 
-    $phase = $module->getPhase($_POST['phase']);
+    $phase = $module->getPhase($_REQUEST['phase']);
 
-    $process = $phase->getProcess(intval($_POST['process']));
+    $process = $phase->getProcess(intval($_REQUEST['process']));
 
     $result = $process->execute();
     if ($result)
@@ -328,14 +328,14 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['pha
 }
 
 // Request to get module parameters
-if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['getParameterList']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getParameterList']))
 {
-    $context = $wiff->getContext($_POST['context']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
-    $module = $context->getModule($_POST['module']);
+    $module = $context->getModule($_REQUEST['module']);
 	if(!$module)
 	{
-		$module = $context->getModuleAvail($_POST['module']);
+		$module = $context->getModuleAvail($_REQUEST['module']);
 	}
 
     $parameterList = $module->getParameterList();
@@ -345,23 +345,23 @@ if ( isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['get
 }
 
 // Request to save module parameters
-if (isset ($_POST['context']) && isset ($_POST['module']) && isset ($_POST['storeParameter']))
+if (isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
 {
-	$context = $wiff->getContext($_POST['context']);
+	$context = $wiff->getContext($_REQUEST['context']);
 	
-	$module = $context->getModule($_POST['module']);
+	$module = $context->getModule($_REQUEST['module']);
 	if(!$module)
 	{
-		$module = $context->getModuleAvail($_POST['module']);
+		$module = $context->getModuleAvail($_REQUEST['module']);
 	}
 	
 	$parameterList = $module->getParameterList();
 	
 	foreach ($parameterList as $parameter)
 	{
-		if(isset($_POST[$parameter->name]))
+		if(isset($_REQUEST[$parameter->name]))
 		{
-			$parameter->value = $_POST[$parameter->name];
+			$parameter->value = $_REQUEST[$parameter->name];
 			$module->storeParameter($parameter);
 		}
 	}
