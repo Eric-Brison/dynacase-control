@@ -295,11 +295,18 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['getProcessList']))
 {
     $context = $wiff->getContext($_REQUEST['context']);
+    if( $context === false ) {
+      error_log(__FUNCTION__." ".$wiff->errorMessage);
+      answer(null, $wiff->errorMessage);
+    } 
 
     $module = $context->getModule($_REQUEST['module']);
+    if( $module === false ) {
+      error_log(__FUNCTION__." ".$context->errorMessage);
+      answer(null, $context->errorMessage);
+    }
 
     $phase = $module->getPhase($_REQUEST['phase']);
-
     $processList = $phase->getProcessList();
 
     answer(json_encode($processList));
