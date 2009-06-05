@@ -212,6 +212,16 @@ class WIFF
             }
         }
 
+	// Get absolute pathname if directory is not already in absolute form
+	if( ! preg_match('|^/|', $root) ) {
+	  $abs_root = realpath($root);
+	  if( $abs_root === false ) {
+	    $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $root);
+	    return false;
+	  }
+	  $root = $abs_root;
+	}
+
         // Write contexts XML
         $xml = new DOMDocument();
         $xml->preserveWhiteSpace = false;
