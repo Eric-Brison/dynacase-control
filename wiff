@@ -10,7 +10,7 @@ if( $wiff_root === false ) {
   $realpath = realpath($mypath);
   $wiff_root = dirname($realpath);
 }
-set_include_path(get_include_path().PATH_SEPARATOR.$wiff_root.'/include');
+ini_set('include_path', get_include_path().PATH_SEPARATOR."$wiff_root".DIRECTORY_SEPARATOR.'include');
 putenv('WIFF_ROOT='.$wiff_root);
 
 $ret = 0;
@@ -73,14 +73,28 @@ function wiff_default(&$argv) {
 }
 
 function wiff_default_getValue(&$argv) {
+  global $wiff_root;
+
   $paramName =  substr($argv[0], 11);
-  
+
+  $contextsFile = "$wiff_root".DIRECTORY_SEPARATOR.WIFF::contexts_filepath;
+
+  $wiffContextName = getenv('WIFF_CONTEXT_NAME');
+  if( $wiffContextName === false || preg_match('/^\s*$/', $wiffContextName) ) {
+    error_log(sprintf("WIFF_CONTEXT_NAME is not defined or empty."));
+    exit( 1 );
+  }
+
   $xml = new DOMDocument();
-  $xml->load(WIFF::contexts_filepath);
+  $ret = $xml->load($contextsFile);
+  if( $ret === false ) {
+    error_log(sprintf("Error opening XML file '%s'.", $contextsFile));
+    exit( 1 );
+  }
   
   $xpath = new DOMXPath($xml);
   
-  $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", getenv('WIFF_CONTEXT_NAME'), $paramName))->item(0);
+  $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", $wiffContextName, $paramName))->item(0);
   if( $parameterNode ) {
     $parameterValue = $parameterNode->getAttribute('value');
     echo $parameterValue."\n";
