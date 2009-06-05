@@ -5,3 +5,4 @@
 - Implement update of installer
 - Write installer install instructions
 - Afficher les messages d'erreurs JSON {error='xxx',[...]}
+- Reprise d'install d'un module installé mais en rouge/erreur
