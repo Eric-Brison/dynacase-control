@@ -157,7 +157,16 @@ class Context
         $moduleList = array ();
 
         $availableModuleList = $this->getAvailableModuleList();
+	if( $availableModuleList === false ) {
+	  $this->errorMessage = sprintf("Could not get available module list.");
+	  return false;
+	}
+
         $installedModuleList = $this->getInstalledModuleList();
+	if( $installedModuleList === false ) {
+	  $this->errorMessage = sprintf("Could not get installed module list.");
+	  return false;
+	}
 
         $moduleList = array_merge($availableModuleList, $installedModuleList); // TODO appropriate merge
 
