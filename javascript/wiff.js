@@ -199,9 +199,9 @@ Ext.onReady(function(){
                                 layout: 'fit',
                                 style: 'padding:10px;',
                                 listeners: {
-                                    render: function(panel){
+                                    afterrender: function(panel){
 										
-										currentContext = panel.title;
+										currentContext = panel.ownerCt.title;
 										                                    
                                         var status = new Ext.ux.grid.RowActions({
                                             header: 'Status',
