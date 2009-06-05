@@ -34,10 +34,14 @@ function answer($data, $error = null)
 {
     if( $data === null )
     {
-      echo "{error:'".addslashes($error)."',data:'',success:'false'}";
+      // echo "{error:'".addslashes($error)."',data:'',success:'false'}";
+      $answer = new JSONAnswer($data, $error, false);
+      echo $answer->encode();
     } else
     {
-      echo "{error:'".addslashes($error)."',data:'".addslashes($data)."',success:'true'}";
+      // echo "{error:'".addslashes($error)."',data:'".addslashes($data)."',success:'true'}";
+      $answer = new JSONAnswer($data, $error, true);
+      echo $answer->encode();
     }
     exit ();
 }
@@ -77,7 +81,8 @@ if ( isset ($_REQUEST['getRepoList']))
     $repoList = $wiff->getRepoList();
     if (!$wiff->errorMessage)
     {
-        answer(json_encode($repoList));
+        // answer(json_encode($repoList));
+        answer($repoList);
     } else
     {
         answer(null, $wiff->errorMessage);
@@ -91,7 +96,8 @@ if ( isset ($_REQUEST['getContextList']))
 	
     if (!$wiff->errorMessage)
     {
-        answer(json_encode($contextList));
+        // answer(json_encode($contextList));
+        answer($contextList);
     } else
     {
         answer(null, $wiff->errorMessage);
@@ -124,7 +130,8 @@ if ( isset ($_REQUEST['createContext']))
             }
         }
 
-        answer(json_encode($context));
+        // answer(json_encode($context));
+        answer($context);
 
     } else
     {
@@ -139,7 +146,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 	
 	$dependencyList = $context->getModuleDependencies($_REQUEST['module']);
 	
-	answer(json_encode($dependencyList));
+	// answer(json_encode($dependencyList));
+	answer($dependencyList);
 	
 }
 
@@ -193,7 +201,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['activateRepo']) && isset 
             }
         }
 
-        answer(json_encode($context));
+        // answer(json_encode($context));
+        answer($context);
 
     } else
     {
@@ -219,7 +228,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['deactivateRepo']) && isse
             }
         }
 
-        answer(json_encode($context));
+        // answer(json_encode($context));
+        answer($context);
 
     } else
     {
@@ -242,7 +252,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getInstalledModuleList'])
             answer(null, $context->errorMessage);
         }
 
-        answer(json_encode($moduleList));
+        // answer(json_encode($moduleList));
+        answer($moduleList);
 
     } else
     {
@@ -265,7 +276,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getAvailableModuleList'])
             answer(null, $context->errorMessage);
         }
 
-        answer(json_encode($moduleList));
+        // answer(json_encode($moduleList));
+        answer($moduleList);
 
     } else
     {
@@ -288,7 +300,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 
     $phaseList = $module->getPhaseList($_REQUEST['operation']);
 
-    answer(json_encode($phaseList));
+    // answer(json_encode($phaseList));
+    answer($phaseList);
 }
 
 // Request to get process list for a given phase
@@ -309,36 +322,48 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
     $phase = $module->getPhase($_REQUEST['phase']);
     $processList = $phase->getProcessList();
 
-    answer(json_encode($processList));
+    // answer(json_encode($processList));
+    answer($processList);
 }
 
 // Request to execute process
 if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['process']) && isset ($_REQUEST['execute']))
 {
-    $context = $wiff->getContext($_REQUEST['context']);
-
-    $module = $context->getModule($_REQUEST['module']);
-
-    $phase = $module->getPhase($_REQUEST['phase']);
-
-    $process = $phase->getProcess(intval($_REQUEST['process']));
-
-    $result = $process->execute();
-    error_log(sprintf("result = %s", print_r($result, true)));
-    if( $result['ret'] === true ) {
-      error_log("It's OK!");
-      $module->setErrorStatus('');
-      $answer = new JSONAnswer($result['output'], null, true);
-      echo $answer->encode();
-      exit( 1 );
-    } else {
-      error_log("It's NOT OK!");
-      $module->setErrorStatus($phase->name);
-      // answer(null, $result['output']);
-      $answer = new JSONAnswer($result['output'], null, false);
-      echo $answer->encode();
-      exit( 1 );
-    }
+  $context = $wiff->getContext($_REQUEST['context']);
+  if( $context === false ) {
+    $answer = new JSONAnswer(null, sprintf("Could not get context '%s'.", $_REQUEST['context']), false);
+    echo $answer->encode();
+    exit( 1 );
+  }
+  
+  $module = $context->getModule($_REQUEST['module']);
+  if( $module === false ) {
+    $answer = new JSONAnswer(null, sprintf("Could not get module '%s' in context '%s'.", $_REQUEST['module'], $_REQUEST['context']), false);
+    echo $answer->encode();
+    exit( 1 );
+  }
+  
+  $phase = $module->getPhase($_REQUEST['phase']);
+  $process = $phase->getProcess(intval($_REQUEST['process']));
+  if( $process === null ) {
+    $answer = new JSONAnswer(null, sprintf("Could not get process '%s' for phase '%s' of module '%s' in context '%s'.", $_REQUEST['process'], $_REQUEST['phase'], $_REQUEST['module'], $_REQUEST['context']), false);
+    echo $answer->encode();
+    exit( 1 );
+  }
+  
+  $result = $process->execute();
+  
+  if( $result['ret'] === true ) {
+    $module->setErrorStatus('');
+    $answer = new JSONAnswer($result['output'], null, true);
+    echo $answer->encode();
+    exit( 1 );
+  }
+  
+  $module->setErrorStatus($phase->name);
+  $answer = new JSONAnswer($result['output'], null, false);
+  echo $answer->encode();
+  exit( 1 );
 }
 
 // Request to get module parameters
@@ -354,7 +379,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 
     $parameterList = $module->getParameterList();
 
-	answer(json_encode($parameterList));
+        // answer(json_encode($parameterList));
+	answer($parameterList);
 
 }
 
