@@ -355,13 +355,13 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
   
   if( $result['ret'] === true ) {
     $module->setErrorStatus('');
-    $answer = new JSONAnswer($result['output'], null, true);
+    $answer = new JSONAnswer(null, $result['output'], true);
     echo $answer->encode();
     exit( 1 );
   }
   
   $module->setErrorStatus($phase->name);
-  $answer = new JSONAnswer($result['output'], null, false);
+  $answer = new JSONAnswer(null, $result['output'], false);
   echo $answer->encode();
   exit( 1 );
 }
