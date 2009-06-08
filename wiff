@@ -67,7 +67,7 @@ function wiff_context(&$argv) {
 
 function wiff_default(&$argv) {
   if( stripos($argv[0], '--getValue=') !== false ) {
-    return wiff_default_getValue(&$argv);
+    return wiff_default_getValue($argv);
   }
   return wiff_help($argv);
 }
