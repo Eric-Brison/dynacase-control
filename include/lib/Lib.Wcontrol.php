@@ -210,7 +210,7 @@ function wcontrol_check_phpclass($process)
 {
   $include = $process->getAttribute('include');
   if( $include != "" ) {
-    $ret = @include($process->getAttribute('include'));
+    $ret = @include($include);
     if ($ret == false) {
       return false;
     }
@@ -226,7 +226,7 @@ function wcontrol_msg_pearmodule($process) {
 }
 
 function wcontrol_msg_phpclass($process) {
-  return sprintft("Checking if the class '%s' is available in include file '%s'", $process->getAttribute('class'), $process->getAttribute('include'));
+  return sprintf("Checking if the class '%s' is available in include file '%s'", $process->getAttribute('class'), $process->getAttribute('include'));
 }
 
 /**
