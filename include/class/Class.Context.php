@@ -497,7 +497,7 @@ class Context
     private function moduleIsInstalled( & $module)
     {
         $installedModule = $this->getModule($module->name);
-        if ($instaledModule === false)
+        if ($installedModule === false)
         {
             return false;
         }
