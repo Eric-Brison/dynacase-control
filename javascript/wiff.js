@@ -79,8 +79,8 @@ Ext.onReady(function(){
                                         updateContextList();
                                         form.reset();
                                     },
-                                    failure: function(){
-                                        Ext.Msg.alert('Failure', 'Failure');
+                                    failure: function(form, action){
+                                        Ext.Msg.alert('Failure', action.result.error);
                                     },
                                     params: {
                                         createContext: true
@@ -633,8 +633,8 @@ Ext.onReady(function(){
                                         Ext.getCmp('parameter-window').close();
                                         getPhaseList(module, operation);
                                     },
-                                    failure: function(){
-                                        Ext.Msg.alert('Failure', 'Failure');
+				    failure: function(form, action){
+                                        Ext.Msg.alert('Failure', action.result.error);
                                     },
                                     params: {
                                         context: currentContext,
