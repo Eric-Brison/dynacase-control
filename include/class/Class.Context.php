@@ -480,7 +480,7 @@ class Context
             }
             $i++;
         }
-        return array_reverse($depsList);
+        return $depsList;
     }
 
     /**
