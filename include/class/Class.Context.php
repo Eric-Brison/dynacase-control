@@ -466,11 +466,21 @@ class Context
                 if (!$this->depsListContains($depsList, $reqMod->name))
                 {
                     array_push($depsList, $reqMod);
-                }
+                } else {
+		  // The module is already present in the list, but it is
+		  // required by the current module:
+		  // - it should be at the tail of the list.
+		  $ret = $this->pushBackModule($depsList, $reqMod);
+		  if( $ret === true ) {
+		    // A module has been pushed back at the tail of the list:
+		    // - keep processing the module at current position
+		    continue;
+		  }
+		}
             }
             $i++;
         }
-        return $depsList;
+        return array_reverse($depsList);
     }
 
     /**
@@ -489,6 +499,23 @@ class Context
             }
         }
         return false;
+    }
+
+    private function pushBackModule(&$depsList, $module, $i) {
+      $moduleName = $module->name;
+      $i = 0;
+      while( $i < count($depsList) ) {
+	if( $depsList[$i]->name == $moduleName ) {
+	  $extractedMod = array_splice($depsList, $i, 1);
+	  foreach( $extractedMod as $mod ) {
+	    array_push($depsList, $mod);
+	    return true;
+	    break;
+	  }
+	}
+	$i++;
+      }
+      return false;
     }
 
     /**
