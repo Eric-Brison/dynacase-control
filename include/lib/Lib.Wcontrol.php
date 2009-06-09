@@ -11,9 +11,16 @@ function wcontrol_eval_process($process)
     if( function_exists( "wcontrol_check_".$process->getAttribute('type') ) ) {
       error_log(sprintf("%s Running wcontrol_check_%s()", __FUNCTION__, $process->getAttribute('type')));
       eval( "\$ret = wcontrol_check_".$process->getAttribute('type')."(\$process);" );
+
+      if( function_exists( "wcontrol_msg_".$process->getAttribute('type') ) ) {
+	eval( "\$msg = wcontrol_msg_".$process->getAttribute('type')."(\$process);" );
+      } else {
+	$msg = generic_message($process);
+      }
+
       return array(
 		   'ret' => $ret,
-		   'output' => ''
+		   'output' => $msg
 		   );
     }
   } else if( $process->getName() == "process" ) {
@@ -22,7 +29,7 @@ function wcontrol_eval_process($process)
   
   return array(
 	       'ret' => false,
-	       'output' => ''
+	       'output' => sprintf("Unknown process with name '%s'", $process->getName())
 	       );
 }
 
@@ -85,12 +92,23 @@ function wcontrol_process($process) {
 }
 
 /**
+ * generic message
+ */
+function generic_msg($process) {
+  return sprintf("Checking process wiht type '%s'", $process->getAttribute('type'));
+}
+
+/**
  * phpfunction check
  */
 
 function wcontrol_check_phpfunction($process)
 {
     return function_exists($process->getAttribute('function'));
+}
+
+function wcontrol_msg_phpfunction($process) {
+  return sprintf("Checking if the PHP function '%s' exists", $process->getAttribute('function'));
 }
 
 /**
@@ -101,6 +119,10 @@ function wcontrol_check_exec($process)
 {
     $out = system($process->getAttribute('cmd'), $ret);
     return ($ret === 0)?true:false;
+}
+
+function wcontrol_msg_check_exec($process) {
+  return sprintf("Checking if the command '%s' returns a success exit code", $process->getAttribute('cmd'));
 }
 
 /**
@@ -153,6 +175,10 @@ function wcontrol_check_file($process)
     }
 }
 
+function wcontrol_msg_check_file($process) {
+  return sprintf("Checking if the file '%s' validate the predicate '%s'", $process->getAttribute('file'), $process->getAttribute('predicate')); 
+}
+
 /**
  * syscommand check
  */
@@ -165,6 +191,10 @@ function wcontrol_check_syscommand($process)
         return false;
     }
     return true;
+}
+
+function wcontrol_msg_syscommand($process) {
+  return sprintf("Checking if the command '%s' is in the PATH", $process->getAttribute('command'));
 }
 
 /**
@@ -190,6 +220,14 @@ function wcontrol_check_phpclass($process)
     return true;
 }
 
+function wcontrol_msg_pearmodule($process) {
+  return wcontrol_msg_phpclass($process);
+}
+
+function wcontrol_msg_phpclass($process) {
+  return sprintft("Checking if the class '%s' is available in include file '%s'", $process->getAttribute('class'), $process->getAttribute('include'));
+}
+
 /**
  * apachemodule check
  */
@@ -206,6 +244,10 @@ function wcontrol_check_apachemodule($process)
         return true;
     }
     return false;
+}
+
+function wcontrol_msg_apachemodule($process) {
+  return sprintf("Checking if the Apache module '%s' is loaded", $process->getAttribute('module'));
 }
 
 ?>
