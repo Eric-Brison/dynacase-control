@@ -206,18 +206,19 @@ function wcontrol_check_pearmodule($process)
     return wcontrol_check_phpclass($process);
 }
 
-function wcontrol_check_phpclass($process)
+function wcontrol_check_phpclass($process) 
 {
-    $ret = @ include ($process->getAttribute('include'));
-    if ($ret == false)
-    {
-        return false;
+  $include = $process->getAttribute('include');
+  if( $include != "" ) {
+    $ret = @include($process->getAttribute('include'));
+    if ($ret == false) {
+      return false;
     }
-    if (!class_exists($process->getAttribute('class')))
-    {
-        return false;
-    }
-    return true;
+  }
+  if( ! class_exists($process->getAttribute('class')) ) {
+    return false;
+  }
+  return true;
 }
 
 function wcontrol_msg_pearmodule($process) {
