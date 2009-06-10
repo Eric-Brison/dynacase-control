@@ -914,7 +914,7 @@ Ext.onReady(function(){
 					        collapsed: true,
 						title: label,
 						iconCls: iconCls,
-						html: '<p class="help">' + help + '</p><pre class="console">' + response.error + '</pre>',
+						html: '<pre class="console">' + response.error + '</pre>' + '<p class="help">' + help + '</p>',
 						border: false,
 						style: 'padding-left:5px;padding-right:5px;padding-top:5px;padding-bottom:0px;'
 					});
