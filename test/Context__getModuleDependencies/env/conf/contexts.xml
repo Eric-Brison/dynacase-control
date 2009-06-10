@@ -3,12 +3,11 @@
   <context name="ctx1" description="Context One" root="ctx1">
 
     <repositories>
-      <access name="stable_2.12" description="Stable 2.12" baseurl="http://ftp.Freedom-ecm.org/frdom/webinst/2_12" />
-      <access name="maintenance_2.10" description="Maintenance 2.10" baseurl="http://ftp.Freedom-ecm.org/frdom/webinst/2_10" />
+      <!-- <access name="test" description="Test repo" baseurl="http://localhost:8080/~jerome/testrepo/" /> -->
+      <access name="repository-installer" description="Online Repository Installer" baseurl="http://ftp.freedom-ecm.org/frdom/wiff/webinst/test"/>
     </repositories>
 
     <modules>
-      <module name="freedom-core" version="2.12.2" release="1" />
     </modules>
 
   </context>

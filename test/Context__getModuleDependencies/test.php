@@ -9,7 +9,7 @@ if( $ctx === false ) {
   exit( 1 );
 }
 
-$depsList = $ctx->getModuleDependencies('freedom-dav');
+$depsList = $ctx->getModuleDependencies('freedom-webdesk');
 if( $depsList === false ) {
   echo "ERROR\n";
   echo $ctx->errorMessage."\n";
