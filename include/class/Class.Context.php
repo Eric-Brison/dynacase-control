@@ -410,112 +410,99 @@ class Context
      *         install order, or false in case of error
      * @param the module name
      */
-    public function getModuleDependencies($name)
-    {
-        $modsAvail = $this->getAvailableModuleList();
-        if ($modsAvail === false)
-        {
-            return false;
-        }
+    public function getModuleDependencies($name) {
+      $modsAvail = $this->getAvailableModuleList();
+      if ($modsAvail === false) {
+	return false;
+      }
+      
+      $module = $this->getModuleAvail($name);
+      if ($module === false) {
+	return false;
+      }
+      
+      $depsList = array ();
+      array_push($depsList, $module);
+      
+      $modMovedBy = array();
+      
+      $i = 0;
+      while ($i < count($depsList)) {
+	$mod = $depsList[$i];
+	$reqList = $mod->getRequiredModules();
+	
+	foreach ($reqList as $req) {
+	  $reqModName = $req['name'];
+	  $reqModVersion = $req['version'];
+	  $reqModComp = $req['comp'];
+	  
+	  $reqMod = $this->getModuleAvail($reqModName);
+	  
+	  switch($reqModComp) {
+	  case '':
+	    break;
+	  case 'ge':
+	    if ($this->cmpVersionRelease($reqModVersion, 0, $reqMod->version, 0) < 0) {
+	      $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.");
+	      return false;
+	    }
+	    break;
+	  default:
+	    $this->errorMessage = sprintf("Operator of module comparison '%s' is not yet implemented.", $reqModComp);
+	    return false;
+	  }
 
-        $module = $this->getModuleAvail($name);
-        if ($module === false)
-        {
-            return false;
-        }
-
-        $depsList = array ();
-        array_push($depsList, $module);
-
-        $i = 0;
-        while ($i < count($depsList))
-        {
-            $mod = $depsList[$i];
-            $reqList = $mod->getRequiredModules();
-            foreach ($reqList as $req)
-            {
-                $reqModName = $req['name'];
-                $reqModVersion = $req['version'];
-                $reqModComp = $req['comp'];
-
-                $reqMod = $this->getModuleAvail($reqModName);
-
-                switch($reqModComp)
-                {
-                    case '':
-                        break;
-                    case 'ge':
-                        if ($this->cmpVersionRelease($reqModVersion, 0, $reqMod->version, 0) < 0)
-                        {
-                            $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.");
-                            return false;
-                        }
-                    break;
-                    default:
-                        $this->errorMessage = sprintf("Operator of module comparison '%s' is not yet implemented.", $reqModComp);
-                        return false;
-                }
-
-                // Check if a version of this module is already installed
-                if ($this->moduleIsInstalledAndUpToDateWith($reqMod))
-                {
-                    continue ;
-                }
-
-                // Prevent duplicates module in dependencies list
-                if (!$this->depsListContains($depsList, $reqMod->name))
-                {
-                    array_push($depsList, $reqMod);
-                } else {
-		  // The module is already present in the list, but it is
-		  // required by the current module:
-		  // - it should be at the tail of the list.
-		  $ret = $this->pushBackModule($depsList, $reqMod);
-		  if( $ret === true ) {
-		    // A module has been pushed back at the tail of the list:
-		    // - keep processing the module at current position
-		    continue;
-		  }
-		}
-            }
-            $i++;
-        }
-        return $depsList;
+	  // Check if a version of this module is already installed
+	  if ($this->moduleIsInstalledAndUpToDateWith($reqMod)) {
+	    continue ;
+	  }
+	 
+	  $pos = $this->depsListContains($depsList, $reqMod->name);
+	  if( $pos < 0 ) {
+	    // Add the module to the dependencies list
+	    array_push($depsList, $reqMod);
+	  } else if( $pos >= 0 && $pos < $i ) {
+	    if( $modMovedBy[$reqMod->name][$mod->name] <= 1 ) {
+	      // Move the module to the right
+	      $this->moveDepToRight($depsList, $pos, $i);
+	      $modMovedBy[$reqMod->name][$mod->name]++;
+	      $i--;
+	    }
+	  }
+	}
+	$i++;
+      }
+      return $depsList;
     }
-
+    
     /**
      * Check if a Module object with this name already exists a a list of
      * Module objects
      * @return true if the module with the given name is found, false if not found
      * @param array( Module object 1, [...], Module object N )
      */
-    private function depsListContains( & $depsList, $name)
+    private function depsListContains(&$depsList, $name)
     {
-        foreach ($depsList as $mod)
-        {
-            if ($mod->name == $name)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private function pushBackModule(&$depsList, $module, $i) {
-      $moduleName = $module->name;
       $i = 0;
       while( $i < count($depsList) ) {
-	if( $depsList[$i]->name == $moduleName ) {
-	  $extractedMod = array_splice($depsList, $i, 1);
-	  foreach( $extractedMod as $mod ) {
-	    array_push($depsList, $mod);
-	    return true;
-	    break;
-	  }
+	if ($depsList[$i]->name == $name) {
+	  return $i;
 	}
 	$i++;
       }
-      return false;
+      return -1;
+    }
+
+    /**
+     * Move a module at position $pos after position $pivot
+     * @return (nothing)
+     * @param array of Module
+     * @param position of actual module to move
+     * @param position after which the module should be moved
+     */
+    private function moveDepToRight(&$depsList, $pos, $pivot) {
+      $extractedModule = array_splice($depsList, $pos, 1);
+      array_splice($depsList, $pivot, 0, $extractedModule);
     }
 
     /**
