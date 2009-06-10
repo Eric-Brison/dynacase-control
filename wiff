@@ -27,6 +27,15 @@ case 'context':
 case 'help':
   $ret = wiff_help($argv);
   break;
+case 'whattext':
+  $ret = wiff_whattext($argv);
+  break;
+case 'wstart':
+  $ret = wiff_wstart($argv);
+  break;
+case 'wstop':
+  $ret = wiff_wstop($argv);
+  break;
 default:
   $ret = wiff_default($argv);
   break;
@@ -44,14 +53,31 @@ function wiff_help(&$argv) {
   echo "-----\n";
   echo "\n";
   echo "  wiff help [get|set|param|context]\n";
+  echo "\n";
+  echo "  wiff param show\n";
   echo "  wiff param get <param_name>\n";
   echo "  wiff param set <param_name> <param_value>\n";
+  echo "\n";
+  echo "  wiff whattext <context_name>\n";
+  echo "  wiff wstop <context_name>\n";
+  echo "  wiff wstart <context_name>\n";
   echo "\n";
   return 0;
 }
 
 function wiff_param(&$argv) {
-  echo "'param' not yet implemented.\n";
+  $op = array_shift($argv);
+  switch( $op ) {
+  case 'show':
+    echo "'param show' not yet implemented.\n";
+    break;
+  case 'get':
+    echo "'param get' not yet implemented.\n";
+    break;
+  case 'set':
+    echo "'param set' not yet implemented.\n";
+    break;
+  }
   return 0;
 }
 
@@ -63,6 +89,44 @@ function wiff_show(&$argv) {
 function wiff_context(&$argv) {
   echo "'context' not yet implemented.\n";
   return 0;
+}
+
+function wiff_whattext(&$argv) {
+  $ctx_name = array_shift($argv);
+
+  $wiff = WIFF::getInstance();
+
+  $context = $wiff->getContext($ctx_name);
+  if( $context === false ) {
+    echo sprintf("Error getting context '%s'!", $ctx_name);
+    return -1;
+  }
+  
+  $ctx_root = $context->root;
+  $core_environment = sprintf("%s/programs/core_environment", $context->root);
+  if( ! is_executable($core_environment) ) {
+    echo sprintf("core_environment '%s' not found or not executable.", $core_environment);
+    return -1;
+  }
+
+  $whattext = sprintf("%s/whattext", $context->root);
+  if( ! is_executable($whattext) ) {
+    echo sprintf("whattext '%s' not found or not executable.", $whattext);
+    return -1;
+  }
+
+  $cmd = sprintf("%s", escapeshellarg($whattext));;
+  $out = system($cmd, $ret);
+
+  return $ret;
+}
+
+function wiff_wstop(&$argv) {
+  $ctx_name = array_shift($argv);
+}
+
+function wiff_wstart(&$argv) {
+  $ctx_name = array_shift($argv);
 }
 
 function wiff_default(&$argv) {
