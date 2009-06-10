@@ -172,30 +172,22 @@ function wiff_default_getValue(&$argv) {
 
   $paramName =  substr($argv[0], 11);
 
-  $contextsFile = "$wiff_root".DIRECTORY_SEPARATOR.WIFF::contexts_filepath;
-
   $wiffContextName = getenv('WIFF_CONTEXT_NAME');
   if( $wiffContextName === false || preg_match('/^\s*$/', $wiffContextName) ) {
     error_log(sprintf("WIFF_CONTEXT_NAME is not defined or empty."));
     exit( 1 );
   }
 
-  $xml = new DOMDocument();
-  $ret = $xml->load($contextsFile);
-  if( $ret === false ) {
-    error_log(sprintf("Error opening XML file '%s'.", $contextsFile));
-    exit( 1 );
+  $wiff = WIFF::getInstance();
+
+  $context = $wiff->getContext($wiffContextName);
+  if( $context === false ) {
+    echo sprintf("Error getting context '%s'!", $wiffContextName);
+    echo "";
+    return -1;
   }
-  
-  $xpath = new DOMXPath($xml);
-  
-  $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", $wiffContextName, $paramName))->item(0);
-  if( $parameterNode ) {
-    $parameterValue = $parameterNode->getAttribute('value');
-    echo $parameterValue."\n";
-    return 0;
-  }
-  echo "";
+
+  echo $context->getParamByName($paramName)."\n";
   return 0;
 }
 

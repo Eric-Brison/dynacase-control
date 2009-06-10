@@ -538,6 +538,25 @@ class Context
         return true;
     }
 
+    public function getParamByName($paramName) {
+      $xml = new DOMDocument();
+      $ret = $xml->load(WIFF::contexts_filepath);
+      if( $ret === false ) {
+	$this->errorMessage = sprintf("Error opening XML file '%s'.", WIFF::contexts_filepath);
+	return false;
+      }
+
+      $xpath = new DOMXPath($xml);
+
+      $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", $this->name, $paramName))->item(0);
+      if( $parameterNode ) {
+	$value = $parameterNode->getAttribute('value');
+	$this->errorMessage = '';
+	return $value;
+      }
+      $this->errorMessage = sprintf("Parameter with name '%s' not found in context '%s'.", $paramName, $this->name);
+      return '';
+    }
 }
 
 ?>
