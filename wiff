@@ -102,20 +102,13 @@ function wiff_whattext(&$argv) {
     return -1;
   }
   
-  $ctx_root = $context->root;
-  $core_environment = sprintf("%s/programs/core_environment", $context->root);
-  if( ! is_executable($core_environment) ) {
-    echo sprintf("core_environment '%s' not found or not executable.", $core_environment);
-    return -1;
-  }
-
   $whattext = sprintf("%s/whattext", $context->root);
   if( ! is_executable($whattext) ) {
     echo sprintf("whattext '%s' not found or not executable.", $whattext);
     return -1;
   }
 
-  $cmd = sprintf("%s", escapeshellarg($whattext));;
+  $cmd = sprintf("%s", escapeshellarg($whattext));
   $out = system($cmd, $ret);
 
   return $ret;
@@ -123,10 +116,48 @@ function wiff_whattext(&$argv) {
 
 function wiff_wstop(&$argv) {
   $ctx_name = array_shift($argv);
+
+  $wiff = WIFF::getInstance();
+
+  $context = $wiff->getContext($ctx_name);
+  if( $context === false ) {
+    echo sprintf("Error getting context '%s'!", $ctx_name);
+    return -1;
+  }
+
+  $wstart = sprintf("%s/wstop", $context->root);
+  if( ! is_executable($wstart) ) {
+    echo sprintf("wstop '%s' not found or not executable.", $wstart);
+    return -1;
+  }
+
+  $cmd = sprintf("%s", escapeshellarg($wstart));
+  $out = system($cmd, $ret);
+
+  return $ret;
 }
 
 function wiff_wstart(&$argv) {
   $ctx_name = array_shift($argv);
+
+  $wiff = WIFF::getInstance();
+
+  $context = $wiff->getContext($ctx_name);
+  if( $context === false ) {
+    echo sprintf("Error getting context '%s'!", $ctx_name);
+    return -1;
+  }
+
+  $wstart = sprintf("%s/wstart", $context->root);
+  if( ! is_executable($wstart) ) {
+    echo sprintf("wstart '%s' not found or not executable.", $wstart);
+    return -1;
+  }
+
+  $cmd = sprintf("%s", escapeshellarg($wstart));
+  $out = system($cmd, $ret);
+
+  return $ret;
 }
 
 function wiff_default(&$argv) {
