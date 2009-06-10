@@ -410,6 +410,59 @@ if (isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQU
 	
 }
 
+// Request to run wstop in context
+if( isset($_REQUEST['context']) && isset($_REQUEST['wstop']) ) {
+  $context = $wiff->getContext($_REQUEST['context']);
+  if( $context === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $context->wstop();
+
+  answer(true);
+}
+
+// Request to run wstart in context
+if( isset($_REQUEST['context']) && isset($_REQUEST['wstart']) ) {
+  $context = $wiff->getContext($_REQUEST['context']);
+  if( $context === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $context->wstart();
+
+  answer(true);
+}
+
+if (isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
+{
+	$context = $wiff->getContext($_REQUEST['context']);
+	
+	$module = $context->getModule($_REQUEST['module']);
+	if(!$module)
+	{
+		$module = $context->getModuleAvail($_REQUEST['module']);
+	}
+	
+	$parameterList = $module->getParameterList();
+	
+	foreach ($parameterList as $parameter)
+	{
+		if(isset($_REQUEST[$parameter->name]))
+		{
+			$parameter->value = $_REQUEST[$parameter->name];
+			$module->storeParameter($parameter);
+		}
+	}
+	
+	answer(true);
+	
+}
+
 // Call to get a param value
 if (isset($argv))
 {

@@ -557,6 +557,19 @@ class Context
       $this->errorMessage = sprintf("Parameter with name '%s' not found in context '%s'.", $paramName, $this->name);
       return '';
     }
+
+    public wstop() {
+      $wstop = sprintf("%s/wstop", $this->root);
+      system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstop), $ret));
+      return $ret;
+    }
+
+    public wstart() {
+      $wstart = sprintf("%s/wstart", $this->root);
+      system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstart), $ret));
+      return $ret;
+    }
+
 }
 
 ?>
