@@ -558,14 +558,16 @@ class Context
       return '';
     }
 
-    public wstop() {
+    public function wstop() {
       $wstop = sprintf("%s/wstop", $this->root);
+      error_log(__CLASS__."::".__FUNCTION__." ".sprintf("%s", $wstop));
       system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstop), $ret));
       return $ret;
     }
 
-    public wstart() {
+    public function wstart() {
       $wstart = sprintf("%s/wstart", $this->root);
+      error_log(__CLASS__."::".__FUNCTION__." ".sprintf("%s", $wstart));
       system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstart), $ret));
       return $ret;
     }

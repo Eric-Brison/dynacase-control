@@ -560,9 +560,13 @@ Ext.onReady(function(){
                     fn: function(btn){
                         switch (btn) {
                             case 'ok':
+			    if( toDownload.length > 0 ) {
+				wstop();
                                 for (var i = 0; i < toDownload.length; i++) {
                                     download(toDownload[i]);
                                 }
+				wstart();
+			    }
                                 break;
                             case 'cancel':
                                 // Do nothing. Will simply close message window.
@@ -576,6 +580,29 @@ Ext.onReady(function(){
         
     }
     
+    function wstop() {
+	Ext.Ajax.request({
+	    url: 'wiff.php',
+	    params: {
+		context: currentContext,
+		wstop: 'yes'
+	    },
+	    callback: function(option, success, responseObject){
+                askParameter(toInstall[toInstall.length - 1],'install');
+	    }
+	});
+    }
+
+    function wstart() {
+	Ext.Ajax.request({
+	    url: 'wiff.php',
+	    params: {
+		context: currentContext,
+		wstart: 'yes'
+	    }
+	});
+    }
+
     function download(module){
     
         Ext.Ajax.request({
@@ -588,7 +615,7 @@ Ext.onReady(function(){
             success: function(responseObject){
                 toDownload.remove(module);
                 if (toDownload.length == 0) {
-                    askParameter(toInstall[toInstall.length - 1],'install');
+		    wstop();
                 }
             }
             
