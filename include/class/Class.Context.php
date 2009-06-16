@@ -442,6 +442,10 @@ class Context
 	  $reqModComp = $req['comp'];
 	  
 	  $reqMod = $this->getModuleAvail($reqModName);
+	  if( $reqMod === false ) {
+	    $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+	    return false;
+	  }
 	  
 	  switch($reqModComp) {
 	  case '':
