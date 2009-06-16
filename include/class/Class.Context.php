@@ -43,14 +43,15 @@ class Context
      */
     public function activateRepo($name)
     {
+      $wiff = WIFF::getInstance();
 
         $paramsXml = new DOMDocument();
-        $paramsXml->load(WIFF::params_filepath);
+        $paramsXml->load($wiff->params_filepath);
 
         $paramsXPath = new DOMXPath($paramsXml);
 
         $contextsXml = new DOMDocument();
-        $contextsXml->load(WIFF::contexts_filepath);
+        $contextsXml->load($wiff->contexts_filepath);
 
         $contextsXPath = new DOMXPath($contextsXml);
 
@@ -96,10 +97,10 @@ class Context
 
         $repository = $contextList->item(0)->getElementsByTagName('repositories')->item(0)->appendChild($repository);
 
-        $ret = $contextsXml->save(WIFF::contexts_filepath);
+        $ret = $contextsXml->save($wiff->contexts_filepath);
         if ($ret === false)
         {
-            $this->errorMessage = sprintf("Error writing file '%s'.", WIFF::contexts_filepath);
+            $this->errorMessage = sprintf("Error writing file '%s'.", $wiff->contexts_filepath);
             return false;
         }
 
@@ -117,9 +118,10 @@ class Context
      */
     public function deactivateRepo($name)
     {
+      $wiff = WIFF::getInstance();
 
         $xml = new DOMDocument();
-        $xml->load(WIFF::contexts_filepath);
+        $xml->load($wiff->contexts_filepath);
 
         $xpath = new DOMXPath($xml);
 
@@ -128,7 +130,7 @@ class Context
         if ($contextRepoList->length == 1)
         {
             $contextRepo = $xpath->query("/contexts/context[@name='".$this->name."']/repositories")->item(0)->removeChild($contextRepoList->item(0));
-            $xml->save(WIFF::contexts_filepath);
+            $xml->save($wiff->contexts_filepath);
 
             foreach ($this->repo as $repo)
             {
@@ -180,9 +182,10 @@ class Context
      */
     public function getInstalledModuleList($withAvailableVersion = false)
     {
+      $wiff = WIFF::getInstance();
 
         $xml = new DOMDocument();
-        $xml->load(WIFF::contexts_filepath);
+        $xml->load($wiff->contexts_filepath);
 
         $xpath = new DOMXPath($xml);
 
@@ -366,8 +369,10 @@ class Context
      */
     public function getModule($name)
     {
+      $wiff = WIFF::getInstance();
+
         $xml = new DOMDocument();
-        $xml->load(WIFF::contexts_filepath);
+        $xml->load($wiff->contexts_filepath);
 
         $xpath = new DOMXPath($xml);
 
@@ -539,10 +544,12 @@ class Context
     }
 
     public function getParamByName($paramName) {
+      $wiff = WIFF::getInstance();
+
       $xml = new DOMDocument();
-      $ret = $xml->load(WIFF::contexts_filepath);
+      $ret = $xml->load($wiff->contexts_filepath);
       if( $ret === false ) {
-	$this->errorMessage = sprintf("Error opening XML file '%s'.", WIFF::contexts_filepath);
+	$this->errorMessage = sprintf("Error opening XML file '%s'.", $wiff->contexts_filepath);
 	return false;
       }
 

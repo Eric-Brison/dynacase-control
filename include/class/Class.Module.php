@@ -130,13 +130,15 @@ class Module
 	 */
 	public function setErrorStatus($newErrorStatus)
 	{
+	  $wiff = WIFF::getInstance();
+
 		$xml = new DOMDocument();
-		$xml->load(WIFF::contexts_filepath);
+		$xml->load($wiff->contexts_filepath);
 		$xpath = new DOMXPath($xml);
 		
 		$modules = $xpath->query("/contexts/context[@name = '".$this->context->name."']/modules/module[@name = '".$this->name."']");
 		$modules->item(0)->setAttribute('errorstatus',$newErrorStatus);
-		$xml->save(WIFF::contexts_filepath);
+		$xml->save($wiff->contexts_filepath);
 		
 		return true ;
 	}
@@ -169,7 +171,7 @@ class Module
 		$module = $infoXML->firstChild;
 		
 		$contextsXML = new DOMDocument();
-		$contextsXML->load(WIFF::contexts_filepath);
+		$contextsXML->load($wiff->contexts_filepath);
 		$contextsXPath = new DOMXPath($contextsXML);
 		
 		$module = $contextsXML->importNode($module,true); // Import module to contexts xml document
@@ -194,14 +196,14 @@ class Module
 		  // A corresponding module was found, so replace it
 		  error_log("Replacing existing <module> node.");
 		  if( $existingModuleNodeList->length > 1 ) {
-		    $this->errorMessage = sprintf("Found more than one <module> with name='%s' in '%s'.", $this->name, WIFF::contexts_filepath);
+		    $this->errorMessage = sprintf("Found more than one <module> with name='%s' in '%s'.", $this->name, $wiff->contexts_filepath);
 		    return false;
 		  }
 		  $existingModuleNode = $existingModuleNodeList->item(0);
 		  $modulesNode->replaceChild($module, $existingModuleNode);
 		}
 
-		$contextsXML->save(WIFF::contexts_filepath);
+		$contextsXML->save($wiff->contexts_filepath);
 
 		return $this->tmpfile;
 	}
@@ -323,10 +325,12 @@ class Module
 		  return false;
 	  }
 
+	  $wiff = WIFF::getInstance();
+
 	  $xml = new DOMDocument();
-	  $ret = $xml->load(WIFF::contexts_filepath);
+	  $ret = $xml->load($wiff->contexts_filepath);
 	  if( $ret === false ) {
-	    $this->errorMessage = sprintf("Error loading XML file '%s'.", WIFF::contexts_filepath);
+	    $this->errorMessage = sprintf("Error loading XML file '%s'.", $wiff->contexts_filepath);
 	    return false;
 	  }
 
@@ -390,12 +394,14 @@ class Module
 		  return false;
 	  }
 
+	  $wiff = WIFF::getInstance();
+
 	  $xml = new DOMDocument();
 	  $xml->preserveWhiteSpace = false;
 	  $xml->formatOutput = true;
-	  $ret = $xml->load(WIFF::contexts_filepath);
+	  $ret = $xml->load($wiff->contexts_filepath);
 	  if( $ret === false ) {
-		  $this->errorMessage = sprintf("Error loading XML file '%s'.", WIFF::contexts_filepath);
+		  $this->errorMessage = sprintf("Error loading XML file '%s'.", $wiff->contexts_filepath);
 		  return false;
 	  }
 
@@ -435,9 +441,9 @@ class Module
 	  $param->setAttribute('modulename', $this->name);
 	  $param->setAttribute('value', $parameter->value);
 
-	  $ret = $xml->save(WIFF::contexts_filepath);
+	  $ret = $xml->save($wiff->contexts_filepath);
 	  if( $ret === false ) {
-		  $this->errorMessage = sprintf("Error saving XML to '%s'.", WIFF::contexts_filepath);
+		  $this->errorMessage = sprintf("Error saving XML to '%s'.", $wiff->contexts_filepath);
 		  return false;
 	  }
 

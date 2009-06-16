@@ -473,7 +473,7 @@ if (isset($argv))
 	}
 	
 	$xml = new DOMDocument();
-	$xml->load(WIFF::contexts_filepath);
+	$xml->load($wiff->contexts_filepath);
 	
 	$xpath = new DOMXPath($xml);
 	

@@ -10,13 +10,23 @@ class WIFF
 
     const params_filepath = 'conf/params.xml';
 
+
+    public $contexts_filepath = '';
+    public $params_filepath = '';
+
     public $errorMessage = null;
 
     private static $instance;
 
     private function __construct()
     {
+      $wiff_root = getenv('WIFF_ROOT');
+      if( $wiff_root !== false ) {
+	$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+      }
 
+      $this->contexts_filepath = $wiff_root.WIFF::contexts_filepath;
+      $this->params_filepath = $wiff_root.WIFF::params_filepath;
     }
 
     public static function getInstance()
@@ -56,10 +66,10 @@ class WIFF
         $repoList = array ();
 
         $xml = new DOMDocument();
-        $xml->load(WIFF::params_filepath);
+        $xml->load($this->params_filepath);
         if ($xml === false)
         {
-            $this->errorMessage = sprintf("Error loading XML file '%s'.", WIFF::contexts_filepath);
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->contexts_filepath);
             return false;
         }
 
@@ -89,10 +99,10 @@ class WIFF
         $contextList = array ();
 
         $xml = new DOMDocument();
-        $xml->load(WIFF::contexts_filepath);
+        $xml->load($this->contexts_filepath);
         if ($xml === false)
         {
-            $this->errorMessage = sprintf("Error loading XML file '%s'.", WIFF::contexts_filepath);
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->contexts_filepath);
             return false;
         }
 
@@ -131,12 +141,11 @@ class WIFF
      */
     public function getContext($name)
     {
-
         $xml = new DOMDocument();
-        $xml->load(WIFF::contexts_filepath);
+        $xml->load($this->contexts_filepath);
         if ($xml === false)
         {
-            $this->errorMessage = sprintf("Error loading XML file '%s'.", WIFF::contexts_filepath);
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->contexts_filepath);
             return false;
         }
 
@@ -175,7 +184,6 @@ class WIFF
      */
     public function createContext($name, $root, $desc)
     {
-
         // If Context already exists, method fails.
         if ($this->getContext($name) !== false)
         {
@@ -225,7 +233,7 @@ class WIFF
         // Write contexts XML
         $xml = new DOMDocument();
         $xml->preserveWhiteSpace = false;
-        $xml->load(WIFF::contexts_filepath);
+        $xml->load($this->contexts_filepath);
         $xml->formatOutput = true;
 
         $node = $xml->createElement('context');
@@ -242,10 +250,10 @@ class WIFF
 		$context->appendChild($moduleNode);
 
         // Save XML to file
-        $ret = $xml->save(WIFF::contexts_filepath);
+        $ret = $xml->save($this->contexts_filepath);
         if ($ret === false)
         {
-            $this->errorMessage = sprintf("Error writing file '%s'.", WIFF::contexts_filepath);
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->contexts_filepath);
             return false;
         }
 
@@ -261,10 +269,10 @@ class WIFF
         $plist = array ();
 
         $xml = new DOMDocument();
-        $ret = $xml->load(WIFF::params_filepath);
+        $ret = $xml->load($this->params_filepath);
         if ($ret === false)
         {
-            $this->errorMessage = sprintf("Error loading XML file '%s'.", WIFF::params_filepath);
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
             return false;
         }
 
@@ -272,7 +280,7 @@ class WIFF
         $params = $xpath->query("/wiff/parameters/param");
         if ($params === null)
         {
-            $this->errorMessage = sprintf("Error executing XPath query '%s' on file '%s'.", "/wiff/parameters/param", WIFF::params_filepath);
+            $this->errorMessage = sprintf("Error executing XPath query '%s' on file '%s'.", "/wiff/parameters/param", $this->params_filepath);
             return false;
         }
         foreach ($params as $param)
@@ -312,10 +320,10 @@ class WIFF
     public function setParam($paramName, $paramValue)
     {
         $xml = new DOMDocument();
-        $ret = $xml->load(WIFF::params_filepath);
+        $ret = $xml->load($this->params_filepath);
         if ($ret === false)
         {
-            $this->errorMessage = sprintf("Error loading XML file '%s'.", WIFF::params_filepath);
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
             return false;
         }
 
@@ -323,7 +331,7 @@ class WIFF
         $params = $xpath->query("/wiff/parameters/param[@name='$paramName']");
         if ($params === null)
         {
-            $this->errorMessage = sprintf("Error executing XPath query '%s' on file '%s'.", "/wiff/parameters/param[@name='$paramName']", WIFF::params_filepath);
+            $this->errorMessage = sprintf("Error executing XPath query '%s' on file '%s'.", "/wiff/parameters/param[@name='$paramName']", $this->params_filepath);
             return false;
         }
         foreach ($params as $param)
@@ -331,11 +339,11 @@ class WIFF
             $param->setAttribute('value', $paramValue);
         }
 
-        $ret = $xml->save(WIFF::params_filepath);
+        $ret = $xml->save($this->params_filepath);
         if ($ret === false)
         {
             $this->errorStatus = false;
-            $this->errorMessage = sprintf("Error writing file '%s'.", WIFF::params_filepath);
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
             return false;
         }
 
