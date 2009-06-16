@@ -145,10 +145,12 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 	$context = $wiff->getContext($_REQUEST['context']);
 	
 	$dependencyList = $context->getModuleDependencies($_REQUEST['module']);
-	
-	// answer(json_encode($dependencyList));
-	answer($dependencyList);
-	
+
+	if( $dependencyList === false ) {
+	  answer(null, $context->errorMessage);
+	} else {
+	  answer($dependencyList);
+	}
 }
 
 // Request to download module to temporary dir
