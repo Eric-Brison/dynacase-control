@@ -80,7 +80,35 @@ function wcontrol_process($process) {
 
   $cmd = sprintf('( %s ) 1> "%s" 2>&1', $cmd, escapeshellcmd($tmpfile));
   error_log(sprintf("%s %s", __FUNCTION__, $cmd));
+
+  /*
+  $curdir = getcwd();
+  if( $curdir === false ) {
+    return array(
+		 'ret' => false,
+		 'output' => sprintf("Could not get current working directory.")
+		 );
+  }
+
+  $ctx_root = getenv('WIFF_CONTEXT_ROOT');
+  if( chdir($ctx_root) === false )  {
+    return array(
+		 'ret' => false,
+		 'output' => sprintf("Could not change directory to '%s'.", $ctx_root)
+		 );
+  }
+  */
+
   system($cmd, $ret);
+
+  /*
+  if( chdir($curdir) === false ) {
+    return array(
+		 'ret' => false,
+		 'output' => sprintf("Could not change directory back to '%s'.", $curdir)
+		 );
+  }
+  */
 
   $output = file_get_contents($tmpfile);
   unlink($tmpfile);
