@@ -157,7 +157,17 @@ Ext.onReady(function(){
                 getContextList: true
             },
             success: function(responseObject){
+		updateContextList_success(responseObject);    
+            },
+            failure: function(responseObject){
+		updateContextList_failure(responseObject);
+            }
             
+        });
+        
+    }
+    
+    function updateContextList_success(responseObject) {
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
                     Ext.Msg.alert('Server Error', response.error);
@@ -429,16 +439,15 @@ Ext.onReady(function(){
                         }]
                     })
                 }
-                
-            },
-            failure: function(){
-                Ext.Msg.alert('Error', 'Could not retrieve context list');
-            }
-            
-        });
-        
     }
-    
+
+    function updateContextList_failure(responseObject) {
+        Ext.Msg.alert('Error', 'Could not retrieve context list');
+    }
+
+	/**
+	 * upgrade a module
+	 */
     function upgrade(module){
         Ext.Ajax.request({
             url: 'wiff.php',
@@ -448,7 +457,15 @@ Ext.onReady(function(){
                 getModuleDependencies: true
             },
             success: function(responseObject){
-            
+		upgrade_success(module, responseObject);                
+            },
+	    failure: function(responseObject) {
+		upgrade_failure(module, responseObject);
+	    }
+        });
+    };
+	
+    function upgrade_success(module, responseObject) {
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
                     Ext.Msg.alert('Server Error', response.error);
@@ -485,11 +502,14 @@ Ext.onReady(function(){
                         }
                     }
                 });
-                
-            }
-        });
-    };
-	
+    }
+
+    function upgrade_failure(module, reponseObject) {
+    }
+
+	/**
+	 * remove a module
+	 */
 	function remove(module){
         
         Ext.Ajax.request({
@@ -501,7 +521,17 @@ Ext.onReady(function(){
                 getPhaseList: true
             },
             success: function(responseObject){
+                remove_success(module, responseObject);
+            },
+            failure: function(responseObject){
+		remove_failure(module, responseObject);
+            }
             
+        });
+
+    };
+
+    function remove_success(module, responseObject) {
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
                     Ext.Msg.alert('Server Error', response.error);
@@ -513,16 +543,15 @@ Ext.onReady(function(){
                 currentPhaseIndex = 0;
                 
                 executePhaseList();
-                
-            },
-            failure: function(){
-                Ext.Msg.alert('Error', 'Could not retrieve phase list');
-            }
-            
-        });
+    }
 
-    };
-    
+    function remove_failure(module, responseObject) {
+                Ext.Msg.alert('Error', 'Could not retrieve phase list');
+    }
+
+	/**
+	 * install a module
+	 */
     function install(module){
     
         Ext.Ajax.request({
@@ -533,10 +562,21 @@ Ext.onReady(function(){
                 getModuleDependencies: true
             },
             success: function(responseObject){
+		install_success(module, responseObject);
+            },
+	    failure: function(responseObject) {
+		install_failure(module, responseObject);
+	    }
+        });
+        
+    }
+    
+    function install_success(module, responseObject) {
             
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
                     Ext.Msg.alert('Server Error', response.error);
+		    return;
                 }
                 
                 var data = response.data;
@@ -561,11 +601,9 @@ Ext.onReady(function(){
                         switch (btn) {
                             case 'ok':
 			    if( toDownload.length > 0 ) {
-				wstop();
                                 for (var i = 0; i < toDownload.length; i++) {
                                     download(toDownload[i]);
                                 }
-				wstart();
 			    }
                                 break;
                             case 'cancel':
@@ -574,12 +612,14 @@ Ext.onReady(function(){
                         }
                     }
                 });
-                
-            }
-        });
-        
     }
-    
+
+    function install_failure(module, responseObject) {
+    }
+
+	/**
+	 * wtop
+	 */
     function wstop() {
 	Ext.Ajax.request({
 	    url: 'wiff.php',
@@ -593,6 +633,9 @@ Ext.onReady(function(){
 	});
     }
 
+	/**
+	 * wstart
+	 */
     function wstart() {
 	Ext.Ajax.request({
 	    url: 'wiff.php',
@@ -603,6 +646,9 @@ Ext.onReady(function(){
 	});
     }
 
+	/**
+	 * download a module
+	 */
     function download(module){
     
         Ext.Ajax.request({
@@ -613,16 +659,28 @@ Ext.onReady(function(){
                 download: true
             },
             success: function(responseObject){
+		download_success(module, responseObject);
+            },
+	    failure: function(responseObject) {
+		download_failure(module, responseObject);
+	    }
+        });
+        
+    }
+
+    function download_success(module, responseObject) {
                 toDownload.remove(module);
                 if (toDownload.length == 0) {
 		    wstop();
                 }
-            }
-            
-        });
-        
     }
-    
+
+    function download_failure(module, responseObject) {
+    }
+
+	/**
+	 * ask parameter
+	 */
     function askParameter(module,operation){
         
 		Ext.Ajax.request({
@@ -633,6 +691,16 @@ Ext.onReady(function(){
                 getParameterList: true
             },
             success: function(responseObject){
+                askParameter_success(module, operation, responseObject);
+            },
+            failure: function(responseObject) {
+		askParameter_failure(module, operation, responseObject);
+	    }
+        })
+        
+    }
+
+    function askParameter_success(module, operation, responseObject) {
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
                     Ext.Msg.alert('Server Error', response.error);
@@ -713,12 +781,14 @@ Ext.onReady(function(){
 					}) ;
 					
                 }
-                
-            }
-        })
-        
+    }
+
+    function askParameter_failure(module, operation, responseObject) {
     }
     
+	/**
+	 * get phase list
+	 */
     function getPhaseList(module, operation){
         
         currentModule = module;
@@ -732,6 +802,17 @@ Ext.onReady(function(){
                 getPhaseList: true
             },
             success: function(responseObject){
+                getPhaseList_success(module, responseObject);
+            },
+            failure: function(){
+		getPhaseList_failure(module, responseObject);
+            }
+            
+        });
+        
+    }
+
+    function getPhaseList_success(module, responseObject) {
             
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
@@ -744,16 +825,15 @@ Ext.onReady(function(){
                 currentPhaseIndex = 0;
                 
                 executePhaseList();
-                
-            },
-            failure: function(){
+    }
+
+    function getPhaseList_failure(module, responseObject) {
                 Ext.Msg.alert('Error', 'Could not retrieve phase list');
-            }
-            
-        });
-        
     }
     
+	/**
+	 * execute phase list
+	 */
     function executePhaseList(){
     
         var module = currentModule;
@@ -761,20 +841,20 @@ Ext.onReady(function(){
         var phase = currentPhaseList[currentPhaseIndex];
 		
         if (!phase) {
-			// Phase execution is over
-			// Proceed to next module to install
+	    // Phase execution is over
+	    // Proceed to next module to install
             installedStore[currentContext].load();
             availableStore[currentContext].load();
-			
-			// Remove last module to install
-			toInstall.remove(toInstall[toInstall.length-1]);
-			
-			// Start installing next module in list
-			if (toInstall[toInstall.length - 1]) {
-				askParameter(toInstall[toInstall.length - 1], 'install');
-			}
-
-				return;
+	    
+	    // Remove last module to install
+	    toInstall.remove(toInstall[toInstall.length-1]);
+	    
+	    // Start installing next module in list
+	    if (toInstall[toInstall.length - 1]) {
+		askParameter(toInstall[toInstall.length - 1], 'install');
+	    }
+	    
+	    return;
         }
 		
 		
