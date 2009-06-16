@@ -453,7 +453,7 @@ Ext.onReady(function(){
             url: 'wiff.php',
             params: {
                 context: currentContext,
-                module: module,
+                module: module.name,
                 getModuleDependencies: true
             },
             success: function(responseObject){
@@ -493,7 +493,7 @@ Ext.onReady(function(){
                         switch (btn) {
                             case 'ok':
                                 for (var i = 0; i < toDownload.length; i++) {
-                                    download(toDownload[i]);
+                                    download(toDownload[i], 'upgrade');
                                 }
                                 break;
                             case 'cancel':
@@ -510,7 +510,7 @@ Ext.onReady(function(){
 	/**
 	 * remove a module
 	 */
-	function remove(module){
+    function remove(module, operation){
         
         Ext.Ajax.request({
             url: 'wiff.php',
@@ -521,17 +521,17 @@ Ext.onReady(function(){
                 getPhaseList: true
             },
             success: function(responseObject){
-                remove_success(module, responseObject);
+                remove_success(module, operation, responseObject);
             },
             failure: function(responseObject){
-		remove_failure(module, responseObject);
+		remove_failure(module, operation, responseObject);
             }
             
         });
 
     };
 
-    function remove_success(module, responseObject) {
+    function remove_success(module, operation, responseObject) {
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
                     Ext.Msg.alert('Server Error', response.error);
@@ -542,10 +542,10 @@ Ext.onReady(function(){
                 currentPhaseList = data;
                 currentPhaseIndex = 0;
                 
-                executePhaseList();
+                executePhaseList(operation);
     }
 
-    function remove_failure(module, responseObject) {
+    function remove_failure(module, operation, responseObject) {
                 Ext.Msg.alert('Error', 'Could not retrieve phase list');
     }
 
@@ -602,7 +602,7 @@ Ext.onReady(function(){
                             case 'ok':
 			    if( toDownload.length > 0 ) {
                                 for (var i = 0; i < toDownload.length; i++) {
-                                    download(toDownload[i]);
+                                    download(toDownload[i], 'install');
                                 }
 			    }
                                 break;
@@ -620,7 +620,7 @@ Ext.onReady(function(){
 	/**
 	 * wtop
 	 */
-    function wstop() {
+    function wstop(operation) {
 	Ext.Ajax.request({
 	    url: 'wiff.php',
 	    params: {
@@ -628,7 +628,7 @@ Ext.onReady(function(){
 		wstop: 'yes'
 	    },
 	    callback: function(option, success, responseObject){
-                askParameter(toInstall[toInstall.length - 1],'install');
+                askParameter(toInstall[toInstall.length - 1], operation);
 	    }
 	});
     }
@@ -649,7 +649,7 @@ Ext.onReady(function(){
 	/**
 	 * download a module
 	 */
-    function download(module){
+    function download(module, operation){
     
         Ext.Ajax.request({
             url: 'wiff.php',
@@ -659,23 +659,23 @@ Ext.onReady(function(){
                 download: true
             },
             success: function(responseObject){
-		download_success(module, responseObject);
+		download_success(module, operation, responseObject);
             },
 	    failure: function(responseObject) {
-		download_failure(module, responseObject);
+		download_failure(module, operation, responseObject);
 	    }
         });
         
     }
 
-    function download_success(module, responseObject) {
+    function download_success(module, operation, responseObject) {
                 toDownload.remove(module);
                 if (toDownload.length == 0) {
-		    wstop();
+		    wstop(operation);
                 }
     }
 
-    function download_failure(module, responseObject) {
+    function download_failure(module, operation, responseObject) {
     }
 
 	/**
@@ -690,10 +690,10 @@ Ext.onReady(function(){
                 module: module.name,
                 getParameterList: true
             },
-            success: function(responseObject){
+		    success: function(responseObject){
                 askParameter_success(module, operation, responseObject);
             },
-            failure: function(responseObject) {
+		    failure: function(responseObject) {
 		askParameter_failure(module, operation, responseObject);
 	    }
         })
@@ -774,7 +774,7 @@ Ext.onReady(function(){
                 }
                 else {
 					Ext.Msg.alert('Freedom Web Installer', '<b>' + module.name + '</b> does not have parameters to define.', function(btn){
-						if(operation == 'install')
+						if(operation == 'install' || operation == 'upgrade')
 						{
 							getPhaseList(module,operation);
 						}
@@ -802,17 +802,17 @@ Ext.onReady(function(){
                 getPhaseList: true
             },
             success: function(responseObject){
-                getPhaseList_success(module, responseObject);
+                getPhaseList_success(module, operation, responseObject);
             },
-            failure: function(){
-		getPhaseList_failure(module, responseObject);
+            failure: function(responseObject){
+		getPhaseList_failure(module, operation, responseObject);
             }
             
         });
         
     }
 
-    function getPhaseList_success(module, responseObject) {
+    function getPhaseList_success(module, operation, responseObject) {
             
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
@@ -824,17 +824,17 @@ Ext.onReady(function(){
                 currentPhaseList = data;
                 currentPhaseIndex = 0;
                 
-                executePhaseList();
+                executePhaseList(operation);
     }
 
-    function getPhaseList_failure(module, responseObject) {
+    function getPhaseList_failure(module, operation, responseObject) {
                 Ext.Msg.alert('Error', 'Could not retrieve phase list');
     }
     
 	/**
 	 * execute phase list
 	 */
-    function executePhaseList(){
+    function executePhaseList(operation){
     
         var module = currentModule;
         
@@ -851,7 +851,7 @@ Ext.onReady(function(){
 	    
 	    // Start installing next module in list
 	    if (toInstall[toInstall.length - 1]) {
-		askParameter(toInstall[toInstall.length - 1], 'install');
+		askParameter(toInstall[toInstall.length - 1], operation);
 	    }
 	    
 	    return;
@@ -870,7 +870,7 @@ Ext.onReady(function(){
 							module: module.name,
 							unpack: true
 						},
-						success: function(responseObject){
+					    success: function(responseObject){
 						
 							var response = eval('(' + responseObject.responseText + ')');
 							if (response.error) {
@@ -881,7 +881,7 @@ Ext.onReady(function(){
 							
 							Ext.Msg.alert('Module Unpack', 'Module <b>' + module.name + '</b> unpacked successfully in context directory', function(btn){
 								currentPhaseIndex++;
-								executePhaseList();
+								executePhaseList(operation);
 							});
 							
 						}
@@ -899,7 +899,7 @@ Ext.onReady(function(){
 							phase: phase,
 							getProcessList: true
 						},
-						success: function(responseObject){
+					    success: function(responseObject){
 						
 							var response = eval('(' + responseObject.responseText + ')');
 							if (response.error) {
@@ -910,7 +910,7 @@ Ext.onReady(function(){
 							
 							processwin = null;
 							currentProcessList = data;
-							executeProcessList(currentModule, phase);
+						    executeProcessList(currentModule, phase, operation);
 							
 						}
 					});
@@ -920,7 +920,7 @@ Ext.onReady(function(){
         
     }
     
-    function executeProcessList(module, phase){
+    function executeProcessList(module, phase, operation){
 	
         processList = currentProcessList;
 		
@@ -948,7 +948,7 @@ Ext.onReady(function(){
 						processwin.destroy();
 						processwin = null;
 						currentPhaseIndex++;
-						executePhaseList();
+						executePhaseList(operation);
 					}
 				});
 				
@@ -961,7 +961,7 @@ Ext.onReady(function(){
 						for (var i = 0; i < processList.length; i++) {
 							processList[i].executed = false;
 						}
-						executeProcessList(module, phase);
+					    executeProcessList(module, phase, operation);
 					}
 				});
 				
@@ -1001,7 +1001,7 @@ Ext.onReady(function(){
 					process: process + '',
 					execute: true
 				},
-				success: function(responseObject){
+			    success: function(responseObject){
 				
 					var response = eval('(' + responseObject.responseText + ')');
 					
@@ -1032,7 +1032,7 @@ Ext.onReady(function(){
 					
 					if (success || optional) {
 						processList[i].executed = true;
-						executeProcessList(module, phase);
+					    executeProcessList(module, phase, operation);
 					}
 					else {
 					//Ext.Msg.alert('Error',response.error);
@@ -1049,7 +1049,7 @@ Ext.onReady(function(){
 		} else {
 			// if there is no process to execute in this phase go on to next phase.
 			currentPhaseIndex++;
-            executePhaseList();
+            executePhaseList(operation);
 		}
 		
     }
