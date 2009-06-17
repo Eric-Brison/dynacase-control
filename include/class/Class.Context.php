@@ -194,8 +194,11 @@ class Context
         $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module");
 
         foreach ($moduleDom as $module)
-        {
-            $moduleList[] = new Module($this, null, $module, true);
+	  {
+	    $mod = new Module($this, null, $module, true);
+	    if( $mod->status == 'installed' ) {
+	      $moduleList[] = $mod;
+	    }
         }
 		
 		//Process for with available version option
@@ -537,6 +540,10 @@ class Context
         {
             return false;
         }
+
+	if( $installedModule->status != 'installed' ) {
+	  return false;
+	}
 
         $cmp = $this->cmpModuleByVersionReleaseAsc($installedModule, $targetModule);
 

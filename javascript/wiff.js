@@ -642,6 +642,9 @@ Ext.onReady(function(){
 	    params: {
 		context: currentContext,
 		wstart: 'yes'
+	    },
+	    callback: function(option, success, responseObject) {
+		    // The end
 	    }
 	});
     }
@@ -841,19 +844,11 @@ Ext.onReady(function(){
         var phase = currentPhaseList[currentPhaseIndex];
 		
         if (!phase) {
-	    // Phase execution is over
-	    // Proceed to next module to install
-            installedStore[currentContext].load();
-            availableStore[currentContext].load();
-	    
 	    // Remove last module to install
 	    toInstall.remove(toInstall[toInstall.length-1]);
 	    
-	    // Start installing next module in list
-	    if (toInstall[toInstall.length - 1]) {
-		askParameter(toInstall[toInstall.length - 1], operation);
-	    }
-	    
+	    setModuleStatusInstalled(module, operation);
+
 	    return;
         }
 		
@@ -1053,5 +1048,30 @@ Ext.onReady(function(){
 		}
 		
     }
-    
+
+    function setModuleStatusInstalled(module, operation) {
+	Ext.Ajax.request({
+	    url: 'wiff.php',
+	    params: {
+		setStatus: true,
+		context: currentContext,
+		module: module.name,
+		status: 'installed',
+		errorstatus: ''
+	    },
+	    callback: function(option, success, responseObject){
+		// Start installing next module in list
+		if (toInstall[toInstall.length - 1]) {
+		    askParameter(toInstall[toInstall.length - 1], operation);
+		}
+		// Phase execution is over
+		// Proceed to next module to install
+		installedStore[currentContext].load();
+		availableStore[currentContext].load();
+
+		wstart();
+            }
+	});
+    }
+
 });

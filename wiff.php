@@ -440,6 +440,38 @@ if( isset($_REQUEST['context']) && isset($_REQUEST['wstart']) ) {
   answer(true);
 }
 
+// Set module status
+if( isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['setStatus']) && isset($_REQUEST['status']) ) {
+  $contextName = $_REQUEST['context'];
+  $moduleName = $_REQUEST['module'];
+  $status = $_REQUEST['status'];
+  $errorstatus = $_REQUEST['errorstatus'];
+
+  $context = $wiff->getContext($contextName);
+  if( $context === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $contextName), true);
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $module = $context->getModule($moduleName);
+  if( $module === false ) {
+    $anwser = new JSONAnswer(null, sprintf("Error getting module '%s' in context '%s'!", $moduleName, $contextName), true);
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $ret = $module->setStatus($status, $errorstatus);
+  if( $ret === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error setting status '%s' of module '%s' in context '%s': %s", $status, $moduleName, $contextName, $module->errorMessage));
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  answer(true);
+}
+  
+
 if (isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
 {
 	$context = $wiff->getContext($_REQUEST['context']);

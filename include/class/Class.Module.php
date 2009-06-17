@@ -23,6 +23,9 @@ class Module
 	private $context;
 	private $repository;
 
+	public $status;
+	public $errorstatus;
+
 	public $tmpfile;
 	public $tmpdir;
 
@@ -77,6 +80,7 @@ class Module
 				 'basecomponent',
 				 'src',
 				 'tmpfile',
+				 'status',
 				 'errorstatus'
 				 ) as $attrName ) {
 			$this->$attrName = $xmlNode->getAttribute($attrName);
@@ -514,6 +518,84 @@ class Module
 	  }
 	  $modules = $this->requires['modules'];
 	  return $modules;
+	}
+
+	/**
+	 * Set the status of a module
+	 */
+	public function setStatus($status, $errorstatus=null) {
+	  $wiff = WIFF::getInstance();
+
+	  $xml = new DOMDocument();
+	  $xml->preserveWhiteSpace = false;
+	  $xml->formatOutput = true;
+	  $ret = $xml->load($wiff->contexts_filepath);
+	  if( $ret === false ) {
+	    $this->errorMessage = sprintf("Error loading XML file '%s'.", $wiff->contexts_filepath);
+	    return false;
+	  }
+
+	  $xpath = new DOMXpath($xml);
+	  $moduleNodeList = $xpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->context->name, $this->name));
+	  if( $moduleNodeList->length <= 0 ){
+	    $this->errorMessage = sprintf("Could not find module '%s' in context '%s'!", $this->name, $this->context->name);
+	    return false;
+	  }
+
+	  $moduleNode = $moduleNodeList->item(0);
+
+	  $this->status = $status;
+	  $moduleNode->setAttribute('status', $status);
+	  if( $errorstatus !== null ) {
+	    $this->errorstatus = $errorstatus;
+	    $moduleNode->setAttribute('errorstatus', $errorstatus);
+	  }
+
+	  $ret = $xml->save($wiff->contexts_filepath);
+	  if( $ret === false ) {
+	    $this->errorMessage = sprintf("Error saving XML to '%s'.", $wiff->contexts_filepath);
+	    return false;
+	  }
+
+	  return $status;
+	}
+
+	/**
+	 * Delete the tmpfile associated with a module
+	 */
+	public function deleteTmpFile() {
+	  $wiff = WIFF::getInstance();
+
+	  $xml = new DOMDocument();
+	  $xml->preserveWhiteSpace = false;
+	  $xml->formatOutput = true;
+	  $ret = $xml->load($wiff->contexts_filepath);
+	  if( $ret === false ) {
+	    $this->errorMessage = sprintf("Error loading XML file '%s'.", $wiff->contexts_filepath);
+	    return false;
+	  }
+
+	  $xpath = new DOMXpath($xml);
+	  $moduleNodeList = $xpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->context->name, $this->name));
+	  if( $moduleNodeList->length <= 0 ) {
+	    $this->errorMessage = sprintf("Could not find module '%s' in context '%s'!", $this->name, $this->context->name);
+	    return false;
+	  }
+
+	  $moduleNode = $moduleNodeList->item(0);
+
+	  $tmpfile = $moduleNode->getAttribute('tmpfile');
+	  unlink($tmpfile);
+	  $moduleNode->removeAttribute('tmpfile');
+	  $this->tmpfile = false;
+
+	  $ret = $xml->save($wiff->contexts_filepath);
+	  if( $ret === false ) {
+	    $this->errorMessage = sprintf("Error saving XML to '%s'.", $wiff->contexts_filepath);
+	    return false;
+	  }
+
+	  return $tmpfile;
 	}
 
 }
