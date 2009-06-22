@@ -18,10 +18,8 @@ ini_set('max_execution_time', 3600);
 
 putenv('WIFF_ROOT='.getcwd());
 
-function __autoload($class_name)
-{
-    require_once 'class/Class.'.$class_name.'.php';
-}
+require_once('class/Class.WIFF.php');
+require_once('class/Class.JSONAnswer.php');
 
 /**
  * Format answer for javascript

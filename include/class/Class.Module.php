@@ -134,6 +134,8 @@ class Module
 	 */
 	public function setErrorStatus($newErrorStatus)
 	{
+	  require_once('class/Class.WIFF.php');
+
 	  $wiff = WIFF::getInstance();
 
 		$xml = new DOMDocument();
@@ -152,6 +154,8 @@ class Module
 	 * @return temp filename of downloaded file, or false in case of error
 	 */
 	public function download(){
+	  require_once('class/Class.WIFF.php');
+
 		$wiff = WIFF::getInstance();
 
 		if( $this->repository === null ) {
@@ -322,6 +326,9 @@ class Module
 	 * @return array of object Parameter or false in case of error
 	 */
 	public function getParameterList(){
+	  require_once('class/Class.WIFF.php');
+	  require_once('class/Class.Parameter.php');
+
 	  $plist = array();
 
 	  if( $this->context->name == null ) {
@@ -393,6 +400,8 @@ class Module
 	 * @param object Parameter
 	 */
 	public function storeParameter($parameter) {
+	  require_once('class/Class.WIFF.php');
+
 	  if( $this->context->name == null ) {
 		  $this->errorMessage = sprintf("Can't call '%s' method with null '%s'.", __FUNCTION__, 'context');
 		  return false;
@@ -483,7 +492,9 @@ class Module
 	 * @param string $name Phase name and XML tag
 	 */
 	public function getPhase($name){
-		return new Phase($name, $this->xmlNode, $this);
+	  require_once('class/Class.Phase.php');
+	  
+	  return new Phase($name, $this->xmlNode, $this);
 	}
 
 	/**
@@ -524,6 +535,8 @@ class Module
 	 * Set the status of a module
 	 */
 	public function setStatus($status, $errorstatus=null) {
+	  require_once('class/Class.WIFF.php');
+
 	  $wiff = WIFF::getInstance();
 
 	  $xml = new DOMDocument();
@@ -564,6 +577,8 @@ class Module
 	 * Delete the tmpfile associated with a module
 	 */
 	public function deleteTmpFile() {
+	  require_once('class/Class.WIFF.php');
+
 	  $wiff = WIFF::getInstance();
 
 	  $xml = new DOMDocument();

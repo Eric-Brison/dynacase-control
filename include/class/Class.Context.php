@@ -43,6 +43,9 @@ class Context
      */
     public function activateRepo($name)
     {
+      require_once('class/Class.WIFF.php');
+      require_once('class/Class.Repository.php');
+
       $wiff = WIFF::getInstance();
 
         $paramsXml = new DOMDocument();
@@ -118,6 +121,8 @@ class Context
      */
     public function deactivateRepo($name)
     {
+      require_once('class/Class.WIFF.php');
+
       $wiff = WIFF::getInstance();
 
         $xml = new DOMDocument();
@@ -182,6 +187,9 @@ class Context
      */
     public function getInstalledModuleList($withAvailableVersion = false)
     {
+      require_once('class/Class.WIFF.php');
+      require_once('class/Class.Module.php');
+
       $wiff = WIFF::getInstance();
 
         $xml = new DOMDocument();
@@ -372,6 +380,9 @@ class Context
      */
     public function getModule($name)
     {
+      require_once('class/Class.WIFF.php');
+      require_once('class/Class.Module.php');
+
       $wiff = WIFF::getInstance();
 
         $xml = new DOMDocument();
@@ -555,6 +566,8 @@ class Context
     }
 
     public function getParamByName($paramName) {
+      require_once('class/Class.WIFF.php');
+
       $wiff = WIFF::getInstance();
 
       $xml = new DOMDocument();

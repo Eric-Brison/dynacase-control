@@ -29,6 +29,8 @@ class Phase
      */
     public function getProcessList()
     {
+      require_once('class/Class.Process.php');
+
         $plist = array ();
 
         if (!in_array($this->name, array (

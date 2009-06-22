@@ -1,8 +1,6 @@
 <?php
 
-function __autoload($class_name) {
-  require_once 'class/Class.'.$class_name.'.php';
-}
+require_once('class/Class.WIFF.php');
 
 function wiff_help(&$argv) {
   echo "\n";

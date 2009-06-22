@@ -62,6 +62,7 @@ class WIFF
      */
     public function getRepoList()
     {
+      require_once('class/Class.Repository.php');
 
         $repoList = array ();
 
@@ -95,6 +96,8 @@ class WIFF
      */
     public function getContextList()
     {
+      require_once('class/Class.Repository.php');
+      require_once('class/Class.Context.php');
 
         $contextList = array ();
 
@@ -141,6 +144,9 @@ class WIFF
      */
     public function getContext($name)
     {
+      require_once('class/Class.Repository.php');
+      require_once('class/Class.Context.php');
+
         $xml = new DOMDocument();
         $xml->load($this->contexts_filepath);
         if ($xml === false)

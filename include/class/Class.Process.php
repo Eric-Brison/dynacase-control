@@ -57,7 +57,8 @@ class Process
      */
     public function execute()
     {
-        include_once ('lib/Lib.Wcontrol.php');
+      require_once('class/Class.WIFF.php');
+      require_once ('lib/Lib.Wcontrol.php');
 	
 	$wiff = WIFF::getInstance();
 	

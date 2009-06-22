@@ -36,6 +36,9 @@ class Repository
 	 */
 	public function getModuleList()
 	{
+	  require_once('class/Class.WIFF.php');
+	  require_once('class/Class.Module.php');
+
 		$wiff = WIFF::getInstance();
 		$tmpfile = $wiff->downloadUrl($this->contenturl);
 		if( $tmpfile === false ) {
