@@ -22,7 +22,7 @@ class Repository
 		$this->baseurl = $url ;
 		$this->description = $description ;
 		$this->contenturl = $this->baseurl.'/content.xml' ;
-		$this->context = context ;
+		$this->context = $context ;
 	}
 	
 	public function __set($property,$value)

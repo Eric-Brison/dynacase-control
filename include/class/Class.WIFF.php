@@ -525,6 +525,48 @@ class WIFF
         return $tmpfile;
     }
 
+    public function DOMDocumentLoadXML($DOMDocument, $xmlFile) {
+      $fh = open($xmlFile, "rw");
+      if( $fh === false ) {
+	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not open '%s'.", $xmlFile);
+	return false;
+      }
+
+      if( flock($fh, LOCK_EX) === false ) {
+	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on '%s'.", $xmlFile);
+	fclose($fh);
+	return false;
+      }
+
+      $ret = $DOMDocument->load($xmlFile);
+      
+      flock($fh, LOCK_UN);
+      fclose($fh);
+      
+      return $ret;
+    }
+
+    public function DOMDocumentSaveXML($DOMDocument, $xmlFile) {
+      $fh = open($xmlFile, "rw");
+      if( $fh === false ) {
+	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not open '%s'.", $xmlFile);
+	return false;
+      }
+
+      if( flock($fh, LOCK_EX) === false ) {
+	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on '%s'.", $xmlFile);
+	fclose($fh);
+	return false;
+      }
+
+      $ret = $DOMDocument->save($xmlFile);
+      
+      flock($fh, LOCK_UN);
+      fclose($fh);
+      
+      return $ret;
+    }
+
 }
 
 ?>

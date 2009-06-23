@@ -12,14 +12,44 @@ header('Content-type: text/html; charset=UTF-8');
 
 set_include_path(get_include_path().PATH_SEPARATOR.getcwd().DIRECTORY_SEPARATOR.'include');
 
-ini_set('error_reporting', 'E_ALL & ~E_NOTICE');
+ini_set('error_reporting', E_ALL & ~E_NOTICE);
 ini_set('display_errors', 'Off');
 ini_set('max_execution_time', 3600);
 
 putenv('WIFF_ROOT='.getcwd());
 
+checkServer();
+
 require_once('class/Class.WIFF.php');
 require_once('class/Class.JSONAnswer.php');
+
+
+/**
+ * Check for required PHP classes/functions on server
+ */
+function checkServer() {
+  $notfound = array();
+  foreach( array(
+		 'DOMDocument'
+		 ) as $class ) {
+    if( ! class_exists($class) ) {
+      array_push($notfound, sprintf("PHP class '%s' not found.", $class));
+    }
+  }
+  foreach( array(
+		 'json_encode',
+		 'json_decode'
+		 ) as $function ) {
+    if( ! function_exists($function) ) {
+      array_push($notfound, sprintf("PHP function '%s' not found.", $function));
+    }
+  }
+  if( count($notfound) > 0 ) {
+    $msg = join('\n', $notfound);
+    echo sprintf('alert("%s")', $msg);
+    exit( 1 );
+  }
+}
 
 /**
  * Format answer for javascript
@@ -77,29 +107,20 @@ if ( isset ($_REQUEST['update']))
 if ( isset ($_REQUEST['getRepoList']))
 {
     $repoList = $wiff->getRepoList();
-    if (!$wiff->errorMessage)
-    {
-        // answer(json_encode($repoList));
-        answer($repoList);
-    } else
-    {
+    if( $repoList === false ) {
         answer(null, $wiff->errorMessage);
     }
+    answer($repoList);
 }
 
 // Request to get context list
 if ( isset ($_REQUEST['getContextList']))
 {
     $contextList = $wiff->getContextList();
-	
-    if (!$wiff->errorMessage)
-    {
-        // answer(json_encode($contextList));
-        answer($contextList);
-    } else
-    {
-        answer(null, $wiff->errorMessage);
+    if( $contextList === false ) {
+      answer(null, $wiff->errorMessage);
     }
+    answer($contextList);
 }
 
 // Request to create new context
