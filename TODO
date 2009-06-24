@@ -12,3 +12,4 @@
 - Bloquer l'interface d'en dessous quand on installe/upgrade un module
 - Afficher un spinner quand il y a des requêtes en attente quand on execute les pre-install ou post-install
 - implémenter post-param
+- Call $module->deleteTmpFile() after install completed to cleanup downloaded file
