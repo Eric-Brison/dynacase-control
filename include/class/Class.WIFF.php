@@ -390,7 +390,9 @@ class WIFF
 
     public function downloadLocalFile($url)
     {
-        $tmpfile = tempnam(null, 'WIFF_downloadLocalFile');
+      require_once('lib/Lib.System.php');
+
+      $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
@@ -413,7 +415,7 @@ class WIFF
     {
         include_once ('lib/Lib.System.php');
 
-        $tmpfile = tempnam(null, 'WIFF_downloadHttpUrlWget');
+        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHttpUrlWget');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
@@ -483,7 +485,9 @@ class WIFF
 
     public function downloadHttpUrlFopen($url)
     {
-        $tmpfile = tempnam(null, 'WIFF_downloadHTtpUrlFopen');
+      require_once('lib/Lib.System.php');
+
+      $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHTtpUrlFopen');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");

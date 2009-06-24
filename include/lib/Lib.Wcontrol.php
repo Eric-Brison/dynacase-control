@@ -39,6 +39,8 @@ function wcontrol_eval_process($process)
  * @param object $process
  */
 function wcontrol_process($process) {
+  require_once('lib/Lib.System.php');
+
   $cmd = $process->getAttribute('command');
 
   if( ! preg_match('|^\s*/|', $cmd) ) {
@@ -70,7 +72,7 @@ function wcontrol_process($process) {
   $ret = proc_close($proc);
   */
 
-  $tmpfile = tempnam(null, 'wcontrol_process');
+  $tmpfile = LibSystem::tempnam(null, 'wcontrol_process');
   if( $tmpfile === false ) {
     return array(
 		 'ret' => false,

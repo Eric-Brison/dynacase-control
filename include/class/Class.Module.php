@@ -27,7 +27,6 @@ class Module
 	public $errorstatus;
 
 	public $tmpfile;
-	public $tmpdir;
 
 	public $requires;
 
@@ -274,17 +273,15 @@ class Module
 	}
 
 	/**
-	 * Remove temp files/dirs used by download/unpack/install process
+	 * Remove temp file used by download/unpack/install process
 	 * @return false in case of error
 	 */
 	public function cleanupDownload() {
 		if( is_file($this->tmpfile) ) {
 			unlink($this->tmpfile);
+			return $this->tmpfile;
 		}
-		if( is_dir($this->tmpdir) ) {
-			unlink($this->tmpdir);
-		}
-		return true;
+		return false;
 	}
 	
 	/**
