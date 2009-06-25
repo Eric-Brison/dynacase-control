@@ -281,4 +281,81 @@ function wcontrol_msg_apachemodule($process) {
   return sprintf("Checking if the Apache module '%s' is loaded", $process->getAttribute('module'));
 }
 
+/**
+ * pgversion check
+ */
+
+function wcontrol_check_pgversion($process) {
+  require_once('class/Class.WIFF.php');
+
+  $service = $process->getAttribute('service');
+  $predicate = $process->getAttribute('predicate');
+  $version = $process->getAttribute('version');
+
+  $wiff = WIFF::getInstance();
+  $service = $wiff->expandParamValue($service);
+
+  if( $service == "" ) {
+    return false;
+  }
+  if( $version == "" ) {
+    return false;
+  }
+
+  $conn = pg_connect("service='$service'");
+  if( $conn === false ) {
+    return false;
+  }
+  $res = pg_query($conn, "SHOW SERVER_VERSION");
+  if( $res === false ) {
+    pg_close($conn);
+    return false;
+  }
+  $row = pg_fetch_row($res);
+  if( $row === false ) {
+    pg_close($conn);
+    return false;
+  }
+
+  $verstr_server = join("", array_map(create_function('$v', 'return sprintf("%03d", $v);'), preg_split("/\./", $row[0])));
+  $verstr_target = join("", array_map(create_function('$v', 'return sprintf("%03d", $v);'), preg_split("/\./", $version)));
+
+  switch($predicate) {
+  case 'eq':
+    return ($verstr_server = $verstr_target)?true:false; break;
+  case 'ne':
+    return ($verstr_server != $verstr_target)?true:false; break;
+  case 'lt':
+    return ($verstr_server < $verstr_target)?true:false; break;
+ case 'le':
+    return ($verstr_server <= $verstr_target)?true:false; break;
+  case 'gt':
+    return ($verstr_server > $verstr_target)?true:false; break;
+  case 'ge':
+    return ($verstr_server >= $verstr_target)?true:false; break;
+  }
+  
+  return false;
+}
+
+function wcontrol_msg_pgversion($process) {
+  $predicate = $process->getAttribute('predicate');
+  $op = $predicate;
+  switch($predicate) {
+  case 'eq':
+    $op = "equal to"; break;
+  case 'ne':
+    $op = "not equal to"; break;
+  case 'lt':
+    $op = "less than"; break;
+  case 'le':
+    $op = "less than or equal to"; break;
+  case 'gt':
+    $op = "greater than"; break;
+  case 'ge':
+    $op = "greater or equal to"; break;
+  }
+  return sprintf("Checking if the Postgresql server version is %s '%s'", $op, $process->getAttribute('version'));
+}
+
 ?>

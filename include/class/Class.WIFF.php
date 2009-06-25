@@ -528,6 +528,28 @@ class WIFF
 
         return $tmpfile;
     }
+    
+    public function expandParam($paramName) {
+      $paramName = preg_replace('/@(\w+?)/', '\1', $paramName);
+
+      $contextName = getenv("WIFF_CONTEXT_NAME");
+      if( $contextName === false ) {
+	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."WIFF_CONTEXT_NAME env var not defined!");
+	return false;
+      }
+      $context = $wiff->getContext($contextName);
+      if( $context === false ) {
+	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get context with name '%s'.", $contextName);
+	return false;
+      }
+      $paramValue = $context->getParamByName($paramName);
+      if( $paramValue === false ) {
+	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get value for param with name '%s'.", $paramName);
+	return false;
+      }
+
+      return $paramValue;
+    }
 
     public function DOMDocumentLoadXML($DOMDocument, $xmlFile) {
       $fh = open($xmlFile, "rw");
