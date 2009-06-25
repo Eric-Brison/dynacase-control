@@ -529,7 +529,7 @@ class WIFF
         return $tmpfile;
     }
     
-    public function expandParam($paramName) {
+    public function expandParamValue($paramName) {
       $paramName = preg_replace('/@(\w+?)/', '\1', $paramName);
 
       $contextName = getenv("WIFF_CONTEXT_NAME");
@@ -537,7 +537,7 @@ class WIFF
 	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."WIFF_CONTEXT_NAME env var not defined!");
 	return false;
       }
-      $context = $wiff->getContext($contextName);
+      $context = $this->getContext($contextName);
       if( $context === false ) {
 	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get context with name '%s'.", $contextName);
 	return false;
