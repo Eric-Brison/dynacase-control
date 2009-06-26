@@ -18,34 +18,68 @@ ini_set('max_execution_time', 3600);
 
 putenv('WIFF_ROOT='.getcwd());
 
-checkServer();
+checkInitServer();
 
 require_once('class/Class.WIFF.php');
 require_once('class/Class.JSONAnswer.php');
 
-
 /**
  * Check for required PHP classes/functions on server
  */
-function checkServer() {
-  $notfound = array();
+function checkInitServer() {
+  $errors = array();
+
+  // Check for required classes
   foreach( array(
 		 'DOMDocument'
 		 ) as $class ) {
     if( ! class_exists($class) ) {
-      array_push($notfound, sprintf("PHP class '%s' not found.", $class));
+      array_push($errors, sprintf("PHP class '%s' not found.", $class));
     }
   }
+
+  // Check for required functions
   foreach( array(
 		 'json_encode',
 		 'json_decode'
 		 ) as $function ) {
     if( ! function_exists($function) ) {
-      array_push($notfound, sprintf("PHP function '%s' not found.", $function));
+      array_push($errors, sprintf("PHP function '%s' not found.", $function));
     }
   }
-  if( count($notfound) > 0 ) {
-    $msg = join('\n', $notfound);
+
+  // Initialize xml conf files
+  foreach( array(
+		 'conf/params.xml',
+		 'conf/contexts.xml'
+		 ) as $file ) {
+    if( is_file($file) ) {
+      continue;
+    }
+    if( ! is_file(sprintf("%s.template", $file)) ) {
+      array_push($errors, sprintf("Could not find '%s.template' file.", $file, $file));
+      continue;
+    }
+    $fout = fopen($file, 'x');
+    if( $fh === false ) {
+      array_push($errors, sprintf("Could not create '%s' file.", $file));
+      continue;
+    }
+    $content = @file_get_contents(sprintf("%s.template", $file));
+    if( $content === false ) {
+      array_push($errors, sprintf("Error reading content of '%s.template'.", $file));
+      continue;
+    }
+    $ret = fwrite($fout, $content);
+    if( $ret === false ) {
+      array_push($errors, sprintf("Error writing content to '%s'.", $file));
+      continue;
+    }
+    fclose($fout);
+  }
+      
+  if( count($errors) > 0 ) {
+    $msg = join('\n', $errors);
     echo sprintf('alert("%s")', $msg);
     exit( 1 );
   }
