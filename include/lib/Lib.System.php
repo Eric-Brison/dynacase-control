@@ -97,7 +97,7 @@ class LibSystem {
       $dir = null;
       foreach( array('TMP', 'TMPDIR') as $env ) {
 	$dir = getenv($env);
-	if( $dir !== false ) {
+	if( $dir !== false && is_dir($dir) && is_writable($dir) ) {
 	  break;
 	}
       }
