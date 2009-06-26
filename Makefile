@@ -1,5 +1,5 @@
 TAR_DIST_NAME=freedom-wiff
-TAR_DIST_DIR=.
+TAR_DIST_DIR=wiff-$(VERSION)-$(RELEASE)
 
 TAR_DIST_OPTS=--owner 0 --group 0
 
