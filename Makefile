@@ -24,6 +24,7 @@ dist:
 		--exclude test \
 		--exclude mk.sh \
 		--exclude $(TAR_DIST_NAME)-*-*.tar.gz \
+		--exclude $(TAR_DIST_NAME)-*-*.autoinstall.php \
 		--exclude "*~" \
 		. | tar -C tmp/$(TAR_DIST_DIR) -xf -
 	tar -C tmp -zcf $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).tar.gz $(TAR_DIST_OPTS) $(TAR_DIST_DIR)
