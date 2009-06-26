@@ -11,5 +11,50 @@
   (centraliser les accès aux XML dans Class.WIFF et mutex, ou faire des flock() quand on manipule les fichiers XML)
 - Bloquer l'interface d'en dessous quand on installe/upgrade un module
 - Afficher un spinner quand il y a des requêtes en attente quand on execute les pre-install ou post-install
+- Bloquer les boutons quand on est en entête d'évenements
 - implémenter post-param
 - Call $module->deleteTmpFile() after install completed to cleanup downloaded file
+- Check for safe_mode and low max_execution_time ini settings
+- Download modules sequentially
+- Apache config should set "AllowOverride All"
+- Fix all bash script for pathnames containing spaces
+
+Errors
+------
+
+
+- psql:/var/www/wiff/test/FDL/fdl.sql:31: WARNING:  nonstandard use of escape in a string literal
+LINE 2: returns bool as '
+                        ^
+HINT:  Use the escape string syntax for escapes, e.g., E'\r\n'.
+
+- psql:/var/www/wiff/test/FDL/fdl.sql:351: ERROR:  relation "docread" does not exist
+
+- DbObj::exec_query [syntax error at or near "("
+LINE 4: CREATE  INDEX doc_full1 on  doc1 using (fulltext);
+                                               ^]:.[CREATE  INDEX doc_initid1 on  doc1(initid);
+CREATE  INDEX doc_title1 on  doc1(title);
+CREATE unique INDEX doc_name1 on  doc1(name,revision,doctype);
+CREATE  INDEX doc_full1 on  doc1 using (fulltext);
+CREATE  INDEX doc_profid1 on  doc1(profid);
+]
+
+- 26/06/2009 17:02:57 LOG::[W] What:DbObj:doc1  : PostgreSQL Error : syntax error at or near "("
+LINE 4: CREATE  INDEX doc_full1 on  doc1 using (fulltext);
+                                               ^
+- DbObj::exec_query [syntax error at or near "("
+LINE 4: CREATE  INDEX doc_full2 on  doc2 using (fulltext);
+                                               ^]:.[CREATE  INDEX doc_initid2 on  doc2(initid);
+CREATE  INDEX doc_title2 on  doc2(title);
+CREATE unique INDEX doc_name2 on  doc2(name,revision,doctype);
+CREATE  INDEX doc_full2 on  doc2 using (fulltext);
+CREATE  INDEX doc_profid2 on  doc2(profid);
+]
+
+- 26/06/2009 17:03:12 LOG::[W] What:DbObj:docrel  : PostgreSQL Error : null value in column "sinitid" violates not-null constraint
+
+- DbObj::exec_query [syntax error at or near "and"
+LINE 1: delete from docrel where sinitid= and type = 'cv_mskid'
+                                          ^]:.[delete from docrel where sinitid= and type = 'cv_mskid']
+26/06/2009 17:03:12 LOG::[W] What:DbObj:docrel  : exec_query :delete from docrel where sinitid= and type = 'cv_mskid'
+
