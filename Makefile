@@ -29,7 +29,11 @@ dist:
 	tar -C tmp -zcf $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).tar.gz $(TAR_DIST_OPTS) $(TAR_DIST_DIR)
 	rm -Rf tmp
 
+autoinstall: dist
+	cat $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).tar.gz | php -r 'echo"<?php\n";$$fh=fopen("php://stdin","r");$$content=stream_get_contents($$fh);fclose($$fh);print"\$$content = <<<EOF\n".base64_encode($$content)."\nEOF;\n\$$proc=popen(\"tar zxf -\",\"w\");\nfwrite(\$$proc,base64_decode(\$$content));\nfclose(\$$proc);\nheader(\"Location: wiff-$(VERSION)-$(RELEASE)\");\n?>";' > $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).autoinstall.php
+
 clean:
 	find . -name "*~" -exec rm -f {} \;
 	rm -Rf tmp
 	rm -f $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).tar.gz
+	rm -f $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).autoinstall.php
