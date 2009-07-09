@@ -193,6 +193,18 @@ if ( isset ($_REQUEST['createContext']))
 }
 
 // Request to get dependency module list for a module
+if ( isset ($_REQUEST['context']))
+{
+	$context = $wiff->getContext($_REQUEST['context']);
+	
+	if( $context === false ) {
+	  answer(null, $wiff->errorMessage);
+	} else {
+	  answer($context);
+	}
+}
+
+// Request to get dependency module list for a module
 if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getModuleDependencies']))
 {
 	$context = $wiff->getContext($_REQUEST['context']);
