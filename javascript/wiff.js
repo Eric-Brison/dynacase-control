@@ -76,7 +76,7 @@ Ext.onReady(function(){
                                 Ext.getCmp('create-context-form').getForm().submit({
                                     url: 'wiff.php',
                                     success: function(form, action){
-                                        updateContextList();
+                                        updateContextList('select-last');
                                         form.reset();
                                     },
                                     failure: function(form, action){
@@ -149,7 +149,7 @@ Ext.onReady(function(){
     /**
      * Update context list
      */
-    function updateContextList(){
+    function updateContextList(select){
     
         Ext.Ajax.request({
             url: 'wiff.php',
@@ -157,7 +157,7 @@ Ext.onReady(function(){
                 getContextList: true
             },
             success: function(responseObject){
-		updateContextList_success(responseObject);    
+		updateContextList_success(responseObject,select);    
             },
             failure: function(responseObject){
 		updateContextList_failure(responseObject);
@@ -167,7 +167,7 @@ Ext.onReady(function(){
         
     }
     
-    function updateContextList_success(responseObject) {
+    function updateContextList_success(responseObject,select) {
                 var response = eval('(' + responseObject.responseText + ')');
                 if (response.error) {
                     Ext.Msg.alert('Server Error', response.error);
@@ -439,6 +439,21 @@ Ext.onReady(function(){
                         }]
                     })
                 }
+				
+				// Selection of repository to display
+				if(data.length != 0)
+				{
+					if(select == 'select-last')
+					{
+						Ext.getCmp('context-list').setActiveTab(Ext.getCmp('context-list').items.last());
+					}
+					else
+					{
+						Ext.getCmp('context-list').setActiveTab(Ext.getCmp('context-list').items.itemAt(1));
+					}
+				}
+				
+				
     }
 
     function updateContextList_failure(responseObject) {
