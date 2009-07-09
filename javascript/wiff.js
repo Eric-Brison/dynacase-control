@@ -106,12 +106,21 @@ Ext.onReady(function(){
                                 
                                 repoStore.on('load', function(){
                                 
+									// First repository is selected by default.
+									var first = true ;
+								
                                     repoStore.each(function(record){
                                     
                                         repoBoxList.push({
                                             boxLabel: record.get('description') + ' <i>(' + record.get('baseurl') + ')</i>',
-                                            name: 'repo-' + record.get('name')
+                                            name: 'repo-' + record.get('name'),
+											checked: first
                                         });
+										
+										if(first)
+										{
+											first = false ;
+										}
                                         
                                     });
                                     
