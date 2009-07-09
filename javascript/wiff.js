@@ -166,10 +166,10 @@ Ext.onReady(function(){
                 getContextList: true
             },
             success: function(responseObject){
-		updateContextList_success(responseObject,select);    
+				updateContextList_success(responseObject,select);    
             },
             failure: function(responseObject){
-		updateContextList_failure(responseObject);
+				updateContextList_failure(responseObject);
             }
             
         });
