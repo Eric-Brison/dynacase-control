@@ -1059,7 +1059,7 @@ Ext.onReady(function(){
                         iconCls: iconCls,
                         html: html,
                         border: false,
-                        style: 'padding-left:5px;padding-right:5px;padding-top:5px;padding-bottom:0px;'
+                        style: 'padding:0px;'
                     });
                     
                     processpanel.add(panel);
