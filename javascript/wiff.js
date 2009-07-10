@@ -684,6 +684,11 @@ Ext.onReady(function(){
      * download a module
      */
     function download(module, operation){
+		
+		
+		mask = new Ext.LoadMask(Ext.getBody(),{msg:'Downloading...'});
+		
+		mask.show();
     
         Ext.Ajax.request({
             url: 'wiff.php',
@@ -710,6 +715,7 @@ Ext.onReady(function(){
 		}
         else
 		{
+			mask.hide();
             wstop(operation);
         }
     }
