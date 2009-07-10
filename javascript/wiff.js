@@ -188,8 +188,6 @@ Ext.onReady(function(){
         
         for (var i = 0; i < data.length; i++)
 		{
-        
-			console.log(data[i]);
 		
 			var repositoryHtml = '<ul>';
 			for (var j = 0; j < data[i].repo.length; j++)
