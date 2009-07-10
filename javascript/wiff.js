@@ -186,8 +186,19 @@ Ext.onReady(function(){
             }
         }, panel);
         
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < data.length; i++)
+		{
         
+			console.log(data[i]);
+		
+			var repositoryHtml = '<ul>';
+			for (var j = 0; j < data[i].repo.length; j++)
+			{
+				repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + ' <i>(' + data[i].repo[j].baseurl + ')</i></li>'
+			}
+			repositoryHtml += '</ul>'
+			var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
+		
             panel.add({
                 title: data[i].name,
                 iconCls: 'x-icon-context',
@@ -207,14 +218,21 @@ Ext.onReady(function(){
                     id: data[i].name,
                     bodyStyle: 'overflow-y:auto;',
                     items: [{
+						xtype: 'form',
+						title: 'Context Information',
+						style: 'padding:10px;font-size:small;',
+						bodyStyle: 'padding:5px;',
+						html: contextInfoHtml
+					},
+					{
                         id: data[i].name + '-installed',
                         title: 'Installed',
                         columnWidth: .45,
                         layout: 'fit',
-                        style: 'padding:10px;',
+                        style: 'padding:10px;padding-top:0px;',
                         listeners: {
                             afterrender: function(panel){
-                            
+							
                                 currentContext = panel.ownerCt.title;
                                 
                                 var status = new Ext.ux.grid.RowActions({
