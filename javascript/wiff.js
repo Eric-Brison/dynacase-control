@@ -685,7 +685,6 @@ Ext.onReady(function(){
      */
     function download(module, operation){
 		
-		
 		mask = new Ext.LoadMask(Ext.getBody(),{msg:'Downloading...'});
 		
 		mask.show();
@@ -974,12 +973,13 @@ Ext.onReady(function(){
 					modal: true,
 					height: 400,
 					width: 300,
-					bbar: toolbar
+					bbar: toolbar,
+					bodyStyle: 'overflow:auto;'
                 });
                 
                 processpanel = new Ext.Panel({
                     border: false,
-                    bodyStyle: 'overflow:auto;'
+
                 });
                 
                 processwin.add(processpanel);
@@ -1063,7 +1063,7 @@ Ext.onReady(function(){
 					
                     var panel = new Ext.Panel({
                         collapsible: help || response.error,
-                        collapsed: false,
+                        collapsed: !response.error,
                         title: label,
                         iconCls: iconCls,
                         html: html,
@@ -1072,9 +1072,11 @@ Ext.onReady(function(){
                     });
                     
                     processpanel.add(panel);
-                    
-					processwin.processbutton.enable();
-					processwin.retrybutton.enable();
+                    					
+					if (process == processList[processList.length - 1] || !success) {
+						processwin.processbutton.enable();
+						processwin.retrybutton.enable();
+					}
 					
                     processwin.doLayout();
                     
