@@ -953,17 +953,21 @@ Ext.onReady(function(){
         if (processList.length != 0) {
         
             if (!processwin) {
+				
+				var toolbar = new Ext.Toolbar({});
+				
                 processwin = new Ext.Window({
                     title: 'Executing ' + phase,
                     id: 'process-window',
                     resizable: true,
-					modal: true
+					modal: true,
+					height: 400,
+					width: 300,
+					bbar: toolbar
                 });
                 
                 processpanel = new Ext.Panel({
                     border: false,
-                    height: 300,
-                    width: 300,
                     bodyStyle: 'overflow:auto;'
                 });
                 
@@ -993,14 +997,9 @@ Ext.onReady(function(){
                     }
                 });
                 
-                var toolbar = new Ext.Toolbar({});
-                
                 toolbar.add(processwin.retrybutton);
                 toolbar.add(new Ext.Toolbar.Fill());
                 toolbar.add(processwin.processbutton);
-                
-                
-                processwin.add(toolbar);
                 
             }
             
@@ -1038,10 +1037,14 @@ Ext.onReady(function(){
                     var data = response.data;
                     
                     var success = response.success;
+					
+					console.log('Process', processList[process]);
                     
                     var optional = processList[process].attributes.optional == 'yes' ? true : false;
                     
-                    var label = processList[process].label ? processList[process].label : 'Process ' + process;
+                    var label = processList[process].label ? processList[process].label :
+					processList[process].attributes.command ? 'Command ' + processList[process].attributes.command :
+					 'Process ' + process;
                     var help = (!response.success) ? processList[process].help : '';
                     
                     iconCls = success ? 'x-icon-ok' : optional ? 'x-icon-warning' : 'x-icon-ko';
