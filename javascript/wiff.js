@@ -632,9 +632,9 @@ Ext.onReady(function(){
                 switch (btn) {
                     case 'ok':
                         if (toDownload.length > 0) {
-                            for (var i = 0; i < toDownload.length; i++) {
-                                download(toDownload[i], 'install');
-                            }
+                            //for (var i = 0; i < toDownload.length; i++) {
+                                download(toDownload[0], 'install');
+                            //}
                         }
                         break;
                     case 'cancel':
@@ -704,7 +704,12 @@ Ext.onReady(function(){
     
     function download_success(module, operation, responseObject){
         toDownload.remove(module);
-        if (toDownload.length == 0) {
+		if(toDownload.length > 0)
+		{
+			download(toDownload[0],operation);
+		}
+        else
+		{
             wstop(operation);
         }
     }
@@ -1038,8 +1043,6 @@ Ext.onReady(function(){
                     
                     var success = response.success;
 					
-					console.log('Process', processList[process]);
-                    
                     var optional = processList[process].attributes.optional == 'yes' ? true : false;
                     
                     var label = processList[process].label ? processList[process].label :
