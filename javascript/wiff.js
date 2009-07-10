@@ -1063,7 +1063,7 @@ Ext.onReady(function(){
 					
                     var panel = new Ext.Panel({
                         collapsible: help || response.error,
-                        collapsed: !response.error,
+                        collapsed: success,
                         title: label,
                         iconCls: iconCls,
                         html: html,
