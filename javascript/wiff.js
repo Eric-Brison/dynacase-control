@@ -1072,8 +1072,8 @@ Ext.onReady(function(){
                     });
                     
                     processpanel.add(panel);
-                    					
-					if (process == processList[processList.length - 1] || !success) {
+					                    					
+					if (process == processList.length - 1 || (!success && !optional) ) {
 						processwin.processbutton.enable();
 						processwin.retrybutton.enable();
 					}
