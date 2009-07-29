@@ -7,7 +7,7 @@
  * PHP Script called by Web Installer asynchronous requests.
  *
  */
- 
+
 header('Content-type: text/html; charset=UTF-8');
 
 set_include_path(get_include_path().PATH_SEPARATOR.getcwd().DIRECTORY_SEPARATOR.'include');
@@ -20,69 +20,81 @@ putenv('WIFF_ROOT='.getcwd());
 
 checkInitServer();
 
-require_once('class/Class.WIFF.php');
-require_once('class/Class.JSONAnswer.php');
+require_once ('class/Class.WIFF.php');
+require_once ('class/Class.JSONAnswer.php');
 
 /**
  * Check for required PHP classes/functions on server
  */
-function checkInitServer() {
-  $errors = array();
+function checkInitServer()
+{
+    $errors = array ();
 
-  // Check for required classes
-  foreach( array(
-		 'DOMDocument'
-		 ) as $class ) {
-    if( ! class_exists($class) ) {
-      array_push($errors, sprintf("PHP class '%s' not found.", $class));
+    // Check for required classes
+    foreach ( array (
+    'DOMDocument'
+    ) as $class)
+    {
+        if (!class_exists($class))
+        {
+            array_push($errors, sprintf("PHP class '%s' not found.", $class));
+        }
     }
-  }
 
-  // Check for required functions
-  foreach( array(
-		 'json_encode',
-		 'json_decode'
-		 ) as $function ) {
-    if( ! function_exists($function) ) {
-      array_push($errors, sprintf("PHP function '%s' not found.", $function));
+    // Check for required functions
+    foreach ( array (
+    'json_encode',
+    'json_decode'
+    ) as $function)
+    {
+        if (!function_exists($function))
+        {
+            array_push($errors, sprintf("PHP function '%s' not found.", $function));
+        }
     }
-  }
 
-  // Initialize xml conf files
-  foreach( array(
-		 'conf/params.xml',
-		 'conf/contexts.xml'
-		 ) as $file ) {
-    if( is_file($file) ) {
-      continue;
+    // Initialize xml conf files
+    foreach ( array (
+    'conf/params.xml',
+    'conf/contexts.xml'
+    ) as $file)
+    {
+        if (is_file($file))
+        {
+            continue ;
+        }
+        if (!is_file(sprintf("%s.template", $file)))
+        {
+            array_push($errors, sprintf("Could not find '%s.template' file.", $file, $file));
+            continue ;
+        }
+        $fout = fopen($file, 'x');
+        if ($fh === false)
+        {
+            array_push($errors, sprintf("Could not create '%s' file.", $file));
+            continue ;
+        }
+        $content = @file_get_contents(sprintf("%s.template", $file));
+        if ($content === false)
+        {
+            array_push($errors, sprintf("Error reading content of '%s.template'.", $file));
+            continue ;
+        }
+        $ret = fwrite($fout, $content);
+        if ($ret === false)
+        {
+            array_push($errors, sprintf("Error writing content to '%s'.", $file));
+            continue ;
+        }
+        fclose($fout);
     }
-    if( ! is_file(sprintf("%s.template", $file)) ) {
-      array_push($errors, sprintf("Could not find '%s.template' file.", $file, $file));
-      continue;
+
+    if (count($errors) > 0)
+    {
+        $msg = join('\n', $errors);
+        echo sprintf('alert("%s")', $msg);
+        exit (1);
     }
-    $fout = fopen($file, 'x');
-    if( $fh === false ) {
-      array_push($errors, sprintf("Could not create '%s' file.", $file));
-      continue;
-    }
-    $content = @file_get_contents(sprintf("%s.template", $file));
-    if( $content === false ) {
-      array_push($errors, sprintf("Error reading content of '%s.template'.", $file));
-      continue;
-    }
-    $ret = fwrite($fout, $content);
-    if( $ret === false ) {
-      array_push($errors, sprintf("Error writing content to '%s'.", $file));
-      continue;
-    }
-    fclose($fout);
-  }
-      
-  if( count($errors) > 0 ) {
-    $msg = join('\n', $errors);
-    echo sprintf('alert("%s")', $msg);
-    exit( 1 );
-  }
 }
 
 /**
@@ -94,16 +106,16 @@ function checkInitServer() {
  */
 function answer($data, $error = null)
 {
-    if( $data === null )
+    if ($data === null)
     {
-      // echo "{error:'".addslashes($error)."',data:'',success:'false'}";
-      $answer = new JSONAnswer($data, $error, false);
-      echo $answer->encode();
+        // echo "{error:'".addslashes($error)."',data:'',success:'false'}";
+        $answer = new JSONAnswer($data, $error, false);
+        echo $answer->encode();
     } else
     {
-      // echo "{error:'".addslashes($error)."',data:'".addslashes($data)."',success:'true'}";
-      $answer = new JSONAnswer($data, $error, true);
-      echo $answer->encode();
+        // echo "{error:'".addslashes($error)."',data:'".addslashes($data)."',success:'true'}";
+        $answer = new JSONAnswer($data, $error, true);
+        echo $answer->encode();
     }
     exit ();
 }
@@ -141,7 +153,8 @@ if ( isset ($_REQUEST['update']))
 if ( isset ($_REQUEST['getRepoList']))
 {
     $repoList = $wiff->getRepoList();
-    if( $repoList === false ) {
+    if ($repoList === false)
+    {
         answer(null, $wiff->errorMessage);
     }
     answer($repoList);
@@ -151,8 +164,9 @@ if ( isset ($_REQUEST['getRepoList']))
 if ( isset ($_REQUEST['getContextList']))
 {
     $contextList = $wiff->getContextList();
-    if( $contextList === false ) {
-      answer(null, $wiff->errorMessage);
+    if ($contextList === false)
+    {
+        answer(null, $wiff->errorMessage);
     }
     answer($contextList);
 }
@@ -164,14 +178,14 @@ if ( isset ($_REQUEST['createContext']))
 
     if (!$wiff->errorMessage)
     {
-		
+
         $repoList = $wiff->getRepoList();
 
         foreach ($repoList as $repo)
         {
             $postcode = 'repo-'.$repo->name;
-			
-			str_replace('.','_',$postcode); // . characters in variables are replace by _ characters during POST requesting
+
+            str_replace('.', '_', $postcode); // . characters in variables are replace by _ characters during POST requesting
 
             if ( isset ($_REQUEST[$postcode]))
             {
@@ -193,49 +207,53 @@ if ( isset ($_REQUEST['createContext']))
 }
 
 // Request to get dependency module list for a module
-if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getModuleDependencies']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['modulelist']) && isset ($_REQUEST['getModuleDependencies']))
 {
-	$context = $wiff->getContext($_REQUEST['context']);
-	
-	$dependencyList = $context->getModuleDependencies($_REQUEST['module']);
+    $context = $wiff->getContext($_REQUEST['context']);
 
-	if( $dependencyList === false ) {
-	  answer(null, $context->errorMessage);
-	} else {
-	  answer($dependencyList);
-	}
+    $dependencyList = $context->getModuleDependencies($_REQUEST['modulelist']);
+
+    if ($dependencyList === false)
+    {
+        answer(null, $context->errorMessage);
+    } else
+    {
+        answer($dependencyList);
+    }
 }
 
 // Request to download module to temporary dir
-if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['download']) )
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['download']))
 {
-	$context = $wiff->getContext($_REQUEST['context']);
-	
-	$module = $context->getModuleAvail($_REQUEST['module']);
-	
-	if ($module->download())
-	{
-		answer(true);
-	} else {
-		answer(null,$module->errorMessage);
-	}
-	
+    $context = $wiff->getContext($_REQUEST['context']);
+
+    $module = $context->getModuleAvail($_REQUEST['module']);
+
+    if ($module->download())
+    {
+        answer(true);
+    } else
+    {
+        answer(null, $module->errorMessage);
+    }
+
 }
 
 // Request to unpack module in context
-if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['unpack']) )
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['unpack']))
 {
-	$context = $wiff->getContext($_REQUEST['context']);
-	
-	$module = $context->getModule($_REQUEST['module']);
-	
-	if ($module->unpack($context->root))
-	{
-		answer(true);
-	} else {
-		answer(null,$module->errorMessage);
-	}
-	
+    $context = $wiff->getContext($_REQUEST['context']);
+
+    $module = $context->getModule($_REQUEST['module']);
+
+    if ($module->unpack($context->root))
+    {
+        answer(true);
+    } else
+    {
+        answer(null, $module->errorMessage);
+    }
+
 }
 
 
@@ -347,11 +365,11 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
     $context = $wiff->getContext($_REQUEST['context']);
 
     $module = $context->getModule($_REQUEST['module']);
-	
-	if(!$module) // If no module was found in installed modules by previous method, then try to get module from available modules
-	{
-		$module = $context->getModuleAvail($_REQUEST['module']);
-	}
+
+    if (!$module) // If no module was found in installed modules by previous method, then try to get module from available modules
+    {
+        $module = $context->getModuleAvail($_REQUEST['module']);
+    }
 
     $phaseList = $module->getPhaseList($_REQUEST['operation']);
 
@@ -363,15 +381,17 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['getProcessList']))
 {
     $context = $wiff->getContext($_REQUEST['context']);
-    if( $context === false ) {
-      error_log(__FUNCTION__." ".$wiff->errorMessage);
-      answer(null, $wiff->errorMessage);
-    } 
+    if ($context === false)
+    {
+        error_log( __FUNCTION__ ." ".$wiff->errorMessage);
+        answer(null, $wiff->errorMessage);
+    }
 
     $module = $context->getModule($_REQUEST['module']);
-    if( $module === false ) {
-      error_log(__FUNCTION__." ".$context->errorMessage);
-      answer(null, $context->errorMessage);
+    if ($module === false)
+    {
+        error_log( __FUNCTION__ ." ".$context->errorMessage);
+        answer(null, $context->errorMessage);
     }
 
     $phase = $module->getPhase($_REQUEST['phase']);
@@ -384,41 +404,45 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 // Request to execute process
 if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['process']) && isset ($_REQUEST['execute']))
 {
-  $context = $wiff->getContext($_REQUEST['context']);
-  if( $context === false ) {
-    $answer = new JSONAnswer(null, sprintf("Could not get context '%s'.", $_REQUEST['context']), false);
+    $context = $wiff->getContext($_REQUEST['context']);
+    if ($context === false)
+    {
+        $answer = new JSONAnswer(null, sprintf("Could not get context '%s'.", $_REQUEST['context']), false);
+        echo $answer->encode();
+        exit (1);
+    }
+
+    $module = $context->getModule($_REQUEST['module']);
+    if ($module === false)
+    {
+        $answer = new JSONAnswer(null, sprintf("Could not get module '%s' in context '%s'.", $_REQUEST['module'], $_REQUEST['context']), false);
+        echo $answer->encode();
+        exit (1);
+    }
+
+    $phase = $module->getPhase($_REQUEST['phase']);
+    $process = $phase->getProcess(intval($_REQUEST['process']));
+    if ($process === null)
+    {
+        $answer = new JSONAnswer(null, sprintf("Could not get process '%s' for phase '%s' of module '%s' in context '%s'.", $_REQUEST['process'], $_REQUEST['phase'], $_REQUEST['module'], $_REQUEST['context']), false);
+        echo $answer->encode();
+        exit (1);
+    }
+
+    $result = $process->execute();
+
+    if ($result['ret'] === true)
+    {
+        $module->setErrorStatus('');
+        $answer = new JSONAnswer(null, $result['output'], true);
+        echo $answer->encode();
+        exit (1);
+    }
+
+    $module->setErrorStatus($phase->name);
+    $answer = new JSONAnswer(null, $result['output'], false);
     echo $answer->encode();
-    exit( 1 );
-  }
-  
-  $module = $context->getModule($_REQUEST['module']);
-  if( $module === false ) {
-    $answer = new JSONAnswer(null, sprintf("Could not get module '%s' in context '%s'.", $_REQUEST['module'], $_REQUEST['context']), false);
-    echo $answer->encode();
-    exit( 1 );
-  }
-  
-  $phase = $module->getPhase($_REQUEST['phase']);
-  $process = $phase->getProcess(intval($_REQUEST['process']));
-  if( $process === null ) {
-    $answer = new JSONAnswer(null, sprintf("Could not get process '%s' for phase '%s' of module '%s' in context '%s'.", $_REQUEST['process'], $_REQUEST['phase'], $_REQUEST['module'], $_REQUEST['context']), false);
-    echo $answer->encode();
-    exit( 1 );
-  }
-  
-  $result = $process->execute();
-  
-  if( $result['ret'] === true ) {
-    $module->setErrorStatus('');
-    $answer = new JSONAnswer(null, $result['output'], true);
-    echo $answer->encode();
-    exit( 1 );
-  }
-  
-  $module->setErrorStatus($phase->name);
-  $answer = new JSONAnswer(null, $result['output'], false);
-  echo $answer->encode();
-  exit( 1 );
+    exit (1);
 }
 
 // Request to get module parameters
@@ -427,152 +451,161 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
     $context = $wiff->getContext($_REQUEST['context']);
 
     $module = $context->getModule($_REQUEST['module']);
-	if(!$module)
-	{
-		$module = $context->getModuleAvail($_REQUEST['module']);
-	}
+    if (!$module)
+    {
+        $module = $context->getModuleAvail($_REQUEST['module']);
+    }
 
     $parameterList = $module->getParameterList();
 
-        // answer(json_encode($parameterList));
-	answer($parameterList);
+    // answer(json_encode($parameterList));
+    answer($parameterList);
 
 }
 
 // Request to save module parameters
-if (isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
 {
-	$context = $wiff->getContext($_REQUEST['context']);
-	
-	$module = $context->getModule($_REQUEST['module']);
-	if(!$module)
-	{
-		$module = $context->getModuleAvail($_REQUEST['module']);
-	}
-	
-	$parameterList = $module->getParameterList();
-	
-	foreach ($parameterList as $parameter)
-	{
-		if(isset($_REQUEST[$parameter->name]))
-		{
-			$parameter->value = $_REQUEST[$parameter->name];
-			$module->storeParameter($parameter);
-		}
-	}
-	
-	answer(true);
-	
+    $context = $wiff->getContext($_REQUEST['context']);
+
+    $module = $context->getModule($_REQUEST['module']);
+    if (!$module)
+    {
+        $module = $context->getModuleAvail($_REQUEST['module']);
+    }
+
+    $parameterList = $module->getParameterList();
+
+    foreach ($parameterList as $parameter)
+    {
+        if ( isset ($_REQUEST[$parameter->name]))
+        {
+            $parameter->value = $_REQUEST[$parameter->name];
+            $module->storeParameter($parameter);
+        }
+    }
+
+    answer(true);
+
 }
 
 // Request to run wstop in context
-if( isset($_REQUEST['context']) && isset($_REQUEST['wstop']) ) {
-  $context = $wiff->getContext($_REQUEST['context']);
-  if( $context === false ) {
-    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
-    echo $answer->encode();
-    exit( 1 );
-  }
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['wstop']))
+{
+    $context = $wiff->getContext($_REQUEST['context']);
+    if ($context === false)
+    {
+        $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
+        echo $answer->encode();
+        exit (1);
+    }
 
-  $context->wstop();
+    $context->wstop();
 
-  answer(true);
+    answer(true);
 }
 
 // Request to run wstart in context
-if( isset($_REQUEST['context']) && isset($_REQUEST['wstart']) ) {
-  $context = $wiff->getContext($_REQUEST['context']);
-  if( $context === false ) {
-    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
-    echo $answer->encode();
-    exit( 1 );
-  }
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['wstart']))
+{
+    $context = $wiff->getContext($_REQUEST['context']);
+    if ($context === false)
+    {
+        $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
+        echo $answer->encode();
+        exit (1);
+    }
 
-  $context->wstart();
+    $context->wstart();
 
-  answer(true);
+    answer(true);
 }
 
 // Set module status
-if( isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['setStatus']) && isset($_REQUEST['status']) ) {
-  $contextName = $_REQUEST['context'];
-  $moduleName = $_REQUEST['module'];
-  $status = $_REQUEST['status'];
-  $errorstatus = $_REQUEST['errorstatus'];
-
-  $context = $wiff->getContext($contextName);
-  if( $context === false ) {
-    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $contextName), true);
-    echo $answer->encode();
-    exit( 1 );
-  }
-
-  $module = $context->getModule($moduleName);
-  if( $module === false ) {
-    $anwser = new JSONAnswer(null, sprintf("Error getting module '%s' in context '%s'!", $moduleName, $contextName), true);
-    echo $answer->encode();
-    exit( 1 );
-  }
-
-  $ret = $module->setStatus($status, $errorstatus);
-  if( $ret === false ) {
-    $answer = new JSONAnswer(null, sprintf("Error setting status '%s' of module '%s' in context '%s': %s", $status, $moduleName, $contextName, $module->errorMessage));
-    echo $answer->encode();
-    exit( 1 );
-  }
-
-  answer(true);
-}
-  
-
-if (isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['setStatus']) && isset ($_REQUEST['status']))
 {
-	$context = $wiff->getContext($_REQUEST['context']);
-	
-	$module = $context->getModule($_REQUEST['module']);
-	if(!$module)
-	{
-		$module = $context->getModuleAvail($_REQUEST['module']);
-	}
-	
-	$parameterList = $module->getParameterList();
-	
-	foreach ($parameterList as $parameter)
-	{
-		if(isset($_REQUEST[$parameter->name]))
-		{
-			$parameter->value = $_REQUEST[$parameter->name];
-			$module->storeParameter($parameter);
-		}
-	}
-	
-	answer(true);
-	
+    $contextName = $_REQUEST['context'];
+    $moduleName = $_REQUEST['module'];
+    $status = $_REQUEST['status'];
+    $errorstatus = $_REQUEST['errorstatus'];
+
+    $context = $wiff->getContext($contextName);
+    if ($context === false)
+    {
+        $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $contextName), true);
+        echo $answer->encode();
+        exit (1);
+    }
+
+    $module = $context->getModule($moduleName);
+    if ($module === false)
+    {
+        $anwser = new JSONAnswer(null, sprintf("Error getting module '%s' in context '%s'!", $moduleName, $contextName), true);
+        echo $answer->encode();
+        exit (1);
+    }
+
+    $ret = $module->setStatus($status, $errorstatus);
+    if ($ret === false)
+    {
+        $answer = new JSONAnswer(null, sprintf("Error setting status '%s' of module '%s' in context '%s': %s", $status, $moduleName, $contextName, $module->errorMessage));
+        echo $answer->encode();
+        exit (1);
+    }
+
+    answer(true);
+}
+
+
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
+{
+    $context = $wiff->getContext($_REQUEST['context']);
+
+    $module = $context->getModule($_REQUEST['module']);
+    if (!$module)
+    {
+        $module = $context->getModuleAvail($_REQUEST['module']);
+    }
+
+    $parameterList = $module->getParameterList();
+
+    foreach ($parameterList as $parameter)
+    {
+        if ( isset ($_REQUEST[$parameter->name]))
+        {
+            $parameter->value = $_REQUEST[$parameter->name];
+            $module->storeParameter($parameter);
+        }
+    }
+
+    answer(true);
+
 }
 
 // Call to get a param value
-if (isset($argv))
+if ( isset ($argv))
 {
-	
-	if(stripos($argv[1],'--getValue=') === 0)
-	{
-		$paramName =  substr($argv[1], 11);
-	}
-	
-	$xml = new DOMDocument();
-	$xml->load($wiff->contexts_filepath);
-	
-	$xpath = new DOMXPath($xml);
-	
-	$parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", getenv('WIFF_CONTEXT_NAME'), $paramName))->item(0);
-	if($parameterNode)
-	{
-	$parameterValue = $parameterNode->getAttribute('value');
-	return $parameterValue ;
-	} else {
-		return false ;
-	}
-	
+
+    if (stripos($argv[1], '--getValue=') === 0)
+    {
+        $paramName = substr($argv[1], 11);
+    }
+
+    $xml = new DOMDocument();
+    $xml->load($wiff->contexts_filepath);
+
+    $xpath = new DOMXPath($xml);
+
+    $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", getenv('WIFF_CONTEXT_NAME'), $paramName))->item(0);
+    if ($parameterNode)
+    {
+        $parameterValue = $parameterNode->getAttribute('value');
+        return $parameterValue;
+    } else
+    {
+        return false;
+    }
+
 }
 
 answer(null, "Unrecognized Call");
