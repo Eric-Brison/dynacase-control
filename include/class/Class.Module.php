@@ -413,7 +413,7 @@ class Module
 					// @CONTEXT_NAME
 					if($p->$attr == "@CONTEXT_NAME")
 					{
-						$p->$attr = $this->context->name ;
+						$p->$attr = preg_replace("/[^A-Za-z0-9]/","",$this->context->name);
 					}
 					
                 }
