@@ -408,6 +408,14 @@ class Module
                 foreach ( array ('name', 'label', 'default', 'type', 'needed') as $attr)
                 {
                     $p->$attr = $param->getAttribute($attr);
+					
+					// Replace keywords
+					// @CONTEXT_NAME
+					if($p->$attr == "@CONTEXT_NAME")
+					{
+						$p->$attr = $this->context->name ;
+					}
+					
                 }
 
                 $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$p->name."' and @modulename='".$this->name."']");

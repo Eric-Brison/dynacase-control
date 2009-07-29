@@ -5,8 +5,8 @@ Ext.onReady(function(){
 
     Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
     Ext.QuickTips.init();
-
-	Ext.Ajax.timeout = 3600000 ;
+    
+    Ext.Ajax.timeout = 3600000;
     
     installedStore = {};
     availableStore = {};
@@ -31,7 +31,7 @@ Ext.onReady(function(){
                 mainItem: 0,
                 items: [{
                     title: 'Freedom <br/> Web Installer'
-                },                //				{
+                }, //				{
                 //                    title: 'Parameters',
                 //                    iconCls: 'x-icon-setup',
                 //                    tabTip: 'Set WIFF parameters',
@@ -188,17 +188,15 @@ Ext.onReady(function(){
             }
         }, panel);
         
-        for (var i = 0; i < data.length; i++)
-		{
-		
-			var repositoryHtml = '<ul>';
-			for (var j = 0; j < data[i].repo.length; j++)
-			{
-				repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + ' <i>(' + data[i].repo[j].baseurl + ')</i></li>'
-			}
-			repositoryHtml += '</ul>'
-			var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
-		
+        for (var i = 0; i < data.length; i++) {
+        
+            var repositoryHtml = '<ul>';
+            for (var j = 0; j < data[i].repo.length; j++) {
+                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + ' <i>(' + data[i].repo[j].baseurl + ')</i></li>'
+            }
+            repositoryHtml += '</ul>'
+            var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
+            
             panel.add({
                 title: data[i].name,
                 iconCls: 'x-icon-context',
@@ -218,13 +216,12 @@ Ext.onReady(function(){
                     id: data[i].name,
                     bodyStyle: 'overflow-y:auto;',
                     items: [{
-						xtype: 'form',
-						title: 'Context Information',
-						style: 'padding:10px;font-size:small;',
-						bodyStyle: 'padding:5px;',
-						html: contextInfoHtml
-					},
-					{
+                        xtype: 'form',
+                        title: 'Context Information',
+                        style: 'padding:10px;font-size:small;',
+                        bodyStyle: 'padding:5px;',
+                        html: contextInfoHtml
+                    }, {
                         id: data[i].name + '-installed',
                         title: 'Installed',
                         columnWidth: .45,
@@ -232,7 +229,7 @@ Ext.onReady(function(){
                         style: 'padding:10px;padding-top:0px;',
                         listeners: {
                             afterrender: function(panel){
-							
+                            
                                 currentContext = panel.ownerCt.title;
                                 
                                 var status = new Ext.ux.grid.RowActions({
@@ -264,7 +261,7 @@ Ext.onReady(function(){
                                 var actions = new Ext.ux.grid.RowActions({
                                     header: '',
                                     autoWidth: false,
-									width: 70,
+                                    width: 70,
                                     actions: [{
                                         iconCls: 'x-icon-update',
                                         tooltip: 'Update',
@@ -272,15 +269,15 @@ Ext.onReady(function(){
                                     }, {
                                         iconCls: 'x-icon-param',
                                         tooltip: 'Parameters',
-										hideIndex: '!hasParameter'
+                                        hideIndex: '!hasParameter'
                                     }, {
                                         iconCls: 'x-icon-help',
                                         tooltip: 'Help',
-										hideIndex: '!infopath'
-//                                    }, {
-//                                        iconCls: 'x-icon-remove',
-//                                        tooltip: 'Remove',
-//                                        hideIndex: "(name=='freedom-core')"
+                                        hideIndex: '!infopath'
+                                        //                                    }, {
+                                        //                                        iconCls: 'x-icon-remove',
+                                        //                                        tooltip: 'Remove',
+                                        //                                        hideIndex: "(name=='freedom-core')"
                                     }]
                                 });
                                 
@@ -301,10 +298,10 @@ Ext.onReady(function(){
                                             case 'x-icon-help':
                                                 var operation = 'help';
                                                 break;
-//                                            case 'x-icon-remove':
-//                                                var operation = 'uninstall';
-//                                                break;
-                                                
+                                            //                                            case 'x-icon-remove':
+                                            //                                                var operation = 'uninstall';
+                                            //                                                break;
+                                        
                                         }
                                         
                                         if (operation == 'parameter') {
@@ -313,17 +310,17 @@ Ext.onReady(function(){
                                         if (operation == 'upgrade') {
                                             upgrade([currentModule.name]);
                                         }
-										if (operation == 'help') {
-											window.open(record.get('infopath'), '_newtab');
-										}
-//                                        if (operation == 'remove') {
-//                                            remove(currentModule);
-//                                        }
-                                        
+                                        if (operation == 'help') {
+                                            window.open(record.get('infopath'), '_newtab');
+                                        }
+                                        //                                        if (operation == 'remove') {
+                                        //                                            remove(currentModule);
+                                        //                                        }
+                                    
                                     }
                                 });
-								
-								
+                                
+                                
                                 
                                 installedStore[currentContext] = new Ext.data.JsonStore({
                                     url: 'wiff.php',
@@ -335,44 +332,45 @@ Ext.onReady(function(){
                                     fields: ['name', 'version', 'availableversion', 'description', 'infopath', 'errorstatus', {
                                         name: 'canUpdate',
                                         type: 'boolean'
-                                    },{
-										name: 'hasParameter',
-										type:'boolean'
-									}],
+                                    }, {
+                                        name: 'hasParameter',
+                                        type: 'boolean'
+                                    }],
                                     autoLoad: true,
-									sortInfo: { field: 'name', direction: "ASC" }
+                                    sortInfo: {
+                                        field: 'name',
+                                        direction: "ASC"
+                                    }
                                 });
                                 
-								var selModel = new Ext.grid.CheckboxSelectionModel({
-									header: '',
-									listeners:{
-							            // prevent selection of records
-							            beforerowselect: function(selModel, rowIndex, keepExisting, record) {
-							                if ((record.get('canUpdate') != true)) {
-							                    return false;
-							                }
-							            },
-							        }
-								});
-								
+                                var selModel = new Ext.grid.CheckboxSelectionModel({
+                                    header: '',
+                                    listeners: {
+                                        // prevent selection of records
+                                        beforerowselect: function(selModel, rowIndex, keepExisting, record){
+                                            if ((record.get('canUpdate') != true)) {
+                                                return false;
+                                            }
+                                        },
+                                    }
+                                });
+                                
                                 var grid = new Ext.grid.GridPanel({
-									selModel: selModel,
-									tbar:[{
-							            text:'Upgrade Selection',
-							            tooltip:'Upgrade selected module(s)',
-							            iconCls:'x-icon-install',
-										handler: function(button,eventObject)
-										{
-											var selections = grid.getSelectionModel().getSelections();
-											var modules = [] ;
-											for(var i = 0 ; i < selections.length ; i++)
-											{
-												modules.push(selections[i].get('name'));
-											}
-											//console.log('List of modules to upgrade', modules);
-											upgrade(modules);
-										}
-							        }],
+                                    selModel: selModel,
+                                    tbar: [{
+                                        text: 'Upgrade Selection',
+                                        tooltip: 'Upgrade selected module(s)',
+                                        iconCls: 'x-icon-install',
+                                        handler: function(button, eventObject){
+                                            var selections = grid.getSelectionModel().getSelections();
+                                            var modules = [];
+                                            for (var i = 0; i < selections.length; i++) {
+                                                modules.push(selections[i].get('name'));
+                                            }
+                                            //console.log('List of modules to upgrade', modules);
+                                            upgrade(modules);
+                                        }
+                                    }],
                                     border: false,
                                     store: installedStore[currentContext],
                                     stripeRows: true,
@@ -421,14 +419,14 @@ Ext.onReady(function(){
                                 var actions = new Ext.ux.grid.RowActions({
                                     header: '',
                                     autoWidth: false,
-									width: 20,
+                                    width: 20,
                                     actions: [{
-//                                        iconCls: 'x-icon-install',
-//                                        tooltip: 'Install'
-//                                    }, {
+                                        //                                        iconCls: 'x-icon-install',
+                                        //                                        tooltip: 'Install'
+                                        //                                    }, {
                                         iconCls: 'x-icon-help',
                                         tooltip: 'Help',
-										hideIndex: '!infopath'
+                                        hideIndex: '!infopath'
                                     }]
                                 });
                                 
@@ -438,22 +436,22 @@ Ext.onReady(function(){
                                         var module = record.get('name');
                                         
                                         switch (action) {
-//                                            case 'x-icon-install':
-//                                                var operation = 'install';
-//                                                break;
+                                            //                                            case 'x-icon-install':
+                                            //                                                var operation = 'install';
+                                            //                                                break;
                                             case 'x-icon-help':
                                                 var operation = 'help';
                                                 break;
                                         }
                                         
-//                                        if (operation == 'install') {
-//                                            install([module]);
-//                                        }
+                                        //                                        if (operation == 'install') {
+                                        //                                            install([module]);
+                                        //                                        }
                                         
-										if (operation == 'help') {
-											window.open(record.get('infopath'), '_newtab');
-										}
-										
+                                        if (operation == 'help') {
+                                            window.open(record.get('infopath'), '_newtab');
+                                        }
+                                        
                                     }
                                 });
                                 
@@ -466,34 +464,35 @@ Ext.onReady(function(){
                                     root: 'data',
                                     fields: ['name', 'version', 'description', 'infopath', 'basecomponent'],
                                     autoLoad: true,
-									sortInfo: { field: 'name', direction: "ASC" }
+                                    sortInfo: {
+                                        field: 'name',
+                                        direction: "ASC"
+                                    }
                                 });
-								
-								var selModel = new Ext.grid.CheckboxSelectionModel({
-									header: ''
-								});
-																                                
+                                
+                                var selModel = new Ext.grid.CheckboxSelectionModel({
+                                    header: ''
+                                });
+                                
                                 var grid = new Ext.grid.GridPanel({
                                     border: false,
                                     store: availableStore[currentContext],
                                     stripeRows: true,
-									selModel: selModel,
-									tbar:[{
-							            text:'Install Selection',
-							            tooltip:'Install selected module(s)',
-							            iconCls:'x-icon-install',
-										handler: function(button,eventObject)
-										{
-											var selections = grid.getSelectionModel().getSelections();
-											var modules = [] ;
-											for(var i = 0 ; i < selections.length ; i++)
-											{
-												modules.push(selections[i].get('name'));
-											}
-											//console.log('List of modules to install', modules);
-											install(modules);
-										}
-							        }],
+                                    selModel: selModel,
+                                    tbar: [{
+                                        text: 'Install Selection',
+                                        tooltip: 'Install selected module(s)',
+                                        iconCls: 'x-icon-install',
+                                        handler: function(button, eventObject){
+                                            var selections = grid.getSelectionModel().getSelections();
+                                            var modules = [];
+                                            for (var i = 0; i < selections.length; i++) {
+                                                modules.push(selections[i].get('name'));
+                                            }
+                                            //console.log('List of modules to install', modules);
+                                            install(modules);
+                                        }
+                                    }],
                                     columns: [selModel, actions, {
                                         id: 'name',
                                         header: 'Module',
@@ -512,26 +511,24 @@ Ext.onReady(function(){
                                     autoHeight: true,
                                     plugins: [actions]
                                 });
-								
-								grid.getStore().on('load',function(store,records,options){
-									
-									var recs = [];
-    								grid.getStore().each(function(rec){
-								        if(rec.get('basecomponent')){
-								            recs.push(rec);
-								        }
-								    });
-							    	grid.getSelectionModel().selectRecords(recs,true);
-									
-									grid.getSelectionModel().on('rowdeselect',function(selModel, rowIndex, record)
-									{
-								    	if ((record.get('basecomponent') == 'yes'))
-										{
-											grid.getSelectionModel().selectRecords([record],true);
-								        }
-								    });
-									
-								});
+                                
+                                grid.getStore().on('load', function(store, records, options){
+                                
+                                    var recs = [];
+                                    grid.getStore().each(function(rec){
+                                        if (rec.get('basecomponent')) {
+                                            recs.push(rec);
+                                        }
+                                    });
+                                    grid.getSelectionModel().selectRecords(recs, true);
+                                    
+                                    grid.getSelectionModel().on('rowdeselect', function(selModel, rowIndex, record){
+                                        if ((record.get('basecomponent') == 'yes')) {
+                                            grid.getSelectionModel().selectRecords([record], true);
+                                        }
+                                    });
+                                    
+                                });
                                 
                                 grid.getView().emptyText = 'No available modules';
                                 
@@ -566,9 +563,11 @@ Ext.onReady(function(){
      * upgrade a module
      */
     function upgrade(modulelist){
-    	mask = new Ext.LoadMask(Ext.getBody(),{msg:'Resolving dependencies...'});
-		mask.show();
-
+        mask = new Ext.LoadMask(Ext.getBody(), {
+            msg: 'Resolving dependencies...'
+        });
+        mask.show();
+        
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
@@ -586,9 +585,9 @@ Ext.onReady(function(){
     };
     
     function upgrade_success(responseObject){
-	
-		mask.hide();
-
+    
+        mask.hide();
+        
         var response = eval('(' + responseObject.responseText + ')');
         if (response.error) {
             Ext.Msg.alert('Server Error', response.error);
@@ -628,7 +627,7 @@ Ext.onReady(function(){
     }
     
     function upgrade_failure(module, reponseObject){
-		mask.hide();
+        mask.hide();
     }
     
     /**
@@ -677,9 +676,11 @@ Ext.onReady(function(){
      * install a module
      */
     function install(modulelist){
-    	mask = new Ext.LoadMask(Ext.getBody(),{msg:'Resolving dependencies...'});
-		mask.show();
-    
+        mask = new Ext.LoadMask(Ext.getBody(), {
+            msg: 'Resolving dependencies...'
+        });
+        mask.show();
+        
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
@@ -698,9 +699,9 @@ Ext.onReady(function(){
     }
     
     function install_success(responseObject){
-	
-		mask.hide();
-
+    
+        mask.hide();
+        
         var response = eval('(' + responseObject.responseText + ')');
         if (response.error) {
             Ext.Msg.alert('Server Error', response.error);
@@ -730,8 +731,8 @@ Ext.onReady(function(){
                     case 'ok':
                         if (toDownload.length > 0) {
                             //for (var i = 0; i < toDownload.length; i++) {
-                                download(toDownload[0], 'install');
-                            //}
+                            download(toDownload[0], 'install');
+                        //}
                         }
                         break;
                     case 'cancel':
@@ -743,7 +744,7 @@ Ext.onReady(function(){
     }
     
     function install_failure(responseObject){
-		mask.hide();
+        mask.hide();
     }
     
     /**
@@ -765,7 +766,7 @@ Ext.onReady(function(){
     /**
      * wstart
      */
-    function wstart(module,operation){
+    function wstart(module, operation){
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
@@ -773,16 +774,17 @@ Ext.onReady(function(){
                 wstart: 'yes'
             },
             callback: function(option, success, responseObject){
-				
-				//Ext.Msg.alert('Freedom Web Installer','Module <b>' + module.name + '</b> installed successfully', function(){
-					// If applicable, start installing next module in list
-                	if (toInstall[toInstall.length - 1]) {
-                    	askParameter(toInstall[toInstall.length - 1], operation);
-                	} else {
-						Ext.Msg.alert('Freedom Web Installer','Install successful');
-					}
-				//})
-				
+            
+                //Ext.Msg.alert('Freedom Web Installer','Module <b>' + module.name + '</b> installed successfully', function(){
+                // If applicable, start installing next module in list
+                if (toInstall[toInstall.length - 1]) {
+                    askParameter(toInstall[toInstall.length - 1], operation);
+                }
+                else {
+                    Ext.Msg.alert('Freedom Web Installer', 'Install successful');
+                }
+                //})
+            
                 // The end
             }
         });
@@ -792,11 +794,13 @@ Ext.onReady(function(){
      * download a module
      */
     function download(module, operation){
-		
-		mask = new Ext.LoadMask(Ext.getBody(),{msg:'Downloading...'});
-		
-		mask.show();
     
+        mask = new Ext.LoadMask(Ext.getBody(), {
+            msg: 'Downloading...'
+        });
+        
+        mask.show();
+        
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
@@ -816,13 +820,11 @@ Ext.onReady(function(){
     
     function download_success(module, operation, responseObject){
         toDownload.remove(module);
-		if(toDownload.length > 0)
-		{
-			download(toDownload[0],operation);
-		}
-        else
-		{
-			mask.hide();
+        if (toDownload.length > 0) {
+            download(toDownload[0], operation);
+        }
+        else {
+            mask.hide();
             wstop(operation);
         }
     }
@@ -917,7 +919,7 @@ Ext.onReady(function(){
             var parameterWindow = new Ext.Window({
                 title: 'Parameters for ' + module.name,
                 id: 'parameter-window',
-				modal: true
+                modal: true
             });
             
             parameterWindow.add(form);
@@ -927,11 +929,11 @@ Ext.onReady(function(){
         }
         else {
             //Ext.Msg.alert('Freedom Web Installer', '<b>' + module.name + '</b> does not have parameters to define.', function(btn){
-                if (operation == 'install' || operation == 'upgrade') {
-                    getPhaseList(module, operation);
-                }
+            if (operation == 'install' || operation == 'upgrade') {
+                getPhaseList(module, operation);
+            }
             //});
-            
+        
         }
     }
     
@@ -1024,10 +1026,10 @@ Ext.onReady(function(){
                         var data = response.data;
                         
                         //Ext.Msg.alert('Module Unpack', 'Module <b>' + module.name + '</b> unpacked successfully in context directory', function(btn){
-                            currentPhaseIndex++;
-                            executePhaseList(operation);
-                        //});
-                        
+                        currentPhaseIndex++;
+                        executePhaseList(operation);
+                    //});
+                    
                     }
                 });
                 
@@ -1071,18 +1073,18 @@ Ext.onReady(function(){
         if (processList.length != 0) {
         
             if (!processwin) {
-				
-				var toolbar = new Ext.Toolbar({});
-				
+            
+                var toolbar = new Ext.Toolbar({});
+                
                 processwin = new Ext.Window({
                     title: 'Executing ' + phase + ' for ' + module.name,
                     id: 'process-window',
                     resizable: true,
-					modal: true,
-					height: 400,
-					width: 400,
-					bbar: toolbar,
-					bodyStyle: 'overflow:auto;'
+                    modal: true,
+                    height: 400,
+                    width: 400,
+                    bbar: toolbar,
+                    bodyStyle: 'overflow:auto;'
                 });
                 
                 processpanel = new Ext.Panel({
@@ -1093,7 +1095,7 @@ Ext.onReady(function(){
                 
                 processwin.processbutton = new Ext.Button({
                     text: 'Continue',
-					disabled: true,
+                    disabled: true,
                     handler: function(button, event){
                         processwin.destroy();
                         processwin = null;
@@ -1101,15 +1103,15 @@ Ext.onReady(function(){
                         executePhaseList(operation);
                     }
                 });
-				
-				processwin.statustext = new Ext.Toolbar.TextItem({
-					text: 'Processing...',
-					style: "background-image:url(javascript/lib/ext/resources/images/default/grid/loading.gif);background-repeat:no-repeat;line-height:14px;padding-left:18px;"
-				})
+                
+                processwin.statustext = new Ext.Toolbar.TextItem({
+                    text: 'Processing...',
+                    style: "background-image:url(javascript/lib/ext/resources/images/default/grid/loading.gif);background-repeat:no-repeat;line-height:14px;padding-left:18px;"
+                });
                 
                 processwin.retrybutton = new Ext.Button({
                     text: 'Retry',
-					disabled: true,
+                    disabled: true,
                     handler: function(button, event){
                         processwin.destroy();
                         processwin = null;
@@ -1119,52 +1121,50 @@ Ext.onReady(function(){
                         executeProcessList(module, phase, operation);
                     }
                 });
-				
-				processwin.ignorebutton = new Ext.Button({
+                
+                processwin.ignorebutton = new Ext.Button({
                     text: 'Ignore',
-					hidden: true,
-					disabled: true,
+                    hidden: true,
+                    disabled: true,
                     handler: function(button, event){
-						Ext.Msg.show({
-							
-							title: 'Freedom Web Installer',
-							msg: 'Incorrect process execution will cause problems in your freedom context',
-							
-							buttons: {
-								ok:'Continue',
-								cancel:'Cancel'
-							},
-							
-							fn: function(buttonId)
-							{
-								switch(buttonId)
-								{
-									case 'ok':
-										processwin.destroy();
-                        				processwin = null;
-                        				currentPhaseIndex++;
-                        				executePhaseList(operation);
-									break;
-									case 'cancel' :
-									break;
-								}
-							}
-							
-						});
+                        Ext.Msg.show({
+                        
+                            title: 'Freedom Web Installer',
+                            msg: 'Incorrect process execution will cause problems in your freedom context',
+                            
+                            buttons: {
+                                ok: 'Continue',
+                                cancel: 'Cancel'
+                            },
+                            
+                            fn: function(buttonId){
+                                switch (buttonId) {
+                                    case 'ok':
+                                        processwin.destroy();
+                                        processwin = null;
+                                        currentPhaseIndex++;
+                                        executePhaseList(operation);
+                                        break;
+                                    case 'cancel':
+                                        break;
+                                }
+                            }
+                            
+                        });
                         
                     }
                 });
                 
                 toolbar.add(processwin.retrybutton);
-				toolbar.add(new Ext.Toolbar.Fill());
-				toolbar.add(processwin.statustext);
+                toolbar.add(new Ext.Toolbar.Fill());
+                toolbar.add(processwin.statustext);
                 toolbar.add(processwin.processbutton);
-				toolbar.add(processwin.ignorebutton);
+                toolbar.add(processwin.ignorebutton);
                 
             }
             
             processwin.show();
-			
+            
             var module = module;
             
             for (var i = 0; i < processList.length; i++) {
@@ -1190,104 +1190,100 @@ Ext.onReady(function(){
                     process: process + '',
                     execute: true
                 },
-                callback: function(options,serverSuccess,responseObject){
-                			
-					if (serverSuccess) {
-					
-						var response = eval('(' + responseObject.responseText + ')');
-						
-						var data = response.data;
-						
-						var success = response.success;
-						
-						var help = (!response.success) ? processList[process].help : '';
-						
-						var html = response.error ? '<pre class="console">' + response.error + '</pre>' : '' ;
-						html += help ? '<p class="help">' + help + '</p>' : '' ;
-						
-					} else {
-						
-						var success = false;
-						
-						var help = 'Request failed : ' + responseObject.status + ' - ' + responseObject.statusText  ;
-						
-						var html = help ? '<p class="help">' + help + '</p>' : '' ;
-						
-					}
-					
+                callback: function(options, serverSuccess, responseObject){
+                
+                    if (serverSuccess) {
+                    
+                        var response = eval('(' + responseObject.responseText + ')');
+                        
+                        var data = response.data;
+                        
+                        var success = response.success;
+                        
+                        var help = (!response.success) ? processList[process].help : '';
+                        
+                        var html = response.error ? '<pre class="console">' + response.error + '</pre>' : '';
+                        html += help ? '<p class="help">' + help + '</p>' : '';
+                        
+                    }
+                    else {
+                    
+                        var success = false;
+                        
+                        var help = 'Request failed : ' + responseObject.status + ' - ' + responseObject.statusText;
+                        
+                        var html = help ? '<p class="help">' + help + '</p>' : '';
+                        
+                    }
+                    
                     var optional = processList[process].attributes.optional == 'yes' ? true : false;
-				
-					var getLabel = function(process, rank)
-					{
-						
-						var label = '' ;
-						
-						if(process.label)
-						{
-							label = process.label ;
-						}
-						else if(process.name && process.name == 'check')
-						{
-
-							label = 'Check' ;
-							
-							if (process.attributes.type)
-							{
-								if (process.attributes.type == 'syscommand') {
-									label += ' system command';
-								}
-								else if (process.attributes.type == 'phpfunction') {
-									label += ' php function';
-								}
-								else if (process.attributes.type == 'pearmodule') {
-									label += ' pear module';
-								}
-								else if (process.attributes.type == 'apachemodule') {
-									label += ' apache module';
-								}
-								
-								else {
-									label += ' ' + process.attributes.type;
-								}
-							}
-							
-							if (process.attributes.function)
-							{
-								label += ' ' + process.attributes.function;
-							}
-							
-							if (process.attributes.command)
-							{
-								label += ' ' + process.attributes.command;
-							}
-							
-							if (process.attributes.class)
-							{
-								label += ' ' + process.attributes.class;
-							}
-							
-							if (process.attributes.module)
-							{
-								label += ' ' + process.attributes.module;
-							}
-							
-						}
-						else if(process.attributes.command)
-						{
-							label = 'Command ' + process.attributes.command ;
-						}
-						else 
-						{
-							label = 'Process ' + rank ;
-						}
-							
-						return label ;
-					}					
-					
-                    var label = getLabel(processList[process],process);
+                    
+                    var getLabel = function(process, rank){
+                    
+                        var label = '';
+                        
+                        if (process.label) {
+                            label = process.label;
+                        }
+                        else 
+                            if (process.name && process.name == 'check') {
+                            
+                                label = 'Check';
+                                
+                                if (process.attributes.type) {
+                                    if (process.attributes.type == 'syscommand') {
+                                        label += ' system command';
+                                    }
+                                    else 
+                                        if (process.attributes.type == 'phpfunction') {
+                                            label += ' php function';
+                                        }
+                                        else 
+                                            if (process.attributes.type == 'pearmodule') {
+                                                label += ' pear module';
+                                            }
+                                            else 
+                                                if (process.attributes.type == 'apachemodule') {
+                                                    label += ' apache module';
+                                                }
+                                                
+                                                else {
+                                                    label += ' ' + process.attributes.type;
+                                                }
+                                }
+                                
+                                if (process.attributes.function) {
+                                    label += ' ' + process.attributes.function;
+                                }
+                                
+                                if (process.attributes.command) {
+                                    label += ' ' + process.attributes.command;
+                                }
+                                
+                                if (process.attributes.class) {
+                                    label += ' ' + process.attributes.class;
+                                }
+                                
+                                if (process.attributes.module) {
+                                    label += ' ' + process.attributes.module;
+                                }
+                                
+                            }
+                            else 
+                                if (process.attributes.command) {
+                                    label = 'Command ' + process.attributes.command;
+                                }
+                                else {
+                                    label = 'Process ' + rank;
+                                }
+                        
+                        return label;
+                    }
+                    
+                    var label = getLabel(processList[process], process);
                     
                     iconCls = success ? 'x-icon-ok' : optional ? 'x-icon-warning' : 'x-icon-ko';
-                    					
+                    
                     var panel = new Ext.Panel({
                         collapsible: help || response.error,
                         collapsed: success,
@@ -1299,28 +1295,28 @@ Ext.onReady(function(){
                     });
                     
                     processpanel.add(panel);
-					
-					if (process == processList.length - 1 || (!success && !optional)) {
-						processwin.processbutton.hide();
-						processwin.retrybutton.enable();
-						processwin.statustext.hide();
-						processwin.ignorebutton.enable();
-						processwin.ignorebutton.show();
-					}
-					                    					
-					if (process == processList.length - 1 && (success || optional) ) {
-						processwin.processbutton.show();
-						processwin.processbutton.enable();
-						processwin.ignorebutton.disable();
-						processwin.ignorebutton.hide();
-						processwin.statustext.hide();
-					}
-					
+                    
+                    if (process == processList.length - 1 || (!success && !optional)) {
+                        processwin.processbutton.hide();
+                        processwin.retrybutton.enable();
+                        processwin.statustext.hide();
+                        processwin.ignorebutton.enable();
+                        processwin.ignorebutton.show();
+                    }
+                    
+                    if (process == processList.length - 1 && (success || optional)) {
+                        processwin.processbutton.show();
+                        processwin.processbutton.enable();
+                        processwin.ignorebutton.disable();
+                        processwin.ignorebutton.hide();
+                        processwin.statustext.hide();
+                    }
+                    
                     processwin.doLayout();
-					
-					var div = processwin.body.dom;
-					div.scrollTop = div.scrollHeight;
-					
+                    
+                    var div = processwin.body.dom;
+                    div.scrollTop = div.scrollHeight;
+                    
                     if (success || optional) {
                         processList[i].executed = true;
                         executeProcessList(module, phase, operation);
@@ -1330,11 +1326,11 @@ Ext.onReady(function(){
                     }
                     
                 }
-//                failure: function(){
-//                    Ext.Msg.alert('Error', 'Server side error when executing a process.');
-//                }
-                
-                
+                //                failure: function(){
+                //                    Ext.Msg.alert('Error', 'Server side error when executing a process.');
+                //                }
+            
+            
             });
             
         }
@@ -1357,13 +1353,13 @@ Ext.onReady(function(){
                 errorstatus: ''
             },
             callback: function(option, success, responseObject){
-				
-				// Phase execution is over
+            
+                // Phase execution is over
                 // Proceed to next module to install
                 installedStore[currentContext].load();
                 availableStore[currentContext].load();
-				
-                wstart(module,operation);
+                
+                wstart(module, operation);
             }
         });
     }
