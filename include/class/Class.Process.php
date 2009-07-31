@@ -16,6 +16,8 @@ class Process
     private $type;
 
     private $phase;
+	
+	public $errorMessage;
 
     public function __construct($xmlStr = "", $phase)
     {
@@ -47,8 +49,8 @@ class Process
         $this->help = $node->getElementsByTagName('help')->item(0)->nodeValue;
 
         return;
+		
     }
-
 
     /**
      * Execute process
@@ -84,16 +86,5 @@ class Process
         return "";
     }
 
-    /**
-     * Get error message
-     * @return string error message or boolean false
-     */
-    public function getErrorMessage()
-    {
-
-    }
-
-
 }
-
 ?>
