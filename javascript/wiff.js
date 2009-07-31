@@ -76,10 +76,17 @@ Ext.onReady(function(){
                                     success: function(form, action){
                                         updateContextList('select-last');
                                         form.reset();
+										var panel = Ext.getCmp('create-context-form');
+										panel.fireEvent('render',panel);
                                     },
                                     failure: function(form, action){
-                                        Ext.Msg.alert('Failure', action.result.error);
-                                    },
+										if(action && action.result)
+										{
+                                        	Ext.Msg.alert('Failure', action.result.error);
+                                    	} else {
+											Ext.Msg.alert('Failure', 'Select at least one repository.');
+										}
+									},
                                     params: {
                                         createContext: true
                                     },
@@ -89,7 +96,7 @@ Ext.onReady(function(){
                         }],
                         listeners: {
                             render: function(panel){
-                            
+								
                                 repoStore = new Ext.data.JsonStore({
                                     url: 'wiff.php',
                                     baseParams: {
@@ -121,13 +128,17 @@ Ext.onReady(function(){
                                         
                                     });
                                     
-                                    var checkBoxGroup = new Ext.form.CheckboxGroup({
+									panel.remove(panel.checkBoxGroup);
+									
+                                    panel.checkBoxGroup = new Ext.form.CheckboxGroup({
                                         fieldLabel: 'Repositories',
+										allowBlank: false,
+										blankText: "You must select at least one repository.",
                                         columns: 1,
                                         items: repoBoxList
                                     });
                                     
-                                    panel.add(checkBoxGroup);
+                                    panel.checkBoxGroup = panel.add(panel.checkBoxGroup);
                                     panel.doLayout();
                                     
                                 });
@@ -1294,7 +1305,7 @@ Ext.onReady(function(){
                         style: 'padding:0px;'
                     });
                     
-                    processpanel.add(panel);
+                    processpanel.insert(0,panel);
                     
                     if (process == processList.length - 1 || (!success && !optional)) {
                         processwin.processbutton.hide();
@@ -1314,8 +1325,9 @@ Ext.onReady(function(){
                     
                     processwin.doLayout();
                     
-                    var div = processwin.body.dom;
-                    div.scrollTop = div.scrollHeight;
+					// Autoscroll down.
+//                    var div = processwin.body.dom;
+//                    div.scrollTop = div.scrollHeight;
                     
                     if (success || optional) {
                         processList[i].executed = true;
