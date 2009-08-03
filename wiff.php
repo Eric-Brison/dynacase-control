@@ -23,6 +23,25 @@ checkInitServer();
 require_once ('class/Class.WIFF.php');
 require_once ('class/Class.JSONAnswer.php');
 
+// Disabling magic quotes at runtime
+// http://fr3.php.net/manual/en/security.magicquotes.disabling.php
+if (get_magic_quotes_gpc()) {
+    function stripslashes_deep($value)
+    {
+        $value = is_array($value) ?
+                    array_map('stripslashes_deep', $value) :
+                    stripslashes($value);
+
+        return $value;
+    }
+
+    $_POST = array_map('stripslashes_deep', $_POST);
+    $_GET = array_map('stripslashes_deep', $_GET);
+    $_COOKIE = array_map('stripslashes_deep', $_COOKIE);
+    $_REQUEST = array_map('stripslashes_deep', $_REQUEST);
+}
+
+
 /**
  * Check for required PHP classes/functions on server
  */
@@ -176,9 +195,10 @@ if ( isset ($_REQUEST['createContext']))
 {
     $context = $wiff->createContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc']);
 
+
+
     if (!$wiff->errorMessage)
     {
-
         $repoList = $wiff->getRepoList();
 
         foreach ($repoList as $repo)

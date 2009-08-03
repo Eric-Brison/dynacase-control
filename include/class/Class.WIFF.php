@@ -20,13 +20,14 @@ class WIFF
 
     private function __construct()
     {
-      $wiff_root = getenv('WIFF_ROOT');
-      if( $wiff_root !== false ) {
-	$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
-      }
+        $wiff_root = getenv('WIFF_ROOT');
+        if ($wiff_root !== false)
+        {
+            $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+        }
 
-      $this->contexts_filepath = $wiff_root.WIFF::contexts_filepath;
-      $this->params_filepath = $wiff_root.WIFF::params_filepath;
+        $this->contexts_filepath = $wiff_root.WIFF::contexts_filepath;
+        $this->params_filepath = $wiff_root.WIFF::params_filepath;
     }
 
     public static function getInstance()
@@ -62,7 +63,7 @@ class WIFF
      */
     public function getRepoList()
     {
-      require_once('class/Class.Repository.php');
+        require_once ('class/Class.Repository.php');
 
         $repoList = array ();
 
@@ -96,8 +97,8 @@ class WIFF
      */
     public function getContextList()
     {
-      require_once('class/Class.Repository.php');
-      require_once('class/Class.Context.php');
+        require_once ('class/Class.Repository.php');
+        require_once ('class/Class.Context.php');
 
         $contextList = array ();
 
@@ -144,8 +145,8 @@ class WIFF
      */
     public function getContext($name)
     {
-      require_once('class/Class.Repository.php');
-      require_once('class/Class.Context.php');
+        require_once ('class/Class.Repository.php');
+        require_once ('class/Class.Context.php');
 
         $xml = new DOMDocument();
         $xml->load($this->contexts_filepath);
@@ -195,6 +196,8 @@ class WIFF
         {
             $this->errorMessage = sprintf("Context '%s' already exists.", $name);
             return false;
+        } else {
+        	$this->errorMessage = null ;
         }
 
         // Create or reuse directory
@@ -226,15 +229,17 @@ class WIFF
             }
         }
 
-	// Get absolute pathname if directory is not already in absolute form
-	if( ! preg_match('|^/|', $root) ) {
-	  $abs_root = realpath($root);
-	  if( $abs_root === false ) {
-	    $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $root);
-	    return false;
-	  }
-	  $root = $abs_root;
-	}
+        // Get absolute pathname if directory is not already in absolute form
+        if (!preg_match('|^/|', $root))
+        {
+            $abs_root = realpath($root);
+            if ($abs_root === false)
+            {
+                $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $root);
+                return false;
+            }
+            $root = $abs_root;
+        }
 
         // Write contexts XML
         $xml = new DOMDocument();
@@ -250,10 +255,11 @@ class WIFF
         $context->setAttribute('root', $root);
 
         $descriptionNode = $xml->createElement('description', $desc);
+
         $context->appendChild($descriptionNode);
-		
-		$moduleNode = $xml->createElement('modules');
-		$context->appendChild($moduleNode);
+
+        $moduleNode = $xml->createElement('modules');
+        $context->appendChild($moduleNode);
 
         // Save XML to file
         $ret = $xml->save($this->contexts_filepath);
@@ -390,9 +396,9 @@ class WIFF
 
     public function downloadLocalFile($url)
     {
-      require_once('lib/Lib.System.php');
+        require_once ('lib/Lib.System.php');
 
-      $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
+        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
@@ -485,9 +491,9 @@ class WIFF
 
     public function downloadHttpUrlFopen($url)
     {
-      require_once('lib/Lib.System.php');
+        require_once ('lib/Lib.System.php');
 
-      $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHTtpUrlFopen');
+        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHTtpUrlFopen');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
@@ -528,69 +534,79 @@ class WIFF
 
         return $tmpfile;
     }
-    
-    public function expandParamValue($paramName) {
-      $paramName = preg_replace('/@(\w+?)/', '\1', $paramName);
 
-      $contextName = getenv("WIFF_CONTEXT_NAME");
-      if( $contextName === false ) {
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."WIFF_CONTEXT_NAME env var not defined!");
-	return false;
-      }
-      $context = $this->getContext($contextName);
-      if( $context === false ) {
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get context with name '%s'.", $contextName);
-	return false;
-      }
-      $paramValue = $context->getParamByName($paramName);
-      if( $paramValue === false ) {
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get value for param with name '%s'.", $paramName);
-	return false;
-      }
+    public function expandParamValue($paramName)
+    {
+        $paramName = preg_replace('/@(\w+?)/', '\1', $paramName);
 
-      return $paramValue;
+        $contextName = getenv("WIFF_CONTEXT_NAME");
+        if ($contextName === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."WIFF_CONTEXT_NAME env var not defined!");
+            return false;
+        }
+        $context = $this->getContext($contextName);
+        if ($context === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Could not get context with name '%s'.", $contextName);
+            return false;
+        }
+        $paramValue = $context->getParamByName($paramName);
+        if ($paramValue === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Could not get value for param with name '%s'.", $paramName);
+            return false;
+        }
+
+        return $paramValue;
     }
 
-    public function DOMDocumentLoadXML($DOMDocument, $xmlFile) {
-      $fh = open($xmlFile, "rw");
-      if( $fh === false ) {
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not open '%s'.", $xmlFile);
-	return false;
-      }
+    public function DOMDocumentLoadXML($DOMDocument, $xmlFile)
+    {
+        $fh = open($xmlFile, "rw");
+        if ($fh === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Could not open '%s'.", $xmlFile);
+            return false;
+        }
 
-      if( flock($fh, LOCK_EX) === false ) {
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on '%s'.", $xmlFile);
-	fclose($fh);
-	return false;
-      }
+        if (flock($fh, LOCK_EX) === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Could not get lock on '%s'.", $xmlFile);
+            fclose($fh);
+            return false;
+        }
 
-      $ret = $DOMDocument->load($xmlFile);
-      
-      flock($fh, LOCK_UN);
-      fclose($fh);
-      
-      return $ret;
+        $ret = $DOMDocument->load($xmlFile);
+
+        flock($fh, LOCK_UN);
+        fclose($fh);
+
+        return $ret;
     }
 
-    public function DOMDocumentSaveXML($DOMDocument, $xmlFile) {
-      $fh = open($xmlFile, "rw");
-      if( $fh === false ) {
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not open '%s'.", $xmlFile);
-	return false;
-      }
+    public function DOMDocumentSaveXML($DOMDocument, $xmlFile)
+    {
+        $fh = open($xmlFile, "rw");
+        if ($fh === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Could not open '%s'.", $xmlFile);
+            return false;
+        }
 
-      if( flock($fh, LOCK_EX) === false ) {
-	$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on '%s'.", $xmlFile);
-	fclose($fh);
-	return false;
-      }
+        if (flock($fh, LOCK_EX) === false)
+        {
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Could not get lock on '%s'.", $xmlFile);
+            fclose($fh);
+            return false;
+        }
 
-      $ret = $DOMDocument->save($xmlFile);
-      
-      flock($fh, LOCK_UN);
-      fclose($fh);
-      
-      return $ret;
+        $ret = $DOMDocument->save($xmlFile);
+
+        flock($fh, LOCK_UN);
+        fclose($fh);
+
+        return $ret;
     }
 
 }

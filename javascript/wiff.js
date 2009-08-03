@@ -190,7 +190,7 @@ Ext.onReady(function(){
             Ext.Msg.alert('Server Error', response.error);
         }
         var data = response.data;
-        
+		
         var panel = Ext.getCmp('context-list');
         
         panel.items.each(function(item, index, len){
@@ -726,7 +726,7 @@ Ext.onReady(function(){
         
         htmlModuleList = '<ul>';
         for (var i = 0; i < toDownload.length; i++) {
-            htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(Version ' + toDownload[i].version + ' )</i></li>';
+            htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(' + toDownload[i].version + ')</i></li>';
         }
         htmlModuleList = htmlModuleList + '</ul>';
         
