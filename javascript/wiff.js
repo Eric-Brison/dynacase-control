@@ -1154,6 +1154,7 @@ Ext.onReady(function(){
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
+						processpanel[module.name].parambutton.disable();
                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                         processList[process].executed = true;
                         executeProcessList(module, phase, operation);
@@ -1169,15 +1170,11 @@ Ext.onReady(function(){
                     text: 'Retry',
                     disabled: true,
                     handler: function(button, event){
-                        //processpanel[module.name].destroy();
-                        //processpanel[module.name] = null;
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
+						processpanel[module.name].parambutton.disable();
                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
-                        //                        for (var i = 0; i < processList.length; i++) {
-                        //                            processList[i].executed = false;
-                        //                        }
                         executeProcessList(module, phase, operation);
                     }
                 });
@@ -1200,9 +1197,6 @@ Ext.onReady(function(){
                             fn: function(buttonId){
                                 switch (buttonId) {
                                     case 'ok':
-                                        //processpanel.destroy();
-                                        //processpanel = null;
-                                        
                                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                                         processList[process].executed = true;
                                         executeProcessList(module, phase, operation);
@@ -1216,8 +1210,17 @@ Ext.onReady(function(){
                         
                     }
                 });
+				
+				processpanel[module.name].parambutton = new Ext.Button({
+                    text: 'Parameters',
+                    disabled: true,
+                    handler: function(button, event){
+                        askParameter(module,operation);
+                    }
+                });
                 
                 toolbar.add(processpanel[module.name].retrybutton);
+				toolbar.add(processpanel[module.name].parambutton);
                 toolbar.add(new Ext.Toolbar.Fill());
                 toolbar.add(processpanel[module.name].statustext);
                 toolbar.add(processpanel[module.name].processbutton);
@@ -1396,6 +1399,7 @@ Ext.onReady(function(){
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
+						processpanel[module.name].parambutton.disable();
                         
                         currentPhaseIndex++;
                         executePhaseList(operation);
@@ -1414,6 +1418,8 @@ Ext.onReady(function(){
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
+						processpanel[module.name].parambutton.show()
+						processpanel[module.name].parambutton.enable();
                         processpanel[module.name].statustext.hide();
                         processpanel[module.name].ignorebutton.enable();
                         processpanel[module.name].ignorebutton.show();
@@ -1423,6 +1429,8 @@ Ext.onReady(function(){
                     if (!success && optional) {
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
+						processpanel[module.name].parambutton.show()
+						processpanel[module.name].parambutton.enable();
                         processpanel[module.name].processbutton.show();
                         processpanel[module.name].processbutton.enable();
                         processpanel[module.name].ignorebutton.disable();
