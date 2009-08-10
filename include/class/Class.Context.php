@@ -224,6 +224,7 @@ class Context
                     if ($availableModule->name == $module->name)
                     {
                         $module->availableversion = $availableModule->version;
+						$module->availableversionrelease = $availableModule->version . '-' . $availableModule->release;
                         $cmp = $this->cmpModuleByVersionReleaseAsc($module, $availableModule);
                         if ($cmp < 0)
                         {

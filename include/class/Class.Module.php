@@ -11,12 +11,14 @@ class Module
     public $name;
     public $version;
     public $release;
+	public $versionrelease;
     public $author;
     public $license;
     public $basecomponent;
     public $src;
 
     public $availableversion;
+	public $availableversionrelease;
 
     public $description;
 	
@@ -99,6 +101,9 @@ class Module
         {
             $this->$attrName = $xmlNode->getAttribute($attrName);
         }
+		$this->versionrelease = $this->version . '-' . $this->release ;
+		
+		
         // Load xmlNode <description> elements
         $descriptionNodeList = $xmlNode->getElementsByTagName('description');
         if ($descriptionNodeList->length > 0)

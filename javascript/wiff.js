@@ -44,7 +44,7 @@ Ext.onReady(function(){
                     iconCls: 'x-icon-create',
                     tabTip: 'Create new context',
                     style: 'padding:10px',
-					layout: 'column',
+                    layout: 'column',
                     items: [{
                         xtype: 'form',
                         id: 'create-context-form',
@@ -341,7 +341,7 @@ Ext.onReady(function(){
                                         getInstalledModuleList: true
                                     },
                                     root: 'data',
-                                    fields: ['name', 'version', 'availableversion', 'description', 'infopath', 'errorstatus', {
+                                    fields: ['name', 'versionrelease', 'availableversionrelease', 'description', 'infopath', 'errorstatus', {
                                         name: 'canUpdate',
                                         type: 'boolean'
                                     }, {
@@ -393,11 +393,11 @@ Ext.onReady(function(){
                                     }, {
                                         id: 'installed-version',
                                         header: 'Installed Version',
-                                        dataIndex: 'version'
+                                        dataIndex: 'versionrelease'
                                     }, {
                                         id: 'available-version',
                                         header: 'Available Version',
-                                        dataIndex: 'availableversion'
+                                        dataIndex: 'availableversionrelease'
                                     }, status, {
                                         id: 'description',
                                         header: 'Description',
@@ -473,7 +473,7 @@ Ext.onReady(function(){
                                         getAvailableModuleList: true
                                     },
                                     root: 'data',
-                                    fields: ['name', 'version', 'description', 'infopath', 'basecomponent'],
+                                    fields: ['name', 'versionrelease', 'description', 'infopath', 'basecomponent'],
                                     autoLoad: true,
                                     sortInfo: {
                                         field: 'name',
@@ -511,7 +511,7 @@ Ext.onReady(function(){
                                     }, {
                                         id: 'available-version',
                                         header: 'Available Version',
-                                        dataIndex: 'version'
+                                        dataIndex: 'versionrelease'
                                     }, {
                                         id: 'description',
                                         header: 'Description',
@@ -610,7 +610,7 @@ Ext.onReady(function(){
         
         htmlModuleList = '<ul>';
         for (var i = 0; i < toDownload.length; i++) {
-            htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b></li>';
+            htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(' + toDownload[i].versionrelease + ')</i> </li>';
         }
         htmlModuleList = htmlModuleList + '</ul>';
         
@@ -725,7 +725,7 @@ Ext.onReady(function(){
         
         htmlModuleList = '<ul>';
         for (var i = 0; i < toDownload.length; i++) {
-            htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(' + toDownload[i].version + ')</i></li>';
+            htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(' + toDownload[i].versionrelease + ')</i></li>';
         }
         htmlModuleList = htmlModuleList + '</ul>';
         
@@ -829,7 +829,7 @@ Ext.onReady(function(){
                 wstart: 'yes'
             },
             callback: function(option, success, responseObject){
-				
+            
                 //Ext.Msg.alert('Freedom Web Installer','Module <b>' + module.name + '</b> installed successfully', function(){
                 // If applicable, start installing next module in list
                 if (toInstall[toInstall.length - 1]) {
@@ -970,7 +970,7 @@ Ext.onReady(function(){
                     xtype: 'textfield',
                     name: data[i].name,
                     fieldLabel: data[i].label,
-                    value: data[i].value ? data[i].value : data[i].default
+                    value: data[i].value ? data[i].value : data[i]['default']
                 });
                 
             }
@@ -1154,9 +1154,9 @@ Ext.onReady(function(){
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
-						modulepanel.setModuleIcon(module.name, 'x-icon-loading');
+                        modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                         processList[process].executed = true;
-                        executeProcessList(module, phase, operation);                     
+                        executeProcessList(module, phase, operation);
                     }
                 });
                 
@@ -1175,9 +1175,9 @@ Ext.onReady(function(){
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
-                        for (var i = 0; i < processList.length; i++) {
-                            processList[i].executed = false;
-                        }
+                        //                        for (var i = 0; i < processList.length; i++) {
+                        //                            processList[i].executed = false;
+                        //                        }
                         executeProcessList(module, phase, operation);
                     }
                 });
@@ -1202,10 +1202,10 @@ Ext.onReady(function(){
                                     case 'ok':
                                         //processpanel.destroy();
                                         //processpanel = null;
-										
-										modulepanel.setModuleIcon(module.name, 'x-icon-loading');							
+                                        
+                                        modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                                         processList[process].executed = true;
-                        				executeProcessList(module, phase, operation);
+                                        executeProcessList(module, phase, operation);
                                         break;
                                     case 'cancel':
                                         break;
@@ -1245,9 +1245,9 @@ Ext.onReady(function(){
             
                 if (i == (processList.length - 1) && processList[i].executed) {
                     // if there is no process to execute in this phase go on to next phase.
-            		currentPhaseIndex++;
-            		executePhaseList(operation);
-					return;
+                    currentPhaseIndex++;
+                    executePhaseList(operation);
+                    return;
                 }
                 
                 process = i;
@@ -1329,16 +1329,16 @@ Ext.onReady(function(){
                                                 }
                                 }
                                 
-                                if (process.attributes.function) {
-                                    label += ' ' + process.attributes.function;
+                                if (process.attributes['function']) {
+                                    label += ' ' + process.attributes['function'];
                                 }
                                 
                                 if (process.attributes.command) {
                                     label += ' ' + process.attributes.command;
                                 }
                                 
-                                if (process.attributes.class) {
-                                    label += ' ' + process.attributes.class;
+                                if (process.attributes['class']) {
+                                    label += ' ' + process.attributes['class'];
                                 }
                                 
                                 if (process.attributes.module) {
@@ -1387,38 +1387,42 @@ Ext.onReady(function(){
                     var div = processpanel[module.name].body.dom;
                     div.scrollTop = div.scrollHeight;
                     
-					if (process == processList.length - 1 && success && !optional) {
-                        
+                    if (process == processList.length - 1 && success && !optional) {
+                    
                         processpanel[module.name].ignorebutton.disable();
                         processpanel[module.name].ignorebutton.hide();
-						
-						//Auto-continue
-						processpanel[module.name].statustext.show();
+                        
+                        //Auto-continue
+                        processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
-						
-						currentPhaseIndex++;
+                        
+                        currentPhaseIndex++;
                         executePhaseList(operation);
-						return; 
+                        return;
                     }
-					
+                    
                     //if (success || optional) {
-					if(success && !optional){
+                    if (success && !optional) {
                         processList[process].executed = true;
                         executeProcessList(module, phase, operation);
-						return;
+                        return;
                     }
-                    					
-					if (!success && !optional) {
+                    
+                    if (!success && !optional) {
                         processpanel[module.name].processbutton.hide();
+                        processpanel[module.name].processbutton.disable();
+                        processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
                         processpanel[module.name].statustext.hide();
                         processpanel[module.name].ignorebutton.enable();
                         processpanel[module.name].ignorebutton.show();
                         
                     }
-					
-					if (!success && optional) {
+                    
+                    if (!success && optional) {
+                        processpanel[module.name].retrybutton.show();
+                        processpanel[module.name].retrybutton.enable();
                         processpanel[module.name].processbutton.show();
                         processpanel[module.name].processbutton.enable();
                         processpanel[module.name].ignorebutton.disable();
@@ -1428,9 +1432,9 @@ Ext.onReady(function(){
                     }
                     
                     
-			        
+                    
                 }
-            
+                
             });
             
         }
@@ -1443,7 +1447,7 @@ Ext.onReady(function(){
     }
     
     function setModuleStatusInstalled(module, operation){
-		
+    
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
@@ -1459,14 +1463,14 @@ Ext.onReady(function(){
                 // Proceed to next module to install
                 installedStore[currentContext].load();
                 availableStore[currentContext].load();
-				
-				// Hide process panel in global window if applicable
-		        if (processpanel[module.name]) {
-		            processpanel[module.name].hide();
-		        }
-				
-				// Set proper icon
-				modulepanel.setModuleIcon(module.name, 'x-icon-ok');
+                
+                // Hide process panel in global window if applicable
+                if (processpanel[module.name]) {
+                    processpanel[module.name].hide();
+                }
+                
+                // Set proper icon
+                modulepanel.setModuleIcon(module.name, 'x-icon-ok');
                 
                 wstart(module, operation);
             }
