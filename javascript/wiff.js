@@ -44,10 +44,11 @@ Ext.onReady(function(){
                     iconCls: 'x-icon-create',
                     tabTip: 'Create new context',
                     style: 'padding:10px',
+					layout: 'column',
                     items: [{
                         xtype: 'form',
                         id: 'create-context-form',
-                        width: '600px',
+                        columnWidth: 1,
                         bodyStyle: 'padding:10px',
                         frame: true,
                         title: 'Create New Context',
@@ -76,17 +77,17 @@ Ext.onReady(function(){
                                     success: function(form, action){
                                         updateContextList('select-last');
                                         form.reset();
-										var panel = Ext.getCmp('create-context-form');
-										panel.fireEvent('render',panel);
+                                        var panel = Ext.getCmp('create-context-form');
+                                        panel.fireEvent('render', panel);
                                     },
                                     failure: function(form, action){
-										if(action && action.result)
-										{
-                                        	Ext.Msg.alert('Failure', action.result.error);
-                                    	} else {
-											Ext.Msg.alert('Failure', 'Select at least one repository.');
-										}
-									},
+                                        if (action && action.result) {
+                                            Ext.Msg.alert('Failure', action.result.error);
+                                        }
+                                        else {
+                                            Ext.Msg.alert('Failure', 'Select at least one repository.');
+                                        }
+                                    },
                                     params: {
                                         createContext: true
                                     },
@@ -96,7 +97,7 @@ Ext.onReady(function(){
                         }],
                         listeners: {
                             render: function(panel){
-								
+                            
                                 repoStore = new Ext.data.JsonStore({
                                     url: 'wiff.php',
                                     baseParams: {
@@ -128,12 +129,12 @@ Ext.onReady(function(){
                                         
                                     });
                                     
-									panel.remove(panel.checkBoxGroup);
-									
+                                    panel.remove(panel.checkBoxGroup);
+                                    
                                     panel.checkBoxGroup = new Ext.form.CheckboxGroup({
                                         fieldLabel: 'Repositories',
-										allowBlank: false,
-										blankText: "You must select at least one repository.",
+                                        allowBlank: false,
+                                        blankText: "You must select at least one repository.",
                                         columns: 1,
                                         items: repoBoxList
                                     });
@@ -190,7 +191,7 @@ Ext.onReady(function(){
             Ext.Msg.alert('Server Error', response.error);
         }
         var data = response.data;
-		
+        
         var panel = Ext.getCmp('context-list');
         
         panel.items.each(function(item, index, len){
@@ -378,7 +379,6 @@ Ext.onReady(function(){
                                             for (var i = 0; i < selections.length; i++) {
                                                 modules.push(selections[i].get('name'));
                                             }
-                                            //console.log('List of modules to upgrade', modules);
                                             upgrade(modules);
                                         }
                                     }],
@@ -500,7 +500,6 @@ Ext.onReady(function(){
                                             for (var i = 0; i < selections.length; i++) {
                                                 modules.push(selections[i].get('name'));
                                             }
-                                            //console.log('List of modules to install', modules);
                                             install(modules);
                                         }
                                     }],
@@ -769,7 +768,52 @@ Ext.onReady(function(){
                 wstop: 'yes'
             },
             callback: function(option, success, responseObject){
+            
+                globalwin = new Ext.Window({
+                    title: 'Freedom Web Installer',
+                    id: 'module-window',
+                    layout: 'column',
+                    resizable: true,
+                    //height: 400,
+                    width: 700,
+                    modal: true,
+                    //	bodyStyle: 'overflow:auto;'
+                });
+                
+                modulepanel = new Ext.Panel({
+                    title: 'Module List',
+                    columnWidth: 0.25,
+                    height: 422,
+                    setModuleIcon: function(name, icon){
+                        var panel = this.getComponent('module-' + name);
+                        panel.setIconClass(icon);
+                    }
+                    
+                });
+                
+                for (var i = 0; i < toInstall.length; i++) {
+                    var panel = new Ext.Panel({
+                        //collapsible: true,
+                        //collapsed: true,
+                        title: toInstall[i].name,
+                        iconCls: 'x-icon-none',
+                        //                        html: html,
+                        id: 'module-' + toInstall[i].name,
+                        border: false,
+                        style: 'padding:0px;'
+                    });
+                    
+                    modulepanel.insert(0, panel);
+                }
+                
+                globalwin.add(modulepanel);
+                
+                processpanel = [];
+                
+                globalwin.show();
+                
                 askParameter(toInstall[toInstall.length - 1], operation);
+                
             }
         });
     }
@@ -785,14 +829,16 @@ Ext.onReady(function(){
                 wstart: 'yes'
             },
             callback: function(option, success, responseObject){
-            
+				
                 //Ext.Msg.alert('Freedom Web Installer','Module <b>' + module.name + '</b> installed successfully', function(){
                 // If applicable, start installing next module in list
                 if (toInstall[toInstall.length - 1]) {
                     askParameter(toInstall[toInstall.length - 1], operation);
                 }
                 else {
-                    Ext.Msg.alert('Freedom Web Installer', 'Install successful');
+                    Ext.Msg.alert('Freedom Web Installer', 'Install successful', function(){
+                        globalwin.close();
+                    });
                 }
                 //})
             
@@ -848,6 +894,8 @@ Ext.onReady(function(){
      */
     function askParameter(module, operation){
     
+        modulepanel.setModuleIcon(module.name, 'x-icon-loading');
+        
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
@@ -939,12 +987,10 @@ Ext.onReady(function(){
             
         }
         else {
-            //Ext.Msg.alert('Freedom Web Installer', '<b>' + module.name + '</b> does not have parameters to define.', function(btn){
             if (operation == 'install' || operation == 'upgrade') {
                 getPhaseList(module, operation);
             }
-            //});
-        
+            
         }
     }
     
@@ -1065,7 +1111,8 @@ Ext.onReady(function(){
                         
                         var data = response.data;
                         
-                        processwin = null;
+                        //processpanel = null;
+                        
                         currentProcessList = data;
                         executeProcessList(currentModule, phase, operation);
                         
@@ -1083,49 +1130,51 @@ Ext.onReady(function(){
         
         if (processList.length != 0) {
         
-            if (!processwin) {
+            if (!processpanel) {
+                processpanel = {};
+            }
+            
+            if (!processpanel[module.name]) {
             
                 var toolbar = new Ext.Toolbar({});
                 
-                processwin = new Ext.Window({
-                    title: 'Executing ' + phase + ' for ' + module.name,
-                    id: 'process-window',
-                    resizable: true,
-                    modal: true,
+                processpanel[module.name] = new Ext.Panel({
                     height: 400,
-                    width: 400,
+                    columnWidth: 0.75,
                     bbar: toolbar,
                     bodyStyle: 'overflow:auto;'
                 });
                 
-                processpanel = new Ext.Panel({
-                    border: false
-                });
-                
-                processwin.add(processpanel);
-                
-                processwin.processbutton = new Ext.Button({
+                processpanel[module.name].processbutton = new Ext.Button({
                     text: 'Continue',
                     disabled: true,
                     handler: function(button, event){
-                        processwin.destroy();
-                        processwin = null;
-                        currentPhaseIndex++;
-                        executePhaseList(operation);
+                        //processpanel[module.name].destroy();
+                        //processpanel = null;
+                        processpanel[module.name].statustext.show();
+                        processpanel[module.name].processbutton.disable();
+                        processpanel[module.name].retrybutton.disable();
+						modulepanel.setModuleIcon(module.name, 'x-icon-loading');
+                        processList[process].executed = true;
+                        executeProcessList(module, phase, operation);                     
                     }
                 });
                 
-                processwin.statustext = new Ext.Toolbar.TextItem({
+                processpanel[module.name].statustext = new Ext.Toolbar.TextItem({
                     text: 'Processing...',
                     style: "background-image:url(javascript/lib/ext/resources/images/default/grid/loading.gif);background-repeat:no-repeat;line-height:14px;padding-left:18px;"
                 });
                 
-                processwin.retrybutton = new Ext.Button({
+                processpanel[module.name].retrybutton = new Ext.Button({
                     text: 'Retry',
                     disabled: true,
                     handler: function(button, event){
-                        processwin.destroy();
-                        processwin = null;
+                        //processpanel[module.name].destroy();
+                        //processpanel[module.name] = null;
+                        processpanel[module.name].statustext.show();
+                        processpanel[module.name].processbutton.disable();
+                        processpanel[module.name].retrybutton.disable();
+                        modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                         for (var i = 0; i < processList.length; i++) {
                             processList[i].executed = false;
                         }
@@ -1133,7 +1182,7 @@ Ext.onReady(function(){
                     }
                 });
                 
-                processwin.ignorebutton = new Ext.Button({
+                processpanel[module.name].ignorebutton = new Ext.Button({
                     text: 'Ignore',
                     hidden: true,
                     disabled: true,
@@ -1151,10 +1200,12 @@ Ext.onReady(function(){
                             fn: function(buttonId){
                                 switch (buttonId) {
                                     case 'ok':
-                                        processwin.destroy();
-                                        processwin = null;
-                                        currentPhaseIndex++;
-                                        executePhaseList(operation);
+                                        //processpanel.destroy();
+                                        //processpanel = null;
+										
+										modulepanel.setModuleIcon(module.name, 'x-icon-loading');							
+                                        processList[process].executed = true;
+                        				executeProcessList(module, phase, operation);
                                         break;
                                     case 'cancel':
                                         break;
@@ -1166,22 +1217,37 @@ Ext.onReady(function(){
                     }
                 });
                 
-                toolbar.add(processwin.retrybutton);
+                toolbar.add(processpanel[module.name].retrybutton);
                 toolbar.add(new Ext.Toolbar.Fill());
-                toolbar.add(processwin.statustext);
-                toolbar.add(processwin.processbutton);
-                toolbar.add(processwin.ignorebutton);
+                toolbar.add(processpanel[module.name].statustext);
+                toolbar.add(processpanel[module.name].processbutton);
+                toolbar.add(processpanel[module.name].ignorebutton);
+                
+                globalwin.add(processpanel[module.name]);
                 
             }
             
-            processwin.show();
+            globalwin.doLayout();
             
             var module = module;
+            
+            if (!processpanel[module.name].titlepanel) {
+                processpanel[module.name].titlepanel = [];
+            }
+            
+            if (!processpanel[module.name].titlepanel[phase]) 
+                processpanel[module.name].titlepanel[phase] = processpanel[module.name].add(new Ext.Panel({
+                    title: '<i>Executing ' + phase + ' for ' + module.name + '</i>',
+                    border: false
+                }));
             
             for (var i = 0; i < processList.length; i++) {
             
                 if (i == (processList.length - 1) && processList[i].executed) {
-                    return;
+                    // if there is no process to execute in this phase go on to next phase.
+            		currentPhaseIndex++;
+            		executePhaseList(operation);
+					return;
                 }
                 
                 process = i;
@@ -1305,43 +1371,65 @@ Ext.onReady(function(){
                         style: 'padding:0px;'
                     });
                     
-                    processpanel.insert(0,panel);
+                    processpanel[module.name].add(panel);
                     
-                    if (process == processList.length - 1 || (!success && !optional)) {
-                        processwin.processbutton.hide();
-                        processwin.retrybutton.enable();
-                        processwin.statustext.hide();
-                        processwin.ignorebutton.enable();
-                        processwin.ignorebutton.show();
+                    if (process == processList.length - 1 && currentPhaseList.length - 1 == currentPhaseIndex) {
+                        modulepanel.setModuleIcon(module.name, 'x-icon-ok');
                     }
                     
-                    if (process == processList.length - 1 && (success || optional)) {
-                        processwin.processbutton.show();
-                        processwin.processbutton.enable();
-                        processwin.ignorebutton.disable();
-                        processwin.ignorebutton.hide();
-                        processwin.statustext.hide();
+                    if (!success && !optional) {
+                        modulepanel.setModuleIcon(module.name, 'x-icon-ko');
                     }
                     
-                    processwin.doLayout();
+                    processpanel[module.name].doLayout();
                     
-					// Autoscroll down.
-//                    var div = processwin.body.dom;
-//                    div.scrollTop = div.scrollHeight;
+                    // Autoscroll down.
+                    var div = processpanel[module.name].body.dom;
+                    div.scrollTop = div.scrollHeight;
                     
-                    if (success || optional) {
-                        processList[i].executed = true;
+					if (process == processList.length - 1 && success && !optional) {
+                        
+                        processpanel[module.name].ignorebutton.disable();
+                        processpanel[module.name].ignorebutton.hide();
+						
+						//Auto-continue
+						processpanel[module.name].statustext.show();
+                        processpanel[module.name].processbutton.disable();
+                        processpanel[module.name].retrybutton.disable();
+						
+						currentPhaseIndex++;
+                        executePhaseList(operation);
+						return; 
+                    }
+					
+                    //if (success || optional) {
+					if(success && !optional){
+                        processList[process].executed = true;
                         executeProcessList(module, phase, operation);
+						return;
                     }
-                    else {
-                        //Ext.Msg.alert('Error',response.error);
+                    					
+					if (!success && !optional) {
+                        processpanel[module.name].processbutton.hide();
+                        processpanel[module.name].retrybutton.enable();
+                        processpanel[module.name].statustext.hide();
+                        processpanel[module.name].ignorebutton.enable();
+                        processpanel[module.name].ignorebutton.show();
+                        
+                    }
+					
+					if (!success && optional) {
+                        processpanel[module.name].processbutton.show();
+                        processpanel[module.name].processbutton.enable();
+                        processpanel[module.name].ignorebutton.disable();
+                        processpanel[module.name].ignorebutton.hide();
+                        processpanel[module.name].statustext.hide();
+                        
                     }
                     
+                    
+			        
                 }
-                //                failure: function(){
-                //                    Ext.Msg.alert('Error', 'Server side error when executing a process.');
-                //                }
-            
             
             });
             
@@ -1355,6 +1443,7 @@ Ext.onReady(function(){
     }
     
     function setModuleStatusInstalled(module, operation){
+		
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
@@ -1370,6 +1459,14 @@ Ext.onReady(function(){
                 // Proceed to next module to install
                 installedStore[currentContext].load();
                 availableStore[currentContext].load();
+				
+				// Hide process panel in global window if applicable
+		        if (processpanel[module.name]) {
+		            processpanel[module.name].hide();
+		        }
+				
+				// Set proper icon
+				modulepanel.setModuleIcon(module.name, 'x-icon-ok');
                 
                 wstart(module, operation);
             }

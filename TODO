@@ -4,18 +4,13 @@
 - Install a module from any given url
 - Implement update of installer
 - Write installer install instructions
-- Afficher les messages d'erreurs JSON {error='xxx',[...]}
 - Reprise d'install d'un module installÃ© mais en rouge/erreur
 - Quand on annule la phase de param, le module apparait comme Ã©tant correctement installÃ© et finalisÃ©
 - Gérer les accès concurrents aux fichiers XML dans le cas des download() lancé en // par ex.
   (centraliser les accès aux XML dans Class.WIFF et mutex, ou faire des flock() quand on manipule les fichiers XML)
-- Bloquer l'interface d'en dessous quand on installe/upgrade un module
-- Afficher un spinner quand il y a des requêtes en attente quand on execute les pre-install ou post-install
-- Bloquer les boutons quand on est en entête d'évenements
 - implémenter post-param
 - Call $module->deleteTmpFile() after install completed to cleanup downloaded file
 - Check for safe_mode and low max_execution_time ini settings
-- Download modules sequentially
 - Apache config should set "AllowOverride All"
 - Fix all bash script for pathnames containing spaces
 
