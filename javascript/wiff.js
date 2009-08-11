@@ -526,7 +526,7 @@ Ext.onReady(function(){
                                 
                                     var recs = [];
                                     grid.getStore().each(function(rec){
-                                        if (rec.get('basecomponent')) {
+                                        if (rec.get('basecomponent') == 'yes') {
                                             recs.push(rec);
                                         }
                                     });
