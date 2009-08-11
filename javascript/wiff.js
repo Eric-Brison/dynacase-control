@@ -1419,7 +1419,10 @@ Ext.onReady(function(){
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
 						processpanel[module.name].parambutton.show()
-						processpanel[module.name].parambutton.enable();
+						if(module.hasParameter)
+						{
+							processpanel[module.name].parambutton.enable();
+						}
                         processpanel[module.name].statustext.hide();
                         processpanel[module.name].ignorebutton.enable();
                         processpanel[module.name].ignorebutton.show();
@@ -1430,7 +1433,10 @@ Ext.onReady(function(){
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
 						processpanel[module.name].parambutton.show()
-						processpanel[module.name].parambutton.enable();
+						if(module.hasParameter)
+						{
+							processpanel[module.name].parambutton.enable();
+						}
                         processpanel[module.name].processbutton.show();
                         processpanel[module.name].processbutton.enable();
                         processpanel[module.name].ignorebutton.disable();
