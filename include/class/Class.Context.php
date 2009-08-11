@@ -224,7 +224,7 @@ class Context
                     if ($availableModule->name == $module->name)
                     {
                         $module->availableversion = $availableModule->version;
-						$module->availableversionrelease = $availableModule->version . '-' . $availableModule->release;
+                        $module->availableversionrelease = $availableModule->version.'-'.$availableModule->release;
                         $cmp = $this->cmpModuleByVersionReleaseAsc($module, $availableModule);
                         if ($cmp < 0)
                         {
@@ -440,19 +440,20 @@ class Context
         {
             return false;
         }
-				
-		$depsList = array ();
 
-		foreach ($namelist as $name)
-		{
-	        $module = $this->getModuleAvail($name);
-	        if ($module === false)
-	        {
-	            return false;
-	        }
-	
-	        array_push($depsList, $module);	
-		}
+        $depsList = array ();
+
+        foreach ($namelist as $name)
+        {
+            $module = $this->getModuleAvail($name);
+            if ($module === false)
+            {
+                $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+                return false;
+            }
+
+            array_push($depsList, $module);
+        }
 
 
         $modMovedBy = array ();
@@ -503,20 +504,60 @@ class Context
                 {
                     // Add the module to the dependencies list
                     array_push($depsList, $reqMod);
-                } else if ($pos >= 0 && $pos < $i)
-                {
-                    if ($modMovedBy[$reqMod->name][$mod->name] <= 1)
-                    {
-                        // Move the module to the right
-                        $this->moveDepToRight($depsList, $pos, $i);
-                        $modMovedBy[$reqMod->name][$mod->name]++;
-                        $i--;
-                    }
                 }
             }
             $i++;
         }
-        return $depsList;
+		
+		function listContains($list,$name)
+		{
+			foreach ($list as $module)
+			{
+				if($module->name == $name)
+				{
+					return true ;
+				}
+			}
+			return false ;
+		}
+		
+		function recursiveOrdering(&$list,&$orderList)
+		{
+			foreach ($list as $key => $mod)
+			{
+				$reqList = $mod->getRequiredModules();
+				
+				$pushable = true ;
+				
+				foreach($reqList as $req)
+				{
+					if(!listContains($orderList, $req['name']))
+					{
+						$pushable = false ;
+					}
+				}
+				
+				if($pushable)
+				{
+					array_push($orderList,$mod);					
+					unset($list[$key]);
+					
+				}
+				
+			}
+			
+			if(count($list) != 0)
+			{
+				recursiveOrdering($list,$orderList);
+			}
+			
+		}
+		
+		$orderList = array ();
+		
+		recursiveOrdering($depsList,$orderList);		
+		
+        return $orderList;
     }
 
     /**

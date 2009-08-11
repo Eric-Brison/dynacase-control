@@ -803,7 +803,7 @@ Ext.onReady(function(){
                         style: 'padding:0px;'
                     });
                     
-                    modulepanel.insert(0, panel);
+                    modulepanel.add(panel);
                 }
                 
                 globalwin.add(modulepanel);
@@ -812,7 +812,7 @@ Ext.onReady(function(){
                 
                 globalwin.show();
                 
-                askParameter(toInstall[toInstall.length - 1], operation);
+                askParameter(toInstall[0], operation);
                 
             }
         });
@@ -832,8 +832,8 @@ Ext.onReady(function(){
             
                 //Ext.Msg.alert('Freedom Web Installer','Module <b>' + module.name + '</b> installed successfully', function(){
                 // If applicable, start installing next module in list
-                if (toInstall[toInstall.length - 1]) {
-                    askParameter(toInstall[toInstall.length - 1], operation);
+                if (toInstall[0]) {
+                    askParameter(toInstall[0], operation);
                 }
                 else {
                     Ext.Msg.alert('Freedom Web Installer', 'Install successful', function(){
@@ -1052,8 +1052,8 @@ Ext.onReady(function(){
         var phase = currentPhaseList[currentPhaseIndex];
         
         if (!phase) {
-            // Remove last module to install
-            toInstall.remove(toInstall[toInstall.length - 1]);
+            // Remove first module to install
+            toInstall.remove(toInstall[0]);
             
             setModuleStatusInstalled(module, operation);
             
