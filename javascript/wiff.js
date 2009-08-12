@@ -952,6 +952,7 @@ Ext.onReady(function(){
     }
     
     function askParameter_success(module, operation, responseObject){
+		
         var response = eval('(' + responseObject.responseText + ')');
         if (response.error) {
             Ext.Msg.alert('Server Error', response.error);
@@ -960,6 +961,8 @@ Ext.onReady(function(){
         var data = response.data;
         
         if (data.length > 0) {
+			
+			module.hasParameter = true ;
         
             var form = new Ext.form.FormPanel({
                 id: 'parameter-panel',
@@ -1187,8 +1190,6 @@ Ext.onReady(function(){
                     text: 'Continue',
                     disabled: true,
                     handler: function(button, event){
-                        //processpanel[module.name].destroy();
-                        //processpanel = null;
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
@@ -1456,7 +1457,7 @@ Ext.onReady(function(){
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
-                        processpanel[module.name].parambutton.show()
+                        processpanel[module.name].parambutton.show();
                         if (module.hasParameter) {
                             processpanel[module.name].parambutton.enable();
                         }
@@ -1469,7 +1470,7 @@ Ext.onReady(function(){
                     if (!success && optional) {
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
-                        processpanel[module.name].parambutton.show()
+                        processpanel[module.name].parambutton.show();
                         if (module.hasParameter) {
                             processpanel[module.name].parambutton.enable();
                         }
