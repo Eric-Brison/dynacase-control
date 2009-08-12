@@ -25,7 +25,7 @@ class Module
 	public $infopath = false;
 
     private $context;
-    private $repository;
+    public $repository;
 
     public $status;
     public $errorstatus;

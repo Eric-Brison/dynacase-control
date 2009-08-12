@@ -473,7 +473,14 @@ Ext.onReady(function(){
                                         getAvailableModuleList: true
                                     },
                                     root: 'data',
-                                    fields: ['name', 'versionrelease', 'description', 'infopath', 'basecomponent'],
+                                    fields: ['name', 'versionrelease', 'description', 'infopath', 'basecomponent',
+									 {
+                                        name: 'repository',
+                                        convert: function(v){
+                                            return v.description ;
+                                        }
+                                    }
+									],
                                     autoLoad: true,
                                     sortInfo: {
                                         field: 'name',
@@ -516,7 +523,11 @@ Ext.onReady(function(){
                                         id: 'description',
                                         header: 'Description',
                                         dataIndex: 'description'
-                                    }],
+                                    }, {
+										id: 'repository',
+										header: 'Repository',
+										dataIndex: 'repository'
+									}],
                                     autoExpandColumn: 'description',
                                     autoHeight: true,
                                     plugins: [actions]
@@ -1154,7 +1165,7 @@ Ext.onReady(function(){
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
-						processpanel[module.name].parambutton.disable();
+                        processpanel[module.name].parambutton.disable();
                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                         processList[process].executed = true;
                         executeProcessList(module, phase, operation);
@@ -1173,7 +1184,7 @@ Ext.onReady(function(){
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
-						processpanel[module.name].parambutton.disable();
+                        processpanel[module.name].parambutton.disable();
                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                         executeProcessList(module, phase, operation);
                     }
@@ -1210,17 +1221,17 @@ Ext.onReady(function(){
                         
                     }
                 });
-				
-				processpanel[module.name].parambutton = new Ext.Button({
+                
+                processpanel[module.name].parambutton = new Ext.Button({
                     text: 'Parameters',
                     disabled: true,
                     handler: function(button, event){
-                        askParameter(module,operation);
+                        askParameter(module, operation);
                     }
                 });
                 
                 toolbar.add(processpanel[module.name].retrybutton);
-				toolbar.add(processpanel[module.name].parambutton);
+                toolbar.add(processpanel[module.name].parambutton);
                 toolbar.add(new Ext.Toolbar.Fill());
                 toolbar.add(processpanel[module.name].statustext);
                 toolbar.add(processpanel[module.name].processbutton);
@@ -1399,7 +1410,7 @@ Ext.onReady(function(){
                         processpanel[module.name].statustext.show();
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.disable();
-						processpanel[module.name].parambutton.disable();
+                        processpanel[module.name].parambutton.disable();
                         
                         currentPhaseIndex++;
                         executePhaseList(operation);
@@ -1418,11 +1429,10 @@ Ext.onReady(function(){
                         processpanel[module.name].processbutton.disable();
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
-						processpanel[module.name].parambutton.show()
-						if(module.hasParameter)
-						{
-							processpanel[module.name].parambutton.enable();
-						}
+                        processpanel[module.name].parambutton.show()
+                        if (module.hasParameter) {
+                            processpanel[module.name].parambutton.enable();
+                        }
                         processpanel[module.name].statustext.hide();
                         processpanel[module.name].ignorebutton.enable();
                         processpanel[module.name].ignorebutton.show();
@@ -1432,11 +1442,10 @@ Ext.onReady(function(){
                     if (!success && optional) {
                         processpanel[module.name].retrybutton.show();
                         processpanel[module.name].retrybutton.enable();
-						processpanel[module.name].parambutton.show()
-						if(module.hasParameter)
-						{
-							processpanel[module.name].parambutton.enable();
-						}
+                        processpanel[module.name].parambutton.show()
+                        if (module.hasParameter) {
+                            processpanel[module.name].parambutton.enable();
+                        }
                         processpanel[module.name].processbutton.show();
                         processpanel[module.name].processbutton.enable();
                         processpanel[module.name].ignorebutton.disable();
