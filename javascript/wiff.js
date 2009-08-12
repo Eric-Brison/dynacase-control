@@ -30,8 +30,18 @@ Ext.onReady(function(){
             items: [{
                 mainItem: 0,
                 items: [{
-                    title: 'Freedom <br/> Web Installer'
-                }, //				{
+                    title: 'Freedom <br/> Web Installer',
+					html: "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Web Installer for Freedom (WIFF)</h1>" +
+					"<p style='margin-bottom:30px;'>If you need help, follow these links to documentation wiki. Subscriptions and contributions are much appreciated.</p>" +
+					"<ul style='margin-left:30px;list-style-type: square;' ><li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff'><h2>Introduction</h2></a>" +
+					"<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:installation'><h2>How to install WIFF ?</h2></a></li>" +
+					"<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:parametrage'><h2>How to setup WIFF ?</h2></a></li>" +
+					"<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:createcontext'><h2>How to create a context ?</h2></a></li>" +
+					"<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:firstinstall'><h2>How to install freedom ?</h2></a></li>" +
+					"</ul></div>"
+					
+                },
+				//				{
                 //                    title: 'Parameters',
                 //                    iconCls: 'x-icon-setup',
                 //                    tabTip: 'Set WIFF parameters',
@@ -569,7 +579,7 @@ Ext.onReady(function(){
                 Ext.getCmp('context-list').setActiveTab(Ext.getCmp('context-list').items.last());
             }
             else {
-                Ext.getCmp('context-list').setActiveTab(Ext.getCmp('context-list').items.itemAt(1));
+                //Ext.getCmp('context-list').setActiveTab(Ext.getCmp('context-list').items.itemAt(1));
             }
         }
         
