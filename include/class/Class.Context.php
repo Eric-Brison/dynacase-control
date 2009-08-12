@@ -508,55 +508,55 @@ class Context
             }
             $i++;
         }
-		
-		function listContains($list,$name)
-		{
-			foreach ($list as $module)
-			{
-				if($module->name == $name)
-				{
-					return true ;
-				}
-			}
-			return false ;
-		}
-		
-		function recursiveOrdering(&$list,&$orderList)
-		{
-			foreach ($list as $key => $mod)
-			{
-				$reqList = $mod->getRequiredModules();
-				
-				$pushable = true ;
-				
-				foreach($reqList as $req)
-				{
-					if(!listContains($orderList, $req['name']))
-					{
-						$pushable = false ;
-					}
-				}
-				
-				if($pushable)
-				{
-					array_push($orderList,$mod);					
-					unset($list[$key]);
-					
-				}
-				
-			}
-			
-			if(count($list) != 0)
-			{
-				recursiveOrdering($list,$orderList);
-			}
-			
-		}
-		
-		$orderList = array ();
-		
-		recursiveOrdering($depsList,$orderList);		
-		
+
+        function listContains($list, $name)
+        {
+            foreach ($list as $module)
+            {
+                if ($module->name == $name)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function recursiveOrdering( & $list, & $orderList)
+        {
+            foreach ($list as $key=>$mod)
+            {
+                $reqList = $mod->getRequiredModules();
+
+                $pushable = true;
+
+                foreach ($reqList as $req)
+                {
+                	// If ordered list does not contain one dependency and dependency list does contain it, module must not be added to ordered list at that time
+                    if (!listContains($orderList, $req['name']) && listContains($list, $req['name']))
+                    {
+                        $pushable = false;
+                    }
+                }
+
+                if ($pushable)
+                {
+                    array_push($orderList, $mod);
+                    unset ($list[$key]);
+                }
+
+            }
+
+            if (count($list) != 0)
+            {
+                recursiveOrdering($list, $orderList);
+            }
+
+        }
+
+        $orderList = array ();
+
+        recursiveOrdering($depsList, $orderList);
+
         return $orderList;
     }
 
