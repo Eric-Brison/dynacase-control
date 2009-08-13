@@ -11,7 +11,8 @@ class Repository
 	public $description ;
 	
 	public $protocol ;
-	
+	public $host ;
+	public $path ;
 	
 	private $login ;
 	private $password ;
