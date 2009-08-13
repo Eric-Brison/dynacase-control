@@ -195,8 +195,6 @@ if ( isset ($_REQUEST['createContext']))
 {
     $context = $wiff->createContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc']);
 
-
-
     if (!$wiff->errorMessage)
     {
         $repoList = $wiff->getRepoList();
@@ -205,7 +203,7 @@ if ( isset ($_REQUEST['createContext']))
         {
             $postcode = 'repo-'.$repo->name;
 
-            str_replace('.', '_', $postcode); // . characters in variables are replace by _ characters during POST requesting
+            str_replace('.', '_', $postcode); // . characters in variables are replaced by _ characters during POST requesting
 
             if ( isset ($_REQUEST[$postcode]))
             {

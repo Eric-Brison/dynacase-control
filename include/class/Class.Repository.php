@@ -10,24 +10,52 @@ class Repository
 	public $baseurl ;
 	public $description ;
 	
+	public $protocol ;
+	
+	
+	private $login ;
+	private $password ;
+	
 	private $context ;
 	
 	private $contenturl ;
 	
 	public $errorMessage = '';
 
-	public function __construct($name,$url,$description,$context = null)
+	public function __construct($xml,$context)
 	{
-		$this->name = $name ;
-		$this->baseurl = $url ;
-		$this->description = $description ;
-		$this->contenturl = $this->baseurl.'/content.xml' ;
+		$this->name = $xml->getAttribute('name') ;
+		$this->baseurl = $xml->getAttribute('baseurl') ;
+		$this->description = $xml->getAttribute('description') ;
+		
+		if(!$this->baseurl)
+		{
+			$this->protocol = $xml->getAttribute('protocol');
+			$this->host = $xml->getAttribute('host');
+			$this->path = $xml->getAttribute('path');
+			
+			$this->login = $xml->getAttribute('login');
+			$this->password = $xml->getAttribute('password');
+		}
+		
+		
+		$this->contenturl = $this->getUrl() .'/content.xml' ;
 		$this->context = $context ;
 	}
 	
 	public function __set($property,$value)
 	{
 		$this->$property = $value ;
+	}
+	
+	public function getUrl()
+	{
+		if($this->baseurl)
+		{
+			return $this->baseurl ;
+		} else {
+			return $this->protocol . '://' . $this->login . ':' . $this->password . '@' . $this->host . '/' . $this->path ;
+		}
 	}
 	
 	/**

@@ -108,7 +108,7 @@ class Context
         }
 
         //Update Context object accordingly
-        $this->repo[] = new Repository($repository->getAttribute('name'), $repository->getAttribute('baseurl'), $repository->getAttribute('description'), $this);
+        $this->repo[] = new Repository($repository, $this);
 
         return true;
 

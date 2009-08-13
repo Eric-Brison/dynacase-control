@@ -127,7 +127,7 @@ Ext.onReady(function(){
                                     repoStore.each(function(record){
                                     
                                         repoBoxList.push({
-                                            boxLabel: record.get('description') + ' <i>(' + record.get('baseurl') + ')</i>',
+                                            boxLabel: record.get('description') + (record.get('baseurl') ? ' <i>(' + record.get('baseurl') + ')</i>' : ' <i>(authenticated)</i>'),
                                             name: 'repo-' + record.get('name'),
                                             checked: first
                                         });
@@ -213,7 +213,7 @@ Ext.onReady(function(){
         
             var repositoryHtml = '<ul>';
             for (var j = 0; j < data[i].repo.length; j++) {
-                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + ' <i>(' + data[i].repo[j].baseurl + ')</i></li>'
+                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + (data[i].repo[j].baseurl ? ' <i>(' + data[i].repo[j].baseurl + ')</i>' : ' <i>(authenticated)</i>') + '</li>'
             }
             repositoryHtml += '</ul>'
             var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';

@@ -188,7 +188,7 @@ class Module
             return false;
         }
 
-        $modUrl = $this->repository->baseurl.'/'.$this->src;
+        $modUrl = $this->repository->getUrl().'/'.$this->src;
         $this->tmpfile = $wiff->downloadUrl($modUrl);
         if ($this->tmpfile === false)
         {

@@ -82,7 +82,7 @@ class WIFF
 
             foreach ($repositories as $repository)
             {
-                $repoList[] = new Repository($repository->getAttribute('name'), $repository->getAttribute('baseurl'), $repository->getAttribute('description'));
+                $repoList[] = new Repository($repository);
             }
 
         }
@@ -125,7 +125,7 @@ class WIFF
 
                 foreach ($repositories as $repository)
                 {
-                    $repoList[] = new Repository($repository->getAttribute('name'), $repository->getAttribute('baseurl'), $repository->getAttribute('description'));
+                	$repoList[] = new Repository($repository);
                 }
 
                 $contextList[] = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
@@ -170,7 +170,7 @@ class WIFF
 
             foreach ($repositories as $repository)
             {
-                $repoList[] = new Repository($repository->getAttribute('name'), $repository->getAttribute('baseurl'), $repository->getAttribute('description'), null);
+            	$repoList[] = new Repository($repository);
             }
 
             $this->errorMessage = null;
