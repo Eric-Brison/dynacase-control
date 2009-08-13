@@ -22,7 +22,7 @@ class Repository
 	
 	public $errorMessage = '';
 
-	public function __construct($xml,$context)
+	public function __construct($xml,$context = null)
 	{
 		$this->name = $xml->getAttribute('name') ;
 		$this->baseurl = $xml->getAttribute('baseurl') ;
