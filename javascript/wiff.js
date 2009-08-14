@@ -125,9 +125,7 @@ Ext.onReady(function(){
                                     var first = true;
                                     
                                     repoStore.each(function(record){
-                                    
-										console.log(record);
-									
+                                    									
                                         repoBoxList.push({
                                             boxLabel: record.get('description') + (record.get('baseurl') ? ' <i>(' + record.get('baseurl') + ')</i>' : ' <i>(' + record.get('protocol') + '://*****:*****@' + record.get('host') + '/' + record.get('path') + ')</i>'),
                                             name: 'repo-' + record.get('name'),
