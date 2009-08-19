@@ -1446,7 +1446,7 @@ Ext.onReady(function(){
                     }
                     
                     //if (success || optional) {
-                    if (success && !optional) {
+                    if (success) {
                         processList[process].executed = true;
                         executeProcessList(module, phase, operation);
                         return;

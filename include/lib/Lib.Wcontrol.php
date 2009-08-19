@@ -419,14 +419,15 @@ function wcontrol_check_ncurses( & $process)
 	system('php -r "print function_exists("ncurses_init");"');
 	
 	$result=ob_get_contents();
+	
   	ob_end_clean();
 	
-	if($result == 1)
+	if($result != 1)
 	{
-		return true ;
-	} else {
 		return false ;
 	}
+	
+	return true ;
 	
 }
 
