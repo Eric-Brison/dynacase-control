@@ -875,7 +875,7 @@ Ext.onReady(function(){
                 }
                 else {
                     Ext.Msg.alert('Freedom Web Installer', 'Install successful', function(){
-                        globalwin.close();
+                        //globalwin.close();
                     });
                 }
                 //})
