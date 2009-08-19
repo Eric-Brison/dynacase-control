@@ -410,4 +410,29 @@ function wcontrol_msg_pgversion($process)
         return "";
     }
 }
+
+function wcontrol_check_ncurses( & $process)
+{
+	
+	ob_start();
+
+	system('php -r "print function_exists("ncurses_init");"');
+	
+	$result=ob_get_contents();
+  	ob_end_clean();
+	
+	if($result == 1)
+	{
+		return true ;
+	} else {
+		return false ;
+	}
+	
+}
+
+function wcontrol_msg_ncurses($process)
+{
+	return "";
+}
+
 ?>
