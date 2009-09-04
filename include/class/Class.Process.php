@@ -67,7 +67,19 @@ class Process
 	putenv("WIFF_CONTEXT_NAME=". $this->phase->module->context->name);
 	putenv("WIFF_CONTEXT_ROOT=". $this->phase->module->context->root);
 	
+	$cwd = getcwd();
+
+	$ret = chdir($this->phase->module->context->root);
+	if( $ret === false ) {
+	  return array(
+		       'ret' => false,
+		       'output' => sprintf("Could not chdir to %s.", $this->phase->module->context->root)
+		       );
+	}
+
 	$result = wcontrol_eval_process($this);
+
+	chdir($cwd);
 
         return $result;
     }
