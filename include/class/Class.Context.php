@@ -482,7 +482,7 @@ class Context
                     case '':
                         break;
                     case 'ge':
-                        if ($this->cmpVersionRelease($reqModVersion, 0, $reqMod->version, 0) < 0)
+                        if ($this->cmpVersionReleaseAsc($reqModVersion, 0, $reqMod->version, 0) < 0)
                         {
                             $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.");
                             return false;
