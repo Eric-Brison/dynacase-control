@@ -3,15 +3,12 @@
 use strict;
 use warnings;
 
+select STDERR; $|=1;
+select STDOUT; $|=1;
+
 if( not open(ICONV, '-|', 'iconv -c -f WINDOWS-1252 -t UTF-8') ) {
   print STDERR "Error running iconv: $!\n";
   exit( 1 );
-}
-
-my $dump;
-{
-  local $/;
-  $dump = <ICONV>;
 }
 
 my @to_remove;
@@ -20,16 +17,70 @@ while(<DATA>) {
   push @to_remove, $_;
 }
 
-$dump =~ s/^client_encoding = 'LATIN1'/client_encoding = 'UTF8'/;
-
-$dump =~ s/^(CREATE TABLE style .*?description) character varying\(\d+\)/${1} text/gms;
-
-my $elmt;
-foreach $elmt (@to_remove) {
-  $dump =~ s/^--\n-- \b\Q$elmt\E\b.*?\n--\n.*?\n--/--/gms;
+my $mode = shift;
+if( $mode eq "--schema" ) {
+  $mode = "schema";
+} else {
+  $mode = "data";
 }
 
-print $dump;
+
+if( $mode eq "schema" ) {
+
+  # -- Schema conversion mode --
+
+  my $dump;
+  {
+    local $/;
+    $dump = <ICONV>;
+  }
+
+  $dump =~ s/^client_encoding = 'LATIN1'/client_encoding = 'UTF8'/;
+
+  $dump =~ s/^(CREATE TABLE style .*?description) character varying\(\d+\)/${1} text/gms;
+
+  my $elmt;
+  foreach $elmt (@to_remove) {
+    $dump =~ s/^--\n-- \b\Q$elmt\E\b.*?\n--\n.*?\n--/--/gms;
+  }
+
+  print $dump;
+
+} else {
+
+  # -- Data conversion mode --
+
+  my $re;
+  my @to_remove_regex;
+  foreach $re (@to_remove) {
+    push @to_remove_regex, qr/^-- \Q$re\E\b/;
+  }
+
+  my $line;
+  my $remove = 0;
+  my $done_encoding = 0;
+  while($line= <ICONV>) {
+    $done_encoding = 1 if( $done_encoding == 0 && $line =~ s/^client_encoding = 'LATIN1'/client_encoding = 'UTF8'/ );
+
+    if( $line =~ m/^-- (?:Data for)? Name: / ) {
+      $remove = 0;
+      foreach $re (@to_remove_regex) {
+	if( $line =~ m/$re/ ) {
+	  $remove = 1;
+	  last;
+	}
+      }
+    }
+
+    if( $remove == 0 ) {
+      print STDOUT $line;
+    }
+  }
+
+}
+  
+
+exit( 0 );
 
 __DATA__
 Name: gtsq; Type: SHELL TYPE
