@@ -662,8 +662,10 @@ Ext.onReady(function(){
             fn: function(btn){
                 switch (btn) {
                     case 'ok':
-                        for (var i = 0; i < toDownload.length; i++) {
-                            download(toDownload[i], 'upgrade');
+                        if (toDownload.length > 0) {
+                            //for (var i = 0; i < toDownload.length; i++) {
+                            download(toDownload[0], 'upgrade');
+                        //}
                         }
                         break;
                     case 'cancel':
