@@ -127,23 +127,30 @@ function wiff_default_getValue(&$argv) {
 
   $paramName =  substr($argv[0], 11);
 
+  $value = wiff_getParamValue($paramName);
+  if( $value === false ) {
+    return 1;
+  }
+  echo $value."\n";
+  return 0;
+}
+
+function wiff_getParamValue($paramName) {
   $wiffContextName = getenv('WIFF_CONTEXT_NAME');
   if( $wiffContextName === false || preg_match('/^\s*$/', $wiffContextName) ) {
     error_log(sprintf("WIFF_CONTEXT_NAME is not defined or empty."));
-    exit( 1 );
+    return false;
   }
 
   $wiff = WIFF::getInstance();
 
   $context = $wiff->getContext($wiffContextName);
   if( $context === false ) {
-    echo sprintf("Error getting context '%s'!", $wiffContextName);
-    echo "";
-    return -1;
+    error_log(sprintf("Error getting context '%s'!", $wiffContextName));
+    return false;
   }
 
-  echo $context->getParamByName($paramName)."\n";
-  return 0;
+  return $context->getParamByName($paramName);
 }
 
 ?>
