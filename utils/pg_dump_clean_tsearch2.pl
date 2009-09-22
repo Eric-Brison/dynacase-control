@@ -17,7 +17,7 @@ while(<DATA>) {
   push @to_remove, $_;
 }
 
-my $mode = shift;
+my $mode = shift || '';
 if( $mode eq "--schema" ) {
   $mode = "schema";
 } else {
@@ -78,7 +78,6 @@ if( $mode eq "schema" ) {
   }
 
 }
-  
 
 exit( 0 );
 

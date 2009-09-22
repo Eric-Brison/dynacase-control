@@ -184,6 +184,8 @@ if( count($v) <= 0 ) {
 }
 $CORE_CLIENT = preg_replace('/&[^;]*;/', '', $CORE_CLIENT);
 
+$CORE_DB = $PGSERVICE;
+
 # -- Generate context
 
 $xml_str = <<<EOD
@@ -283,7 +285,9 @@ if( $CONTEXTS_XML != '' ) {
     exit( 1 );
   }
 } else {
+  echo "\n--8<--\n";
   echo $xml_str;
+  echo "\n-->8--\n";
 }
 
 exit( 0 );
