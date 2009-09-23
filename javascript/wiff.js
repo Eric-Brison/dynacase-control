@@ -65,7 +65,7 @@ Ext.onReady(function(){
                             xtype: 'textfield',
                             fieldLabel: 'Name',
                             name: 'name',
-                            anchor: '-15',
+                            anchor: '-15'
                         }, {
                             xtype: 'textfield',
                             fieldLabel: 'Root',
@@ -372,7 +372,7 @@ Ext.onReady(function(){
                                             if ((record.get('canUpdate') != true)) {
                                                 return false;
                                             }
-                                        },
+                                        }
                                     }
                                 });
                                 
@@ -584,7 +584,7 @@ Ext.onReady(function(){
                                 
                             }
                         }
-                    }],
+                    }]
                 
                 }]
             })
@@ -816,7 +816,7 @@ Ext.onReady(function(){
                     resizable: true,
                     //height: 400,
                     width: 700,
-                    modal: true,
+                    modal: true
                     //	bodyStyle: 'overflow:auto;'
                 });
                 
