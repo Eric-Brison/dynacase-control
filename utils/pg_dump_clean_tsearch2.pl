@@ -35,7 +35,7 @@ if( $mode eq "schema" ) {
     $dump = <ICONV>;
   }
 
-  $dump =~ s/^client_encoding = 'LATIN1'/client_encoding = 'UTF8'/;
+  $dump =~ s/client_encoding = 'LATIN1'/client_encoding = 'UTF8'/;
 
   $dump =~ s/^(CREATE TABLE style .*?description) character varying\(\d+\)/${1} text/gms;
 
@@ -60,7 +60,7 @@ if( $mode eq "schema" ) {
   my $remove = 0;
   my $done_encoding = 0;
   while($line= <ICONV>) {
-    $done_encoding = 1 if( $done_encoding == 0 && $line =~ s/^client_encoding = 'LATIN1'/client_encoding = 'UTF8'/ );
+    $done_encoding = 1 if( $done_encoding == 0 && $line =~ s/client_encoding = 'LATIN1'/client_encoding = 'UTF8'/ );
 
     if( $line =~ m/^-- (?:Data for)? Name: / ) {
       $remove = 0;
