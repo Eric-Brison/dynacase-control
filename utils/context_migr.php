@@ -195,7 +195,7 @@ $xml_str = <<<EOD
 $MODULES_LIST
     </modules>
     <repositories>
-      <access name="freedom-test" description="Freedom Test (2.13)" baseurl="http://ftp.freedom-ecm.org/frdom/webinst/test" /> 
+      <access name="freedom" description="freedom 2.14" baseurl="http://ftp.freedom-ecm.org/2.14/webinst/" />
     </repositories>
     <parameters-value>
       <param name="client_name" modulename="freedom-core" value="$CORE_CLIENT" />
@@ -223,11 +223,6 @@ if( $CONTEXTS_XML != '' ) {
   if( $stat === false ) {
     error_log(sprintf("Error stat on '%s'.", $CONTEXTS_XML));
     exit( 1 );
-  }
-
-  if( getmyuid() === 0 ) {
-    chown($temp, $stat['uid']);
-    chgrp($temp, $stat['gid']);
   }
 
   $xml = new DOMDocument();
@@ -278,6 +273,10 @@ if( $CONTEXTS_XML != '' ) {
     error_log(sprintf("Error saving to temporary xml file '%s'!", $temp));
     exit( 1 );
   }
+
+  @chown($temp, $stat['uid']);
+  @chgrp($temp, $stat['gid']);
+  @chmod($temp, $stat['mode']);
 
   $ret = rename($temp, $CONTEXTS_XML);
   if( $ret === false ) {
