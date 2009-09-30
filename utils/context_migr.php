@@ -225,11 +225,6 @@ if( $CONTEXTS_XML != '' ) {
     exit( 1 );
   }
 
-  if( getmyuid() === 0 ) {
-    chown($temp, $stat['uid']);
-    chgrp($temp, $stat['gid']);
-  }
-
   $xml = new DOMDocument();
   $xml->preserveWhiteSpace = false;
   $xml->formatOutput = true;
@@ -278,6 +273,10 @@ if( $CONTEXTS_XML != '' ) {
     error_log(sprintf("Error saving to temporary xml file '%s'!", $temp));
     exit( 1 );
   }
+
+  @chown($temp, $stat['uid']);
+  @chgrp($temp, $stat['gid']);
+  @chmod($temp, $stat['mode']);
 
   $ret = rename($temp, $CONTEXTS_XML);
   if( $ret === false ) {
