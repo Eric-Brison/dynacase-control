@@ -10,6 +10,72 @@ Ext.onReady(function(){
     
     installedStore = {};
     availableStore = {};
+	
+    // Update Available Test	
+	needUpdate = false;	
+    Ext.Ajax.request({
+        url: 'wiff.php',
+        params: {
+            needUpdate: true
+        },
+        success: function(responseObject){
+            var response = eval('(' + responseObject.responseText + ')');
+            if (response.error) {
+                Ext.Msg.alert('Server Error', response.error);
+            }
+            else {
+                if (response.data) {
+                    needUpdate = true;
+                    Ext.Msg.confirm('Freedom Web Installer', 'Update available for Installer. Update now ?', function(btn){
+                        if (btn == 'yes') {
+                            updateWIFF();
+                        }
+                    });
+                }
+            }
+            
+        },
+        failure: function(responseObject){
+        
+        }
+        
+    });
+    
+    // EO Update Available Test //
+    
+    function updateWIFF(){
+    
+        mask = new Ext.LoadMask(Ext.getBody(), {
+            msg: 'Updating...'
+        });
+        mask.show();
+        
+        Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+                update: true
+            },
+            success: function(responseObject){
+            
+                mask.hide();
+                
+                var response = eval('(' + responseObject.responseText + ')');
+                if (response.error) {
+                    Ext.Msg.alert('Server Error', response.error);
+                }
+                else {
+                    Ext.Msg.alert('Freedom Web Installer', 'Update successful. Click OK to restart.', function(btn){
+                        window.location.reload();
+                    });
+                }
+                
+            },
+            failure: function(responseObject){
+            
+            }
+            
+        });
+    }
     
     function reloadModuleStore(){
         if (installedStore[currentContext]) {
@@ -40,15 +106,94 @@ Ext.onReady(function(){
                     "<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:firstinstall' target='_blank'><h2>How to install freedom ?</h2></a></li>" +
                     "</ul></div>"
                 
-                }, //				{
-                //                    title: 'Parameters',
-                //                    iconCls: 'x-icon-setup',
-                //                    tabTip: 'Set WIFF parameters',
-                //                    layout: 'fit',
-                //                    style: 'padding:10px;',
-                //                    items: []
-                //                },
-                {
+                }, {
+                    title: 'Setup',
+                    iconCls: 'x-icon-setup',
+                    tabTip: 'Setup WIFF',
+                    layout: 'fit',
+                    style: 'padding:10px;',
+                    items: [{
+                        title: 'Setup',
+                        iconCls: 'x-icon-setup',
+                        items: [{
+                            title: 'WIFF Information',
+                            style: 'padding:10px;font-size:small;',
+                            bodyStyle: 'padding:5px;',
+                            //html: '<ul><li class="x-form-item"><b>Current Version :</b> ' + '<span' + '</li><li class="x-form-item"><b>Available Version :</b> ' + '' + '</li></ul>',
+                            listeners: {
+                                render: function(panel){
+                                
+									var currentVersion = null;
+									var availableVersion = null;
+								
+									var displayInfo = function(){
+										if(currentVersion && availableVersion){
+											var html = '<ul><li class="x-form-item"><b>Current Version :</b> ' + currentVersion + '</li><li class="x-form-item"><b>Available Version :</b> ' + availableVersion + '</li></ul>'
+											panel.body.update(html);
+										}
+									};
+								
+                                    Ext.Ajax.request({
+                                        url: 'wiff.php',
+                                        params: {
+                                            version: true
+                                        },
+                                        success: function(responseObject){
+                                            var response = eval('(' + responseObject.responseText + ')');
+                                            if (response.error) {
+                                                Ext.Msg.alert('Server Error', response.error);
+                                            }
+											currentVersion = response.data;
+											displayInfo();
+                                        },
+                                        failure: function(responseObject){
+                                        
+                                        }
+                                        
+                                    });
+                                    
+                                    Ext.Ajax.request({
+                                        url: 'wiff.php',
+                                        params: {
+                                            availVersion: true
+                                        },
+                                        success: function(responseObject){
+                                            var response = eval('(' + responseObject.responseText + ')');
+                                            if (response.error) {
+                                                Ext.Msg.alert('Server Error', response.error);
+                                            }
+											availableVersion = response.data;
+											displayInfo();
+                                        },
+                                        failure: function(responseObject){
+                                        
+                                        }
+                                    });
+                                    
+                                }
+                            },
+                            tbar: [{
+                                xtype: 'button',
+                                text: 'Update',
+                                iconCls: 'x-icon-wiff-update',
+                                handler: function(b, e){
+                                    updateWIFF();
+                                },
+                                disabled: true,
+                                listeners: {
+                                    render: function(button){
+                                        if (needUpdate) {
+                                            this.enable();
+                                        }
+                                    }
+                                }
+                            }]
+                        }]
+                    
+                    
+                    }]
+                
+                }, {
                     title: 'Create Context',
                     iconCls: 'x-icon-create',
                     tabTip: 'Create new context',
@@ -125,7 +270,7 @@ Ext.onReady(function(){
                                     var first = true;
                                     
                                     repoStore.each(function(record){
-                                    									
+                                    
                                         repoBoxList.push({
                                             boxLabel: record.get('description') + (record.get('baseurl') ? ' <i>(' + record.get('baseurl') + ')</i>' : ' <i>(' + record.get('protocol') + '://*****:*****@' + record.get('host') + '/' + record.get('path') + ')</i>'),
                                             name: 'repo-' + record.get('name'),
@@ -954,7 +1099,7 @@ Ext.onReady(function(){
     }
     
     function askParameter_success(module, operation, responseObject){
-		
+    
         var response = eval('(' + responseObject.responseText + ')');
         if (response.error) {
             Ext.Msg.alert('Server Error', response.error);
@@ -963,9 +1108,9 @@ Ext.onReady(function(){
         var data = response.data;
         
         if (data.length > 0) {
-			
-			module.hasParameter = true ;
         
+            module.hasParameter = true;
+            
             var form = new Ext.form.FormPanel({
                 id: 'parameter-panel',
                 labelWidth: 200,

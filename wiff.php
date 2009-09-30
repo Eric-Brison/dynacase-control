@@ -142,6 +142,32 @@ function answer($data, $error = null)
 
 $wiff = WIFF::getInstance();
 
+// Request installer version
+if ( isset ($_REQUEST['version']))
+{
+	$version = $wiff->getVersion();
+	if (!$wiff->errorMessage)
+	{
+		answer($version);
+	} else
+	{
+		answer(null, $wiff->errorMessage);
+	}
+}
+
+// Request installer available version
+if ( isset ($_REQUEST['availVersion']))
+{
+	$version = $wiff->getAvailVersion();
+	if (!$wiff->errorMessage)
+	{
+		answer($version);
+	} else
+	{
+		answer(null, $wiff->errorMessage);
+	}
+}
+
 // Request if installer need update
 if ( isset ($_REQUEST['needUpdate']))
 {

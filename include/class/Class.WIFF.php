@@ -7,14 +7,17 @@ class WIFF
 {
 
     const contexts_filepath = 'conf/contexts.xml';
-
     const params_filepath = 'conf/params.xml';
 
+    const available_host = "ftp://ftp.freedom-ecm.org/";
+    const available_url = "2.14/tarball/";
 
     public $contexts_filepath = '';
     public $params_filepath = '';
 
     public $errorMessage = null;
+
+    public $archiveFile;
 
     private static $instance;
 
@@ -39,13 +42,165 @@ class WIFF
         return self::$instance;
     }
 
+    /** 
+     * Get WIFF version
+     * @return string
+     */
+    public function getVersion()
+    {
+        $wiff_root = getenv('WIFF_ROOT');
+        if ($wiff_root !== false)
+        {
+            $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+        }
+
+        if (!$fversion = fopen($wiff_root.'VERSION', 'r'))
+        {
+            $this->errorMessage = sprintf("Error when opening VERSION file.");
+            return false;
+        }
+
+        if (!$frelease = fopen($wiff_root.'RELEASE', 'r'))
+        {
+            $this->errorMessage = sprintf("Error when opening RELEASE file.");
+            return false;
+        }
+
+        $version = trim(fgets($fversion));
+        $release = trim(fgets($frelease));
+
+        fclose($fversion);
+        fclose($frelease);
+
+        return $version.'-'.$release;
+    }
+
+    /** 
+     * Get current available WIFF version
+     * @return string
+     */
+    public function getAvailVersion()
+    {
+
+        $tmpfile = $this->downloadUrl(self::available_host.self::available_url.'content.xml');
+        if ($tmpfile === false)
+        {
+            $this->errorMessage = 'Error when retrieving repository for wiff update.';
+            return false;
+        }
+
+        $xml = new DOMDocument();
+        $ret = $xml->load($tmpfile);
+        if ($ret === false)
+        {
+            unlink($tmpfile);
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $tmpfile);
+            return false;
+        }
+
+        $xpath = new DOMXPath($xml);
+
+        $modules = $xpath->query("/repo/modules/module");
+
+        $return = false;
+
+        foreach ($modules as $module)
+        {
+            $name = $module->getAttribute('name');
+            if ($name == 'freedom-wiff')
+            {
+                $version = $module->getAttribute('version');
+                $release = $module->getAttribute('release');
+                $return = $version.'-'.$release;
+            }
+
+        }
+
+        unlink($tmpfile);
+
+        return $return;
+
+        //	return '3.2.0-4';
+
+    }
+
+    /**
+     * Compare WIFF versions
+     * @return
+     * @param string $v1
+     * @param string $r1
+     * @param string $v2
+     * @param string $r2
+     */
+    private function compareVersion($v1, $r1, $v2, $r2)
+    {
+        $ver1 = preg_split('/\./', $v1, 3);
+        $rel1 = $r1;
+        $ver2 = preg_split('/\./', $v2, 3);
+        $rel2 = $r2;
+
+        $str1 = sprintf("%03d%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2], $rel1);
+        $str2 = sprintf("%03d%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2], $rel2);
+
+        return strcmp($str1, $str2);
+    }
+
     /**
      * Check if WIFF has available update
      * @return boolean
      */
     public function needUpdate()
     {
+        $vr = $this->getVersion();
+        $svr = preg_split('/\-/', $vr, 2);
+        $v1 = $svr[0];
+        $r1 = $svr[1];
 
+        $avr = $this->getAvailVersion();
+        $savr = preg_split('/\-/', $avr, 2);
+        $v2 = $savr[0];
+        $r2 = $savr[1];
+
+        return $this->compareVersion($v2, $r2, $v1, $r1) == 1?true:false;
+
+    }
+
+    /**
+     * Download latest WIFF file archive
+     * @return
+     */
+    private function download()
+    {
+        $this->archiveFile = $this->downloadUrl(self::available_host.self::available_url.'freedom-wiff-current.tar.gz');
+        return $this->archiveFile;
+    }
+
+    /**
+     * Unpack archive in specified destination directory
+     * @param directory path to unpack the archive in (e.g. context root dir)
+     * @return string containing the given destination dir pr false in case of error
+     */
+    private function unpack()
+    {
+        include_once ('lib/Lib.System.php');
+
+        if (!is_file($this->archiveFile))
+        {
+            $this->errorMessage = sprintf("Archive file has not been downloaded.");
+            return false;
+        }
+
+        $cmd = 'tar xf '.escapeshellarg($this->archiveFile).' --strip-components 1';
+
+        $ret = null;
+        system($cmd, $ret);
+        if ($ret != 0)
+        {
+            $this->errorMessage = sprintf("Error executing command [%s]", $cmd);
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -54,7 +209,8 @@ class WIFF
      */
     public function update()
     {
-
+        $this->download();
+        $this->unpack();
     }
 
     /**
@@ -125,7 +281,7 @@ class WIFF
 
                 foreach ($repositories as $repository)
                 {
-                	$repoList[] = new Repository($repository);
+                    $repoList[] = new Repository($repository);
                 }
 
                 $contextList[] = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
@@ -170,7 +326,7 @@ class WIFF
 
             foreach ($repositories as $repository)
             {
-            	$repoList[] = new Repository($repository);
+                $repoList[] = new Repository($repository);
             }
 
             $this->errorMessage = null;
@@ -196,8 +352,9 @@ class WIFF
         {
             $this->errorMessage = sprintf("Context '%s' already exists.", $name);
             return false;
-        } else {
-        	$this->errorMessage = null ;
+        } else
+        {
+            $this->errorMessage = null;
         }
 
         // Create or reuse directory
@@ -493,7 +650,7 @@ class WIFF
     {
         require_once ('lib/Lib.System.php');
 
-        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHTtpUrlFopen');
+        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHttpUrlFopen');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
