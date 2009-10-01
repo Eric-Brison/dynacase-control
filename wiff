@@ -24,6 +24,7 @@ case 'show':
   $ret = wiff_show($argv);
   break;
 case 'context':
+  $line = array_shift($argv);
   $ret = wiff_context($argv);
   break;
 case 'help':

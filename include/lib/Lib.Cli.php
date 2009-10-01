@@ -9,6 +9,8 @@ function wiff_help(&$argv) {
   echo "\n";
   echo "  wiff help [get|set|param|context]\n";
   echo "\n";
+  echo "  wiff context <context-name>\n";
+  echo "\n";
   echo "  wiff param show\n";
   echo "  wiff param get <param_name>\n";
   echo "  wiff param set <param_name> <param_value>\n";
@@ -42,7 +44,22 @@ function wiff_show(&$argv) {
 }
 
 function wiff_context(&$argv) {
-  echo "'context' not yet implemented.\n";
+  if (!is_array($argv)) return 0;
+  $ctx_name = $argv[0];
+  // echo "<context> $ctx_name\n";
+  if ($ctx_name=="") {
+    wiff_help($argv);
+    return 0;
+  }
+  $wiff = WIFF::getInstance();
+  $context = $wiff->getContext($ctx_name);
+
+  echo "export wpub=".$context->root.";\n";
+  echo "export pgservice_core=".$context->getParamByName("core_db").";\n";
+  echo "export pgservice_freedom=".$context->getParamByName("core_db").";\n";
+  echo "export httpuser=".$context->getParamByName("apacheuser").";\n";
+  echo "export freedom_context=default\n";
+
   return 0;
 }
 

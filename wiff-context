@@ -1,0 +1,10 @@
+#!/bin/bash
+
+eval `../../../wiff/wiff context  "$1"`
+echo " ** "
+echo " ** WIFF Context $1 Environment set : wpub=$wpub ";
+echo " **                   pgservice_core=$pgservice_core ";
+echo " **                   pgservice_freedom=$pgservice_freedom ";
+echo " **                   httpuser=$httpuser ";
+echo " **                   freedom_context=default [for backward compatibility] ";
+echo " ** "
