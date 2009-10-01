@@ -484,8 +484,8 @@ class Context
                     case 'ge':
                         if ($this->cmpVersionReleaseAsc($reqMod->version, 0, $reqModVersion, 0) < 0)
                         {
-			  $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.", $mod->name, $mod->version, $reqModName, $reqModVersion, $reqMod->name, $reqMod->version );
-			  return false;
+                            $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.", $mod->name, $mod->version, $reqModName, $reqModVersion, $reqMod->name, $reqMod->version);
+                            return false;
                         }
                     break;
                     default:
@@ -493,8 +493,9 @@ class Context
                         return false;
                 }
 
+
                 // Check if a version of this module is already installed
-                if ($this->moduleIsInstalledAndUpToDateWith($reqMod))
+                if ($this->moduleIsInstalledAndUpToDateWith($reqMod, $reqModComp, $reqModVersion))
                 {
                     continue ;
                 }
@@ -531,7 +532,7 @@ class Context
 
                 foreach ($reqList as $req)
                 {
-                	// If ordered list does not contain one dependency and dependency list does contain it, module must not be added to ordered list at that time
+                    // If ordered list does not contain one dependency and dependency list does contain it, module must not be added to ordered list at that time
                     if (!listContains($orderList, $req['name']) && listContains($list, $req['name']))
                     {
                         $pushable = false;
@@ -609,15 +610,38 @@ class Context
     /**
      * Check if the given module Object is already installed and up-to-date
      */
-    private function moduleIsInstalledAndUpToDateWith( & $targetModule)
+    private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = '', $version = '')
     {
-        $installedModule = $this->moduleIsInstalled($targetModule);
-        if ($installedModule === false)
-        {
-            return false;
-        }
+    	
+		$installedModule = $this->moduleIsInstalled($targetModule);		
 
-        if ($installedModule->status != 'installed')
+        if ($operator != '')
+        {
+            switch($operator)
+            {
+                case 'ge':
+
+                    $v = $installedModule->version;
+                    $r = $installedModule->release;
+
+                    $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+                    if ($cmp != -1)
+                    {
+                        return true;
+                    } else
+                    {
+                        return false;
+                    }
+                break;
+                case '':
+
+            }
+        } else
+        {
+            return (bool)$installedModule;
+        }
+		
+		if ($installedModule->status != 'installed')
         {
             return false;
         }
