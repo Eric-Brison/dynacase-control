@@ -10,9 +10,9 @@ Ext.onReady(function(){
     
     installedStore = {};
     availableStore = {};
-	
+    
     // Update Available Test	
-	needUpdate = false;	
+    needUpdate = false;
     Ext.Ajax.request({
         url: 'wiff.php',
         params: {
@@ -123,16 +123,16 @@ Ext.onReady(function(){
                             listeners: {
                                 render: function(panel){
                                 
-									var currentVersion = null;
-									var availableVersion = null;
-								
-									var displayInfo = function(){
-										if(currentVersion && availableVersion){
-											var html = '<ul><li class="x-form-item"><b>Current Version :</b> ' + currentVersion + '</li><li class="x-form-item"><b>Available Version :</b> ' + availableVersion + '</li></ul>'
-											panel.body.update(html);
-										}
-									};
-								
+                                    var currentVersion = null;
+                                    var availableVersion = null;
+                                    
+                                    var displayInfo = function(){
+                                        if (currentVersion && availableVersion) {
+                                            var html = '<ul><li class="x-form-item"><b>Current Version :</b> ' + currentVersion + '</li><li class="x-form-item"><b>Available Version :</b> ' + availableVersion + '</li></ul>'
+                                            panel.body.update(html);
+                                        }
+                                    };
+                                    
                                     Ext.Ajax.request({
                                         url: 'wiff.php',
                                         params: {
@@ -143,8 +143,8 @@ Ext.onReady(function(){
                                             if (response.error) {
                                                 Ext.Msg.alert('Server Error', response.error);
                                             }
-											currentVersion = response.data;
-											displayInfo();
+                                            currentVersion = response.data;
+                                            displayInfo();
                                         },
                                         failure: function(responseObject){
                                         
@@ -162,8 +162,8 @@ Ext.onReady(function(){
                                             if (response.error) {
                                                 Ext.Msg.alert('Server Error', response.error);
                                             }
-											availableVersion = response.data;
-											displayInfo();
+                                            availableVersion = response.data;
+                                            displayInfo();
                                         },
                                         failure: function(responseObject){
                                         
@@ -471,6 +471,8 @@ Ext.onReady(function(){
                                         }
                                         
                                         if (operation == 'parameter') {
+											toInstall = [];
+											toInstall[0] = currentModule;
                                             askParameter(currentModule, operation);
                                         }
                                         if (operation == 'upgrade') {
@@ -954,53 +956,55 @@ Ext.onReady(function(){
             },
             callback: function(option, success, responseObject){
             
-                globalwin = new Ext.Window({
-                    title: 'Freedom Web Installer',
-                    id: 'module-window',
-                    layout: 'column',
-                    resizable: true,
-                    //height: 400,
-                    width: 700,
-                    modal: true
-                    //	bodyStyle: 'overflow:auto;'
-                });
-                
-                modulepanel = new Ext.Panel({
-                    title: 'Module List',
-                    columnWidth: 0.25,
-                    height: 422,
-                    setModuleIcon: function(name, icon){
-                        var panel = this.getComponent('module-' + name);
-                        panel.setIconClass(icon);
-                    }
-                    
-                });
-                
-                for (var i = 0; i < toInstall.length; i++) {
-                    var panel = new Ext.Panel({
-                        //collapsible: true,
-                        //collapsed: true,
-                        title: toInstall[i].name,
-                        iconCls: 'x-icon-none',
-                        //                        html: html,
-                        id: 'module-' + toInstall[i].name,
-                        border: false,
-                        style: 'padding:0px;'
-                    });
-                    
-                    modulepanel.add(panel);
-                }
-                
-                globalwin.add(modulepanel);
-                
-                processpanel = [];
-                
-                globalwin.show();
-                
+				getGlobalwin();
+			
                 askParameter(toInstall[0], operation);
                 
             }
         });
+    }
+    
+    function getGlobalwin(){
+    
+        globalwin = new Ext.Window({
+            title: 'Freedom Web Installer',
+            id: 'module-window',
+            layout: 'column',
+            resizable: true,
+            //height: 400,
+            width: 700,
+            modal: true
+        });
+        
+        modulepanel = new Ext.Panel({
+            title: 'Module List',
+            columnWidth: 0.25,
+            height: 422,
+            setModuleIcon: function(name, icon){
+                var panel = this.getComponent('module-' + name);
+                panel.setIconClass(icon);
+            }
+            
+        });
+        
+        for (var i = 0; i < toInstall.length; i++) {
+            var panel = new Ext.Panel({
+                title: toInstall[i].name,
+                iconCls: 'x-icon-none',
+                id: 'module-' + toInstall[i].name,
+                border: false,
+                style: 'padding:0px;'
+            });
+            
+            modulepanel.add(panel);
+        }
+        
+        globalwin.add(modulepanel);
+        
+        processpanel = [];
+        
+        globalwin.show();
+        
     }
     
     /**
@@ -1022,6 +1026,8 @@ Ext.onReady(function(){
                 }
                 else {
                     Ext.Msg.alert('Freedom Web Installer', 'Install successful', function(){
+                        installedStore[currentContext].load();
+                        availableStore[currentContext].load();
                         //globalwin.close();
                     });
                 }
@@ -1078,7 +1084,11 @@ Ext.onReady(function(){
      * ask parameter
      */
     function askParameter(module, operation){
-    
+    		        
+		if(operation == 'parameter'){
+			getGlobalwin();
+		}
+					
         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
         
         Ext.Ajax.request({
@@ -1190,6 +1200,11 @@ Ext.onReady(function(){
      */
     function getPhaseList(module, operation){
     
+		//If parameter, make as if update for now
+		if(operation == 'parameter'){
+			operation = 'upgrade';
+		}
+	
         currentModule = module;
         
         Ext.Ajax.request({
@@ -1659,8 +1674,8 @@ Ext.onReady(function(){
             
                 // Phase execution is over
                 // Proceed to next module to install
-                installedStore[currentContext].load();
-                availableStore[currentContext].load();
+                //installedStore[currentContext].load();
+                //availableStore[currentContext].load();
                 
                 // Hide process panel in global window if applicable
                 if (processpanel[module.name]) {
