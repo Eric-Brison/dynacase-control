@@ -11,6 +11,41 @@ Ext.onReady(function(){
     installedStore = {};
     availableStore = {};
     
+    // Password File Test
+	function checkPasswordFile(){
+		Ext.Ajax.request({
+			url: 'wiff.php',
+			params: {
+				hasPasswordFile: true
+			},
+			success: function(responseObject){
+				var response = eval('(' + responseObject.responseText + ')');
+				if (response.error) {
+					Ext.Msg.alert('Server Error', response.error);
+				}
+				else {
+					if (response.data) {
+					// Nothing to do.
+					}
+					else {
+						//Ext.Msg.alert('Freedom Web Installer', 'Password File Not Found');
+						
+						displayPasswordWindow();
+						
+					}
+				}
+				
+			},
+			failure: function(responseObject){
+			
+			}
+			
+		});
+	}
+	
+	checkPasswordFile();
+    // EO Password File Test	
+    
     // Update Available Test	
     needUpdate = false;
     Ext.Ajax.request({
@@ -85,6 +120,91 @@ Ext.onReady(function(){
             availableStore[currentContext].load();
         }
     }
+	
+	function displayPasswordWindow(cancel){
+		var loginField = new Ext.form.TextField({
+			fieldLabel: 'Login',
+			xtype: 'textfield'
+		});
+		
+		var passwordField = new Ext.form.TextField({
+			fieldLabel: 'Password',
+			xtype: 'textfield'
+		});
+		
+		var win = new Ext.Window({
+			title: 'Freedom Web Installer - Define Password',
+			layout: 'fit',
+			modal: true,
+			items: [{
+				xtype: 'form',
+				height: 200,
+				width: 300,
+				bodyStyle: 'padding:5px',
+				items: [loginField, passwordField],
+				bbar: [{
+					text: 'Save',
+					iconCls: 'x-icon-ok',
+					handler: function(b, e){
+						var newLogin = loginField.getValue();
+						var newPassword = passwordField.getValue();
+						
+						mask = new Ext.LoadMask(Ext.getBody(), {
+							msg: 'Saving...'
+						});
+						mask.show();
+						
+						Ext.Ajax.request({
+							url: 'wiff.php',
+							params: {
+								createPasswordFile: true,
+								login: newLogin,
+								password: newPassword
+							},
+							success: function(responseObject){
+							
+								mask.hide();
+								
+								var response = eval('(' + responseObject.responseText + ')');
+								if (response.error) {
+									Ext.Msg.alert('Server Error', response.error);
+								}
+								else {
+									Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
+										win.close();
+									});
+									
+								}
+								
+								
+								
+							},
+							failure: function(responseObject){
+							
+							}
+							
+						});
+						
+						
+						win.close();
+					}
+				}, {
+					text: 'Cancel',
+					iconCls: 'x-icon-undo',
+					handler: function(b, e){
+						win.close();
+					},
+					disabled: !cancel
+				}]
+			}],
+			listeners: {
+				close: function(){
+					checkPasswordFile();
+				}
+			}
+		});
+		win.show();
+	}
     
     var view = new Ext.Viewport({
         layout: 'fit',
@@ -119,7 +239,6 @@ Ext.onReady(function(){
                             title: 'WIFF Information',
                             style: 'padding:10px;font-size:small;',
                             bodyStyle: 'padding:5px;',
-                            //html: '<ul><li class="x-form-item"><b>Current Version :</b> ' + '<span' + '</li><li class="x-form-item"><b>Available Version :</b> ' + '' + '</li></ul>',
                             listeners: {
                                 render: function(panel){
                                 
@@ -180,6 +299,20 @@ Ext.onReady(function(){
                                     updateWIFF();
                                 },
                                 disabled: true,
+                                listeners: {
+                                    render: function(button){
+                                        if (needUpdate) {
+                                            this.enable();
+                                        }
+                                    }
+                                }
+                            }, {
+                                xtype: 'button',
+                                text: 'Password',
+                                iconCls: 'x-icon-wiff-password',
+                                handler: function(b, e){                                
+									displayPasswordWindow();
+                                },
                                 listeners: {
                                     render: function(button){
                                         if (needUpdate) {
@@ -471,8 +604,8 @@ Ext.onReady(function(){
                                         }
                                         
                                         if (operation == 'parameter') {
-											toInstall = [];
-											toInstall[0] = currentModule;
+                                            toInstall = [];
+                                            toInstall[0] = currentModule;
                                             askParameter(currentModule, operation);
                                         }
                                         if (operation == 'upgrade') {
@@ -956,8 +1089,8 @@ Ext.onReady(function(){
             },
             callback: function(option, success, responseObject){
             
-				getGlobalwin();
-			
+                getGlobalwin();
+                
                 askParameter(toInstall[0], operation);
                 
             }
@@ -1084,11 +1217,11 @@ Ext.onReady(function(){
      * ask parameter
      */
     function askParameter(module, operation){
-    		        
-		if(operation == 'parameter'){
-			getGlobalwin();
-		}
-					
+    
+        if (operation == 'parameter') {
+            getGlobalwin();
+        }
+        
         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
         
         Ext.Ajax.request({
@@ -1200,11 +1333,11 @@ Ext.onReady(function(){
      */
     function getPhaseList(module, operation){
     
-		//If parameter, make as if update for now
-		if(operation == 'parameter'){
-			operation = 'upgrade';
-		}
-	
+        //If parameter, make as if update for now
+        if (operation == 'parameter') {
+            operation = 'upgrade';
+        }
+        
         currentModule = module;
         
         Ext.Ajax.request({

@@ -120,7 +120,49 @@ class WIFF
 
         return $return;
 
-        //	return '3.2.0-4';
+    }
+
+    public function hasPasswordFile()
+    {
+
+        @$accessFile = fopen('.htaccess', 'r');
+        @$passwordFile = fopen('.htpasswd', 'r');
+        
+		if (!$accessFile || !$passwordFile)
+        {
+            return false;
+        } else
+        {
+            return true;
+        }
+
+    }
+
+    public function createPasswordFile($login,$password)
+    {
+
+        @$accessFile = fopen('.htaccess', 'w');
+        @$passwordFile = fopen('.htpasswd', 'w');
+
+        fwrite($accessFile,
+"AuthUserFile ".getenv('WIFF_ROOT')."/.htpasswd
+AuthGroupFile /dev/null
+AuthName 'Veuillez vous identifier'
+AuthType Basic
+
+<Limit GET POST>
+require valid-user
+</Limit>"
+		);
+
+		fwrite($passwordFile,
+			$login.':'.crypt($password) 
+		);
+		
+		fclose($accessFile);
+		fclose($passwordFile);
+		
+		return true;
 
     }
 

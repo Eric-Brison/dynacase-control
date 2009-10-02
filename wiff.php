@@ -194,6 +194,30 @@ if ( isset ($_REQUEST['update']))
     }
 }
 
+if ( isset ($_REQUEST['hasPasswordFile']))
+{
+	$hasPasswordFile = $wiff->hasPasswordFile();
+    if (!$wiff->errorMessage)
+    {
+        answer($hasPasswordFile);
+    } else
+    {
+        answer(null, $wiff->errorMessage);
+    }
+}
+
+if ( isset ($_REQUEST['createPasswordFile']) && isset ($_REQUEST['login']) && isset ($_REQUEST['password']))
+{
+	$wiff->createPasswordFile($_REQUEST['login'],$_REQUEST['password']);
+    if (!$wiff->errorMessage)
+    {
+        answer(true);
+    } else
+    {
+        answer(null, $wiff->errorMessage);
+    }
+}
+
 // Request to get global repository list
 if ( isset ($_REQUEST['getRepoList']))
 {
@@ -652,6 +676,6 @@ if ( isset ($argv))
 
 }
 
-answer(null, "Unrecognized Call");
+answer(null, "Unrecognized or incomplete call");
 
 ?>
