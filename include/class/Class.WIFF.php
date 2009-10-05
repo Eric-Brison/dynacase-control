@@ -288,6 +288,93 @@ require valid-user
         return $repoList;
 
     }
+	
+	/**
+     * Add repository to global repo list
+     * @return boolean
+     */
+    public function createRepo($name,$description,$baseurl)
+    {
+        require_once ('class/Class.Repository.php');
+
+        $xml = new DOMDocument();
+        $xml->load($this->params_filepath);
+        if ($xml === false)
+        {
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+            return false;
+        }
+		
+		$xPath = new DOMXPath($xml);
+
+		// Get repository with this name from WIFF repositories
+        $wiffRepoList = $xPath->query("/wiff/repositories/access[@name='".$name."']");
+        if ($wiffRepoList->length != 0)
+        {
+            // If there is already a repository with same name
+            $this->errorMessage = "Repository with same name already exists.";
+            return false;
+        }
+
+        // Add repository to this context
+		$node = $xml->createElement('access');
+        $repository = $xml->getElementsByTagName('repositories')->item(0)->appendChild($node);
+
+        $repository->setAttribute('name', $name);
+        $repository->setAttribute('description', $description);		
+		$repository->setAttribute('baseurl', $baseurl);
+
+        $ret = $xml->save($this->params_filepath);
+        if ($ret === false)
+        {
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+            return false;
+        }
+
+        return true;
+
+    }
+	
+	/**
+     * Delete repository from global repo list
+     * @return boolean
+     */
+    public function deleteRepo($name)
+    {
+        require_once ('class/Class.Repository.php');
+
+        $xml = new DOMDocument();
+        $xml->load($this->params_filepath);
+        if ($xml === false)
+        {
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+            return false;
+        }
+		
+		$xPath = new DOMXPath($xml);
+
+		// Get repository with this name from WIFF repositories
+        $wiffRepoList = $xPath->query("/wiff/repositories/access[@name='".$name."']");
+        if ($wiffRepoList->length == 0)
+        {
+            // If there is not at least one repository with such name enlisted
+            $this->errorMessage = "Repository not found.";
+            return false;
+        }
+
+        // Delete repository from this context
+        $repository = $xml->getElementsByTagName('repositories')->item(0)->removeChild($wiffRepoList->item(0));
+
+        $ret = $xml->save($this->params_filepath);
+        if ($ret === false)
+        {
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+            return false;
+        }
+
+        return true;
+
+    }
 
     /**
      * Get Context list

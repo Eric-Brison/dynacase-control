@@ -229,6 +229,32 @@ if ( isset ($_REQUEST['getRepoList']))
     answer($repoList);
 }
 
+// Request to add a repo
+if ( isset ($_REQUEST['createRepo']))
+{
+	$wiff->createRepo($_REQUEST['name'],$_REQUEST['description'],$_REQUEST['baseurl']);
+	if( !$wiff->errorMessage)
+	{
+		answer(true);
+	} else
+	{
+		answer(null, $wiff->errorMessage);
+	}
+}
+
+// Request to delete a repo
+if ( isset ($_REQUEST['deleteRepo']))
+{
+	$wiff->deleteRepo($_REQUEST['name']);
+	if( !$wiff->errorMessage)
+	{
+		answer(true);
+	} else
+	{
+		answer(null, $wiff->errorMessage);
+	}
+}
+
 // Request to get context list
 if ( isset ($_REQUEST['getContextList']))
 {

@@ -12,38 +12,38 @@ Ext.onReady(function(){
     availableStore = {};
     
     // Password File Test
-	function checkPasswordFile(){
-		Ext.Ajax.request({
-			url: 'wiff.php',
-			params: {
-				hasPasswordFile: true
-			},
-			success: function(responseObject){
-				var response = eval('(' + responseObject.responseText + ')');
-				if (response.error) {
-					Ext.Msg.alert('Server Error', response.error);
-				}
-				else {
-					if (response.data) {
-					// Nothing to do.
-					}
-					else {
-						//Ext.Msg.alert('Freedom Web Installer', 'Password File Not Found');
-						
-						displayPasswordWindow();
-						
-					}
-				}
-				
-			},
-			failure: function(responseObject){
-			
-			}
-			
-		});
-	}
-	
-	checkPasswordFile();
+    function checkPasswordFile(){
+        Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+                hasPasswordFile: true
+            },
+            success: function(responseObject){
+                var response = eval('(' + responseObject.responseText + ')');
+                if (response.error) {
+                    Ext.Msg.alert('Server Error', response.error);
+                }
+                else {
+                    if (response.data) {
+                        // Nothing to do.
+                    }
+                    else {
+                        //Ext.Msg.alert('Freedom Web Installer', 'Password File Not Found');
+                        
+                        displayPasswordWindow();
+                        
+                    }
+                }
+                
+            },
+            failure: function(responseObject){
+            
+            }
+            
+        });
+    }
+    
+    checkPasswordFile();
     // EO Password File Test	
     
     // Update Available Test	
@@ -120,91 +120,92 @@ Ext.onReady(function(){
             availableStore[currentContext].load();
         }
     }
-	
-	function displayPasswordWindow(cancel){
-		var loginField = new Ext.form.TextField({
-			fieldLabel: 'Login',
-			xtype: 'textfield'
-		});
-		
-		var passwordField = new Ext.form.TextField({
-			fieldLabel: 'Password',
-			xtype: 'textfield'
-		});
-		
-		var win = new Ext.Window({
-			title: 'Freedom Web Installer - Define Password',
-			layout: 'fit',
-			modal: true,
-			items: [{
-				xtype: 'form',
-				height: 200,
-				width: 300,
-				bodyStyle: 'padding:5px',
-				items: [loginField, passwordField],
-				bbar: [{
-					text: 'Save',
-					iconCls: 'x-icon-ok',
-					handler: function(b, e){
-						var newLogin = loginField.getValue();
-						var newPassword = passwordField.getValue();
-						
-						mask = new Ext.LoadMask(Ext.getBody(), {
-							msg: 'Saving...'
-						});
-						mask.show();
-						
-						Ext.Ajax.request({
-							url: 'wiff.php',
-							params: {
-								createPasswordFile: true,
-								login: newLogin,
-								password: newPassword
-							},
-							success: function(responseObject){
-							
-								mask.hide();
-								
-								var response = eval('(' + responseObject.responseText + ')');
-								if (response.error) {
-									Ext.Msg.alert('Server Error', response.error);
-								}
-								else {
-									Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
-										win.close();
-									});
-									
-								}
-								
-								
-								
-							},
-							failure: function(responseObject){
-							
-							}
-							
-						});
-						
-						
-						win.close();
-					}
-				}, {
-					text: 'Cancel',
-					iconCls: 'x-icon-undo',
-					handler: function(b, e){
-						win.close();
-					},
-					disabled: !cancel
-				}]
-			}],
-			listeners: {
-				close: function(){
-					checkPasswordFile();
-				}
-			}
-		});
-		win.show();
-	}
+    
+    function displayPasswordWindow(cancel){
+    
+        var loginField = new Ext.form.TextField({
+            fieldLabel: 'Login',
+            xtype: 'textfield'
+        });
+        
+        var passwordField = new Ext.form.TextField({
+            fieldLabel: 'Password',
+            xtype: 'textfield'
+        });
+        
+        var win = new Ext.Window({
+            title: 'Freedom Web Installer - Define Password',
+            layout: 'fit',
+            modal: true,
+            items: [{
+                xtype: 'form',
+                height: 200,
+                width: 300,
+                bodyStyle: 'padding:5px',
+                items: [loginField, passwordField],
+                bbar: [{
+                    text: 'Save',
+                    iconCls: 'x-icon-ok',
+                    handler: function(b, e){
+                        var newLogin = loginField.getValue();
+                        var newPassword = passwordField.getValue();
+                        
+                        mask = new Ext.LoadMask(Ext.getBody(), {
+                            msg: 'Saving...'
+                        });
+                        mask.show();
+                        
+                        Ext.Ajax.request({
+                            url: 'wiff.php',
+                            params: {
+                                createPasswordFile: true,
+                                login: newLogin,
+                                password: newPassword
+                            },
+                            success: function(responseObject){
+                            
+                                mask.hide();
+                                
+                                var response = eval('(' + responseObject.responseText + ')');
+                                if (response.error) {
+                                    Ext.Msg.alert('Server Error', response.error);
+                                }
+                                else {
+                                    Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
+                                        win.close();
+                                    });
+                                    
+                                }
+                                
+                                
+                                
+                            },
+                            failure: function(responseObject){
+                            
+                            }
+                            
+                        });
+                        
+                        
+                        win.close();
+                    }
+                }, {
+                    text: 'Cancel',
+                    iconCls: 'x-icon-undo',
+                    handler: function(b, e){
+                        win.close();
+                    },
+                    disabled: !cancel
+                }]
+            }],
+            listeners: {
+                close: function(){
+                    checkPasswordFile();
+                }
+            }
+        });
+        win.show();
+    }
     
     var view = new Ext.Viewport({
         layout: 'fit',
@@ -310,8 +311,8 @@ Ext.onReady(function(){
                                 xtype: 'button',
                                 text: 'Password',
                                 iconCls: 'x-icon-wiff-password',
-                                handler: function(b, e){                                
-									displayPasswordWindow();
+                                handler: function(b, e){
+                                    displayPasswordWindow();
                                 },
                                 listeners: {
                                     render: function(button){
@@ -321,6 +322,206 @@ Ext.onReady(function(){
                                     }
                                 }
                             }]
+                        }, {
+                            title: 'Repositories',
+                            style: 'padding:10px;font-size:small;',
+                            listeners: {
+                                render: function(panel){
+                                
+                                    repoStore = new Ext.data.JsonStore({
+                                        url: 'wiff.php',
+                                        baseParams: {
+                                            getRepoList: true
+                                        },
+                                        root: 'data',
+                                        fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path'],
+                                        autoLoad: true
+                                    });
+                                    
+                                    var actions = new Ext.ux.grid.RowActions({
+                                        header: '',
+                                        autoWidth: false,
+                                        width: 20,
+                                        actions: [{
+                                            iconCls: 'x-icon-remove',
+                                            tooltip: 'Remove'
+                                        }]
+                                    });
+                                    
+                                    actions.on({
+                                        action: function(grid, record, action, row, col){
+                                        
+                                            mask = new Ext.LoadMask(Ext.getBody(), {
+                                                msg: 'Deleting...'
+                                            });
+                                            mask.show();
+                                            
+                                            var repositoryName = record.get('name');
+                                            
+                                            switch (action) {
+                                                case 'x-icon-remove':
+                                                    Ext.Ajax.request({
+                                                        url: 'wiff.php',
+                                                        params: {
+                                                            deleteRepo: true,
+                                                            name: repositoryName
+                                                        },
+                                                        success: function(responseObject){
+                                                        
+                                                            mask.hide();
+                                                            
+                                                            var response = eval('(' + responseObject.responseText + ')');
+                                                            if (response.error) {
+                                                                Ext.Msg.alert('Server Error', response.error);
+                                                            }
+                                                            else {
+                                                                Ext.Msg.alert('Freedom Web Installer', 'Removal successful.', function(btn){
+                                                                    grid.getStore().reload();
+                                                                });
+                                                                
+                                                            }
+                                                            
+                                                        },
+                                                        failure: function(responseObject){
+                                                        
+                                                        }
+                                                        
+                                                    });
+                                                    break;
+                                            }
+                                            
+                                        }
+                                    });
+                                    
+                                    var grid = new Ext.grid.GridPanel({
+                                        border: false,
+                                        store: repoStore,
+                                        stripeRows: true,
+                                        loadMask: true,
+                                        tbar: [{
+                                            text: 'Add Repository',
+                                            tooltip: 'Add a new available repository for context(s)',
+                                            iconCls: 'x-icon-install',
+                                            handler: function(button, eventObject){
+                                            
+                                                var nameField = new Ext.form.TextField({
+                                                    fieldLabel: 'Name',
+                                                    xtype: 'textfield'
+                                                });
+                                                
+                                                var descriptionField = new Ext.form.TextField({
+                                                    fieldLabel: 'Description',
+                                                    xtype: 'textfield'
+                                                });
+                                                
+                                                var baseurlField = new Ext.form.TextField({
+                                                    fieldLabel: 'Base Url',
+                                                    xtype: 'textfield'
+                                                });
+                                                
+                                                var win = new Ext.Window({
+                                                    title: 'Freedom Web Installer - Add Repository',
+                                                    layout: 'fit',
+                                                    modal: true,
+                                                    items: [{
+                                                        xtype: 'form',
+                                                        height: 200,
+                                                        width: 300,
+                                                        bodyStyle: 'padding:5px',
+                                                        items: [nameField, descriptionField, baseurlField],
+                                                        bbar: [{
+                                                            text: 'Save',
+                                                            iconCls: 'x-icon-ok',
+                                                            handler: function(b, e){
+                                                                var newName = nameField.getValue();
+                                                                var newDescription = descriptionField.getValue();
+                                                                var newBaseurl = baseurlField.getValue();
+                                                                
+                                                                mask = new Ext.LoadMask(Ext.getBody(), {
+                                                                    msg: 'Saving...'
+                                                                });
+                                                                mask.show();
+                                                                
+                                                                Ext.Ajax.request({
+                                                                    url: 'wiff.php',
+                                                                    params: {
+                                                                        createRepo: true,
+                                                                        name: newName,
+                                                                        description: newDescription,
+                                                                        baseurl: newBaseurl
+                                                                    },
+                                                                    success: function(responseObject){
+                                                                    
+                                                                        mask.hide();
+                                                                        
+                                                                        var response = eval('(' + responseObject.responseText + ')');
+                                                                        if (response.error) {
+                                                                            Ext.Msg.alert('Server Error', response.error);
+                                                                        }
+                                                                        else {
+                                                                            Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
+                                                                                win.close();
+                                                                                grid.getStore().reload();
+                                                                            });
+                                                                            
+                                                                        }
+                                                                        
+                                                                        
+                                                                        
+                                                                    },
+                                                                    failure: function(responseObject){
+                                                                    
+                                                                    }
+                                                                    
+                                                                });
+                                                                
+                                                                
+                                                                win.close();
+                                                            }
+                                                        }, {
+                                                            text: 'Cancel',
+                                                            iconCls: 'x-icon-undo',
+                                                            handler: function(b, e){
+                                                                win.close();
+                                                            }
+                                                        }]
+                                                    }],
+                                                    listeners: {
+                                                        close: function(){
+                                                            checkPasswordFile();
+                                                        }
+                                                    }
+                                                });
+                                                win.show();
+                                                
+                                            }
+                                        }],
+                                        columns: [actions, {
+                                            id: 'name',
+                                            header: 'Repository',
+                                            dataIndex: 'name',
+                                            width: 140
+                                        }, {
+                                            id: 'baseurl',
+                                            header: 'Base Url',
+                                            dataIndex: 'baseurl',
+                                            width: 360
+                                        }, {
+                                            id: 'description',
+                                            header: 'Description',
+                                            dataIndex: 'description'
+                                        }],
+                                        autoExpandColumn: 'description',
+                                        autoHeight: true,
+                                        plugins: [actions]
+                                    });
+                                    
+                                    grid.getView().emptyText = 'No defined repositories';
+                                    
+                                    panel.add(grid);
+                                    
+                                }
+                            }
                         }]
                     
                     
