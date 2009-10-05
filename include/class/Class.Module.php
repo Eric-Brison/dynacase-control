@@ -547,7 +547,7 @@ class Module
             switch($operation)
             {
                 case 'install':
-                    return array ('pre-install','pre-upgrade', 'unpack', 'post-install');
+                    return array ('pre-install', 'unpack', 'post-install');
                     break;
                 case 'upgrade':
 		  			return array ('pre-upgrade', 'unpack', 'post-upgrade');
