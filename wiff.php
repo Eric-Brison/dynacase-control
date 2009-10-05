@@ -232,7 +232,7 @@ if ( isset ($_REQUEST['getRepoList']))
 // Request to add a repo
 if ( isset ($_REQUEST['createRepo']))
 {
-	$wiff->createRepo($_REQUEST['name'],$_REQUEST['description'],$_REQUEST['baseurl']);
+	$wiff->createRepo($_REQUEST['name'],$_REQUEST['description'],$_REQUEST['baseurl'],$_REQUEST['host'],$_REQUEST['path'],$_REQUEST['login'],$_REQUEST['password']);
 	if( !$wiff->errorMessage)
 	{
 		answer(true);

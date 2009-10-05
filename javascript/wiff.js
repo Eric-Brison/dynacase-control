@@ -377,6 +377,7 @@ Ext.onReady(function(){
                                                             else {
                                                                 Ext.Msg.alert('Freedom Web Installer', 'Removal successful.', function(btn){
                                                                     grid.getStore().reload();
+																	Ext.getCmp('create-context-form').fireEvent('render',Ext.getCmp('create-context-form'));
                                                                 });
                                                                 
                                                             }
@@ -418,6 +419,31 @@ Ext.onReady(function(){
                                                     fieldLabel: 'Base Url',
                                                     xtype: 'textfield'
                                                 });
+												
+												var protocolField = new Ext.form.TextField({
+                                                    fieldLabel: 'Protocol',
+                                                    xtype: 'textfield'
+                                                });
+												
+												var hostField = new Ext.form.TextField({
+                                                    fieldLabel: 'Host',
+                                                    xtype: 'textfield'
+                                                });
+												
+												var pathField = new Ext.form.TextField({
+                                                    fieldLabel: 'Path',
+                                                    xtype: 'textfield'
+                                                });
+												
+												var loginField = new Ext.form.TextField({
+                                                    fieldLabel: 'Login',
+                                                    xtype: 'textfield'
+                                                });
+												
+												var passwordField = new Ext.form.TextField({
+                                                    fieldLabel: 'Password',
+                                                    xtype: 'textfield'
+                                                });
                                                 
                                                 var win = new Ext.Window({
                                                     title: 'Freedom Web Installer - Add Repository',
@@ -425,10 +451,10 @@ Ext.onReady(function(){
                                                     modal: true,
                                                     items: [{
                                                         xtype: 'form',
-                                                        height: 200,
+                                                        height: 300,
                                                         width: 300,
                                                         bodyStyle: 'padding:5px',
-                                                        items: [nameField, descriptionField, baseurlField],
+                                                        items: [nameField, descriptionField, baseurlField, hostField, pathField, loginField, passwordField],
                                                         bbar: [{
                                                             text: 'Save',
                                                             iconCls: 'x-icon-ok',
@@ -436,6 +462,11 @@ Ext.onReady(function(){
                                                                 var newName = nameField.getValue();
                                                                 var newDescription = descriptionField.getValue();
                                                                 var newBaseurl = baseurlField.getValue();
+																var newHost = hostField.getValue();
+																var newPath = pathField.getValue();
+																var newLogin = loginField.getValue();
+																var newPassword = passwordField.getValue();
+																
                                                                 
                                                                 mask = new Ext.LoadMask(Ext.getBody(), {
                                                                     msg: 'Saving...'
@@ -448,7 +479,11 @@ Ext.onReady(function(){
                                                                         createRepo: true,
                                                                         name: newName,
                                                                         description: newDescription,
-                                                                        baseurl: newBaseurl
+                                                                        baseurl: newBaseurl,
+																		host: newHost,
+																		path: newPath,
+																		login: newLogin,
+																		password: newPassword
                                                                     },
                                                                     success: function(responseObject){
                                                                     
@@ -462,11 +497,10 @@ Ext.onReady(function(){
                                                                             Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
                                                                                 win.close();
                                                                                 grid.getStore().reload();
+																				Ext.getCmp('create-context-form').fireEvent('render',Ext.getCmp('create-context-form'));
                                                                             });
                                                                             
                                                                         }
-                                                                        
-                                                                        
                                                                         
                                                                     },
                                                                     failure: function(responseObject){

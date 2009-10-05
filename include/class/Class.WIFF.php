@@ -127,8 +127,8 @@ class WIFF
 
         @$accessFile = fopen('.htaccess', 'r');
         @$passwordFile = fopen('.htpasswd', 'r');
-        
-		if (!$accessFile || !$passwordFile)
+
+        if (!$accessFile || !$passwordFile)
         {
             return false;
         } else
@@ -138,14 +138,14 @@ class WIFF
 
     }
 
-    public function createPasswordFile($login,$password)
+    public function createPasswordFile($login, $password)
     {
 
         @$accessFile = fopen('.htaccess', 'w');
         @$passwordFile = fopen('.htpasswd', 'w');
 
         fwrite($accessFile,
-"AuthUserFile ".getenv('WIFF_ROOT')."/.htpasswd
+        "AuthUserFile ".getenv('WIFF_ROOT')."/.htpasswd
 AuthGroupFile /dev/null
 AuthName 'Veuillez vous identifier'
 AuthType Basic
@@ -153,16 +153,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-		);
+        );
 
-		fwrite($passwordFile,
-			$login.':'.crypt($password) 
-		);
-		
-		fclose($accessFile);
-		fclose($passwordFile);
-		
-		return true;
+        fwrite($passwordFile,
+        $login.':'.crypt($password)
+        );
+
+        fclose($accessFile);
+        fclose($passwordFile);
+
+        return true;
 
     }
 
@@ -288,12 +288,12 @@ require valid-user
         return $repoList;
 
     }
-	
-	/**
+
+    /**
      * Add repository to global repo list
      * @return boolean
      */
-    public function createRepo($name,$description,$baseurl)
+    public function createRepo($name, $description, $baseurl, $host, $path, $login, $password)
     {
         require_once ('class/Class.Repository.php');
 
@@ -304,10 +304,10 @@ require valid-user
             $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
             return false;
         }
-		
-		$xPath = new DOMXPath($xml);
 
-		// Get repository with this name from WIFF repositories
+        $xPath = new DOMXPath($xml);
+
+        // Get repository with this name from WIFF repositories
         $wiffRepoList = $xPath->query("/wiff/repositories/access[@name='".$name."']");
         if ($wiffRepoList->length != 0)
         {
@@ -317,12 +317,16 @@ require valid-user
         }
 
         // Add repository to this context
-		$node = $xml->createElement('access');
+        $node = $xml->createElement('access');
         $repository = $xml->getElementsByTagName('repositories')->item(0)->appendChild($node);
 
         $repository->setAttribute('name', $name);
-        $repository->setAttribute('description', $description);		
-		$repository->setAttribute('baseurl', $baseurl);
+        $repository->setAttribute('description', $description);
+        $repository->setAttribute('baseurl', $baseurl);
+        $repository->setAttribute('host', $host);
+        $repository->setAttribute('path', $path);
+        $repository->setAttribute('login', $login);
+        $repository->setAttribute('password', $password);
 
         $ret = $xml->save($this->params_filepath);
         if ($ret === false)
@@ -334,8 +338,8 @@ require valid-user
         return true;
 
     }
-	
-	/**
+
+    /**
      * Delete repository from global repo list
      * @return boolean
      */
@@ -350,10 +354,10 @@ require valid-user
             $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
             return false;
         }
-		
-		$xPath = new DOMXPath($xml);
 
-		// Get repository with this name from WIFF repositories
+        $xPath = new DOMXPath($xml);
+
+        // Get repository with this name from WIFF repositories
         $wiffRepoList = $xPath->query("/wiff/repositories/access[@name='".$name."']");
         if ($wiffRepoList->length == 0)
         {
