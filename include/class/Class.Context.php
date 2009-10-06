@@ -77,28 +77,36 @@ class Context
         }
 
         // Check this repository is not already in context
-        $contextRepoList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories/access[@name='".$name."']");
+        //$contextRepoList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories/access[@name='".$name."']");
+		$contextRepoList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories/access[@use='".$name."']");
         if ($contextRepoList->length > 0)
         {
             // If more than zero repository with name
-            $this->errorMessage = "Repository already activated";
+            $this->errorMessage = "Repository already activated.";
             return false;
         }
 
         // Get repository with this name from WIFF repositories
         $wiffRepoList = $paramsXPath->query("/wiff/repositories/access[@name='".$name."']");
-        if ($wiffRepoList->length != 1)
+        if ($wiffRepoList->length == 0)
         {
-            // If different than one repository with name
+            $this->errorMessage = "No repository with name " . $name .".";
+            return false;
+        } else if ($wiffRepoList->length > 1)
+		{
             $this->errorMessage = "Duplicate repository with same name";
             return false;
-        }
+		}
 
         // Add repository to this context
+        $node = $contextsXml->createElement('access');
+        $repository = $contextList->item(0)->getElementsByTagName('repositories')->item(0)->appendChild($node);
 
-        $repository = $contextsXml->importNode($wiffRepoList->item(0), true); // Node must be imported from params document.
+        $repository->setAttribute('use', $name);
 
-        $repository = $contextList->item(0)->getElementsByTagName('repositories')->item(0)->appendChild($repository);
+//        $repository = $contextsXml->importNode($wiffRepoList->item(0), true); // Node must be imported from params document.
+//
+//        $repository = $contextList->item(0)->getElementsByTagName('repositories')->item(0)->appendChild($repository);
 
         $ret = $contextsXml->save($wiff->contexts_filepath);
         if ($ret === false)

@@ -293,7 +293,7 @@ require valid-user
      * Add repository to global repo list
      * @return boolean
      */
-    public function createRepo($name, $description, $baseurl, $host, $path, $login, $password)
+    public function createRepo($name, $description, $baseurl, $protocol, $host, $path, $login, $password)
     {
         require_once ('class/Class.Repository.php');
 
@@ -323,6 +323,7 @@ require valid-user
         $repository->setAttribute('name', $name);
         $repository->setAttribute('description', $description);
         $repository->setAttribute('baseurl', $baseurl);
+		$repository->setAttribute('protocol', $protocol);
         $repository->setAttribute('host', $host);
         $repository->setAttribute('path', $path);
         $repository->setAttribute('login', $login);

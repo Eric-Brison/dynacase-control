@@ -324,7 +324,7 @@ Ext.onReady(function(){
                             }]
                         }, {
                             title: 'Repositories',
-                            style: 'padding:10px;font-size:small;',
+                            style: 'padding:10px;padding-top:0px;font-size:small;',
                             listeners: {
                                 render: function(panel){
                                 
@@ -334,7 +334,7 @@ Ext.onReady(function(){
                                             getRepoList: true
                                         },
                                         root: 'data',
-                                        fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path'],
+                                        fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url'],
                                         autoLoad: true
                                     });
                                     
@@ -343,7 +343,7 @@ Ext.onReady(function(){
                                         autoWidth: false,
                                         width: 20,
                                         actions: [{
-                                            iconCls: 'x-icon-remove',
+                                            iconCls: 'x-icon-cross',
                                             tooltip: 'Remove'
                                         }]
                                     });
@@ -351,43 +351,50 @@ Ext.onReady(function(){
                                     actions.on({
                                         action: function(grid, record, action, row, col){
                                         
-                                            mask = new Ext.LoadMask(Ext.getBody(), {
-                                                msg: 'Deleting...'
-                                            });
-                                            mask.show();
-                                            
                                             var repositoryName = record.get('name');
                                             
                                             switch (action) {
-                                                case 'x-icon-remove':
-                                                    Ext.Ajax.request({
-                                                        url: 'wiff.php',
-                                                        params: {
-                                                            deleteRepo: true,
-                                                            name: repositoryName
-                                                        },
-                                                        success: function(responseObject){
+                                                case 'x-icon-cross':
+                                                    
+                                                    Ext.Msg.confirm('Freedom Web Installer', 'Delete repository <b>' + repositoryName + '</b> ?', function(btn){
+                                                        if (btn == 'yes') {
                                                         
-                                                            mask.hide();
+                                                            mask = new Ext.LoadMask(Ext.getBody(), {
+                                                                msg: 'Deleting...'
+                                                            });
+                                                            mask.show();
                                                             
-                                                            var response = eval('(' + responseObject.responseText + ')');
-                                                            if (response.error) {
-                                                                Ext.Msg.alert('Server Error', response.error);
-                                                            }
-                                                            else {
-                                                                Ext.Msg.alert('Freedom Web Installer', 'Removal successful.', function(btn){
-                                                                    grid.getStore().reload();
-																	Ext.getCmp('create-context-form').fireEvent('render',Ext.getCmp('create-context-form'));
-                                                                });
+                                                            Ext.Ajax.request({
+                                                                url: 'wiff.php',
+                                                                params: {
+                                                                    deleteRepo: true,
+                                                                    name: repositoryName
+                                                                },
+                                                                success: function(responseObject){
                                                                 
-                                                            }
-                                                            
-                                                        },
-                                                        failure: function(responseObject){
-                                                        
+                                                                    mask.hide();
+                                                                    
+                                                                    var response = eval('(' + responseObject.responseText + ')');
+                                                                    if (response.error) {
+                                                                        Ext.Msg.alert('Server Error', response.error);
+                                                                    }
+                                                                    else {
+                                                                        Ext.Msg.alert('Freedom Web Installer', 'Delete successful.', function(btn){
+                                                                            grid.getStore().reload();
+                                                                            Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
+                                                                        });
+                                                                        
+                                                                    }
+                                                                    
+                                                                },
+                                                                failure: function(responseObject){
+                                                                
+                                                                }
+                                                                
+                                                            });
                                                         }
-                                                        
                                                     });
+                                                    
                                                     break;
                                             }
                                             
@@ -419,28 +426,28 @@ Ext.onReady(function(){
                                                     fieldLabel: 'Base Url',
                                                     xtype: 'textfield'
                                                 });
-												
-												var protocolField = new Ext.form.TextField({
+                                                
+                                                var protocolField = new Ext.form.TextField({
                                                     fieldLabel: 'Protocol',
                                                     xtype: 'textfield'
                                                 });
-												
-												var hostField = new Ext.form.TextField({
+                                                
+                                                var hostField = new Ext.form.TextField({
                                                     fieldLabel: 'Host',
                                                     xtype: 'textfield'
                                                 });
-												
-												var pathField = new Ext.form.TextField({
+                                                
+                                                var pathField = new Ext.form.TextField({
                                                     fieldLabel: 'Path',
                                                     xtype: 'textfield'
                                                 });
-												
-												var loginField = new Ext.form.TextField({
+                                                
+                                                var loginField = new Ext.form.TextField({
                                                     fieldLabel: 'Login',
                                                     xtype: 'textfield'
                                                 });
-												
-												var passwordField = new Ext.form.TextField({
+                                                
+                                                var passwordField = new Ext.form.TextField({
                                                     fieldLabel: 'Password',
                                                     xtype: 'textfield'
                                                 });
@@ -454,7 +461,7 @@ Ext.onReady(function(){
                                                         height: 300,
                                                         width: 300,
                                                         bodyStyle: 'padding:5px',
-                                                        items: [nameField, descriptionField, baseurlField, hostField, pathField, loginField, passwordField],
+                                                        items: [nameField, descriptionField, baseurlField, protocolField, hostField, pathField, loginField, passwordField],
                                                         bbar: [{
                                                             text: 'Save',
                                                             iconCls: 'x-icon-ok',
@@ -462,11 +469,12 @@ Ext.onReady(function(){
                                                                 var newName = nameField.getValue();
                                                                 var newDescription = descriptionField.getValue();
                                                                 var newBaseurl = baseurlField.getValue();
-																var newHost = hostField.getValue();
-																var newPath = pathField.getValue();
-																var newLogin = loginField.getValue();
-																var newPassword = passwordField.getValue();
-																
+																var newProtocol = protocolField.getValue();
+                                                                var newHost = hostField.getValue();
+                                                                var newPath = pathField.getValue();
+                                                                var newLogin = loginField.getValue();
+                                                                var newPassword = passwordField.getValue();
+                                                                
                                                                 
                                                                 mask = new Ext.LoadMask(Ext.getBody(), {
                                                                     msg: 'Saving...'
@@ -480,10 +488,11 @@ Ext.onReady(function(){
                                                                         name: newName,
                                                                         description: newDescription,
                                                                         baseurl: newBaseurl,
-																		host: newHost,
-																		path: newPath,
-																		login: newLogin,
-																		password: newPassword
+																		protocol: newProtocol,
+                                                                        host: newHost,
+                                                                        path: newPath,
+                                                                        login: newLogin,
+                                                                        password: newPassword
                                                                     },
                                                                     success: function(responseObject){
                                                                     
@@ -497,7 +506,7 @@ Ext.onReady(function(){
                                                                             Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
                                                                                 win.close();
                                                                                 grid.getStore().reload();
-																				Ext.getCmp('create-context-form').fireEvent('render',Ext.getCmp('create-context-form'));
+                                                                                Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
                                                                             });
                                                                             
                                                                         }
@@ -536,14 +545,14 @@ Ext.onReady(function(){
                                             dataIndex: 'name',
                                             width: 140
                                         }, {
-                                            id: 'baseurl',
-                                            header: 'Base Url',
-                                            dataIndex: 'baseurl',
-                                            width: 360
-                                        }, {
                                             id: 'description',
                                             header: 'Description',
                                             dataIndex: 'description'
+                                        }, {
+                                            id: 'url',
+                                            header: 'Url',
+                                            dataIndex: 'url',
+                                            width: 400
                                         }],
                                         autoExpandColumn: 'description',
                                         autoHeight: true,
