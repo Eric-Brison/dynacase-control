@@ -469,7 +469,7 @@ Ext.onReady(function(){
                                                                 var newName = nameField.getValue();
                                                                 var newDescription = descriptionField.getValue();
                                                                 var newBaseurl = baseurlField.getValue();
-																var newProtocol = protocolField.getValue();
+                                                                var newProtocol = protocolField.getValue();
                                                                 var newHost = hostField.getValue();
                                                                 var newPath = pathField.getValue();
                                                                 var newLogin = loginField.getValue();
@@ -488,7 +488,7 @@ Ext.onReady(function(){
                                                                         name: newName,
                                                                         description: newDescription,
                                                                         baseurl: newBaseurl,
-																		protocol: newProtocol,
+                                                                        protocol: newProtocol,
                                                                         host: newHost,
                                                                         path: newPath,
                                                                         login: newLogin,
@@ -1504,8 +1504,10 @@ Ext.onReady(function(){
                 border: false,
                 frame: true,
                 bodyStyle: 'padding:15px;',
+                monitorValid: true,
                 buttons: [{
                     text: 'Save Parameters',
+                    formBind: true,
                     handler: function(){
                     
                         form = Ext.getCmp('parameter-panel').getForm();
@@ -1541,12 +1543,54 @@ Ext.onReady(function(){
             
             for (var i = 0; i < data.length; i++) {
             
-                form.add({
-                    xtype: 'textfield',
-                    name: data[i].name,
-                    fieldLabel: data[i].label,
-                    value: data[i].value ? data[i].value : data[i]['default']
-                });
+                if (data[i].type == 'text') {
+                
+                    form.add({
+                        xtype: 'textfield',
+                        name: data[i].name,
+                        fieldLabel: data[i].label,
+                        value: data[i].value ? data[i].value : data[i]['default'],
+                        allowBlank: data[i].needed != 'Y' ? true : false,
+						anchor: '-15'
+                    });
+                    
+                }
+                
+                if (data[i].type == 'enum') {
+                
+                    var values = data[i].values.split('|');
+					
+					var valuesData = [];
+					
+					for(var i = 0 ; i < values.length ; i++){
+						valuesData.push([values[i]]);
+					}
+					
+                    form.add({
+                        xtype: 'combo',
+                        name: data[i].name,
+						fieldLabel: data[i].label,                        
+                        editable: false,
+                        disableKeyFilter: true,
+                        forceSelection: true,
+                        value: data[i]['default'],
+                        triggerAction: 'all',
+                        
+                        mode: 'local',
+                        
+                        store: new Ext.data.SimpleStore({
+                            fields: ['value'],
+                            data: valuesData
+                        }),
+                        
+                        valueField: 'value',
+                    	displayField: 'value',
+						
+						anchor: '-15'
+					
+                    });
+                    
+                }
                 
             }
             

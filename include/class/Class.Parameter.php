@@ -9,6 +9,8 @@ class Parameter
 	public $type ;
 	public $needed ;
 	
+	public $values ; // Used for enum type parameters.
+	
 	public $value ;
 	
 }

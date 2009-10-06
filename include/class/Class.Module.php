@@ -11,18 +11,18 @@ class Module
     public $name;
     public $version;
     public $release;
-	public $versionrelease;
+    public $versionrelease;
     public $author;
     public $license;
     public $basecomponent;
     public $src;
 
     public $availableversion;
-	public $availableversionrelease;
+    public $availableversionrelease;
 
     public $description;
-	
-	public $infopath = false;
+
+    public $infopath = false;
 
     private $context;
     public $repository;
@@ -46,10 +46,10 @@ class Module
      */
     public $canUpdate = false;
 
-	/**
-	 * @var boolean true if module has parameters
-	 */
-	public $hasParameter = false;
+    /**
+     * @var boolean true if module has parameters
+     */
+    public $hasParameter = false;
 
     /**
      * @var string last error message
@@ -64,11 +64,11 @@ class Module
         $this->parseXmlNode($xmlNode);
 
         $this->isInstalled = $isInstalled;
-		
-		$parameterList = $this->getParameterList();
-				
-		$this->hasParameter = is_array($parameterList) && (count($parameterList) != 0) ;
-		
+
+        $parameterList = $this->getParameterList();
+
+        $this->hasParameter = is_array($parameterList) && (count($parameterList) != 0);
+
     }
 
     public function __set($property, $value)
@@ -92,7 +92,7 @@ class Module
         'author',
         'license',
         'basecomponent',
-		'infopath',
+        'infopath',
         'src',
         'tmpfile',
         'status',
@@ -101,9 +101,9 @@ class Module
         {
             $this->$attrName = $xmlNode->getAttribute($attrName);
         }
-		$this->versionrelease = $this->version . '-' . $this->release ;
-		
-		
+        $this->versionrelease = $this->version.'-'.$this->release;
+
+
         // Load xmlNode <description> elements
         $descriptionNodeList = $xmlNode->getElementsByTagName('description');
         if ($descriptionNodeList->length > 0)
@@ -410,17 +410,17 @@ class Module
                 $pSeen[$paramName]++;
 
                 $p = new Parameter();
-                foreach ( array ('name', 'label', 'default', 'type', 'needed') as $attr)
+                foreach ( array ('name', 'label', 'default', 'type', 'needed', 'values') as $attr)
                 {
                     $p->$attr = $param->getAttribute($attr);
-					
-					// Replace keywords
-					// @CONTEXT_NAME
-					if($p->$attr == "@CONTEXT_NAME")
-					{
-						$p->$attr = strtolower(preg_replace("/[^A-Za-z0-9]/","",$this->context->name));
-					}
-					
+
+                    // Replace keywords
+                    // @CONTEXT_NAME
+                    if ($p->$attr == "@CONTEXT_NAME")
+                    {
+                        $p->$attr = strtolower(preg_replace("/[^A-Za-z0-9]/", "", $this->context->name));
+                    }
+
                 }
 
                 $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$p->name."' and @modulename='".$this->name."']");
@@ -550,7 +550,7 @@ class Module
                     return array ('pre-install', 'unpack', 'post-install');
                     break;
                 case 'upgrade':
-		  			return array ('pre-upgrade', 'unpack', 'post-upgrade');
+                    return array ('pre-upgrade', 'unpack', 'post-upgrade');
                     break;
                 case 'uninstall':
                     return array ('pre-remove', 'remove', 'post-remove');
