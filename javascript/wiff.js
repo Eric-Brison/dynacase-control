@@ -30,7 +30,7 @@ Ext.onReady(function(){
                     else {
                         //Ext.Msg.alert('Freedom Web Installer', 'Password File Not Found');
                         
-                        displayPasswordWindow();
+                        displayPasswordWindow(false);
                         
                     }
                 }
@@ -121,17 +121,52 @@ Ext.onReady(function(){
         }
     }
     
-    function displayPasswordWindow(cancel){
+    function displayPasswordWindow(canCancel){
     
+		var fields = [];
+	
+		if(!canCancel){
+			var infoPanel = new Ext.Panel({
+				border: false,
+				html: '<i>Your Wiff is currently not protected by authentification.<br/>Please define a login and a password.</i>',
+				bodyStyle: 'padding-bottom:10px;'
+			});
+			fields.push(infoPanel);
+		}
+	
         var loginField = new Ext.form.TextField({
             fieldLabel: 'Login',
-            xtype: 'textfield'
+            xtype: 'textfield',
+            anchor: '-15'
+        
         });
         
         var passwordField = new Ext.form.TextField({
             fieldLabel: 'Password',
-            xtype: 'textfield'
+            xtype: 'textfield',
+            inputType: 'password',
+            anchor: '-15'
         });
+        
+        var confirmPasswordField = new Ext.form.TextField({
+            fieldLabel: 'Confirm Password',
+            xtype: 'textfield',
+            inputType: 'password',
+            anchor: '-15'
+        });
+		
+		fields.push(loginField);
+		fields.push(passwordField);
+		fields.push(confirmPasswordField);
+		
+		if(!canCancel){
+			var infoPanel = new Ext.Panel({
+				border: false,
+				html: '<i>You can change login and password later in Setup.</i>',
+				bodyStyle: 'padding-top:10px;'
+			});
+			fields.push(infoPanel);
+		}
         
         var win = new Ext.Window({
             title: 'Freedom Web Installer - Define Password',
@@ -141,53 +176,66 @@ Ext.onReady(function(){
                 xtype: 'form',
                 height: 200,
                 width: 300,
-                bodyStyle: 'padding:5px',
-                items: [loginField, passwordField],
+                labelWidth: 120,
+                bodyStyle: 'padding:10px',
+				border: false,
+                items: fields,
                 bbar: [{
                     text: 'Save',
                     iconCls: 'x-icon-ok',
                     handler: function(b, e){
+                    
                         var newLogin = loginField.getValue();
                         var newPassword = passwordField.getValue();
                         
-                        mask = new Ext.LoadMask(Ext.getBody(), {
-                            msg: 'Saving...'
-                        });
-                        mask.show();
+                        var confirmNewPassword = confirmPasswordField.getValue();
                         
-                        Ext.Ajax.request({
-                            url: 'wiff.php',
-                            params: {
-                                createPasswordFile: true,
-                                login: newLogin,
-                                password: newPassword
-                            },
-                            success: function(responseObject){
+                        if (newPassword != confirmNewPassword) {
+                        
+                            Ext.Msg.alert('Freedom Web Installer', 'Provided passwords are not the same.');
                             
-                                mask.hide();
+                        }
+                        else {
+                        
+                            mask = new Ext.LoadMask(Ext.getBody(), {
+                                msg: 'Saving...'
+                            });
+                            mask.show();
+                            
+                            Ext.Ajax.request({
+                                url: 'wiff.php',
+                                params: {
+                                    createPasswordFile: true,
+                                    login: newLogin,
+                                    password: newPassword
+                                },
+                                success: function(responseObject){
                                 
-                                var response = eval('(' + responseObject.responseText + ')');
-                                if (response.error) {
-                                    Ext.Msg.alert('Server Error', response.error);
-                                }
-                                else {
-                                    Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
-                                        win.close();
-                                    });
+                                    mask.hide();
                                     
+                                    var response = eval('(' + responseObject.responseText + ')');
+                                    if (response.error) {
+                                        Ext.Msg.alert('Server Error', response.error);
+                                    }
+                                    else {
+                                        Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
+                                            win.close();
+                                        });
+                                        
+                                    }
+                                    
+                                },
+                                failure: function(responseObject){
+                                
                                 }
                                 
-                                
-                                
-                            },
-                            failure: function(responseObject){
+                            });
                             
-                            }
+                            win.close();
                             
-                        });
+                        }
                         
                         
-                        win.close();
                     }
                 }, {
                     text: 'Cancel',
@@ -195,7 +243,7 @@ Ext.onReady(function(){
                     handler: function(b, e){
                         win.close();
                     },
-                    disabled: !cancel
+                    disabled: !canCancel
                 }]
             }],
             listeners: {
@@ -312,13 +360,34 @@ Ext.onReady(function(){
                                 text: 'Password',
                                 iconCls: 'x-icon-wiff-password',
                                 handler: function(b, e){
-                                    displayPasswordWindow();
+                                    displayPasswordWindow(true);
                                 },
                                 listeners: {
                                     render: function(button){
                                         if (needUpdate) {
                                             this.enable();
                                         }
+                                    }
+                                }
+                            }]
+                        }, {
+                            title: 'Debug',
+                            style: 'padding:10px;padding-top:0px;font-size:small;',
+                            listeners: {
+                                render: function(panel){
+                                
+                                }
+                            },
+                            tbar: [{
+                                text: 'Debug Mode OFF',
+                                enableToggle: true,
+                                iconCls: 'x-icon-debug',
+                                toggleHandler: function(button, state){
+                                    if (state) {
+                                        button.setText('Debug Mode ON');
+                                    }
+                                    else {
+                                        button.setText('Debug Mode OFF');
                                     }
                                 }
                             }]
@@ -1551,7 +1620,7 @@ Ext.onReady(function(){
                         fieldLabel: data[i].label,
                         value: data[i].value ? data[i].value : data[i]['default'],
                         allowBlank: data[i].needed != 'Y' ? true : false,
-						anchor: '-15'
+                        anchor: '-15'
                     });
                     
                 }
@@ -1559,17 +1628,17 @@ Ext.onReady(function(){
                 if (data[i].type == 'enum') {
                 
                     var values = data[i].values.split('|');
-					
-					var valuesData = [];
-					
-					for(var i = 0 ; i < values.length ; i++){
-						valuesData.push([values[i]]);
-					}
-					
+                    
+                    var valuesData = [];
+                    
+                    for (var i = 0; i < values.length; i++) {
+                        valuesData.push([values[i]]);
+                    }
+                    
                     form.add({
                         xtype: 'combo',
                         name: data[i].name,
-						fieldLabel: data[i].label,                        
+                        fieldLabel: data[i].label,
                         editable: false,
                         disableKeyFilter: true,
                         forceSelection: true,
@@ -1584,10 +1653,10 @@ Ext.onReady(function(){
                         }),
                         
                         valueField: 'value',
-                    	displayField: 'value',
-						
-						anchor: '-15'
-					
+                        displayField: 'value',
+                        
+                        anchor: '-15'
+                    
                     });
                     
                 }
