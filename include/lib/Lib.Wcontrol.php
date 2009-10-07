@@ -411,6 +411,75 @@ function wcontrol_msg_pgversion($process)
     }
 }
 
+/**
+ * pgempty check
+ */
+
+function wcontrol_check_pgempty( & $process)
+{
+	
+	if(!function_exists('pg_connect'))
+	{
+		$process->errorMessage = 'PHP function pg_connect() not available. You might need to install a php-pg package from your distribution in order to have Postgresql support in PHP.</help>';
+		return false;
+	}
+	
+    require_once ('class/Class.WIFF.php');
+
+    $service = $process->getAttribute('service');
+
+    $wiff = WIFF::getInstance();
+    $service = $wiff->expandParamValue($service);
+
+    if ($service == "")
+    {
+        return false;
+    }
+
+    $conn = pg_connect("service='$service'");
+    if ($conn === false)
+    {
+        $process->errorMessage = "Connection failed. Maybe postgresql server is not started or database '".$service."' does not exist. ";
+        return false;
+    }
+
+	// Test if database is empty
+    $res = pg_query($conn, "SELECT COUNT(*) FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('information_schema','pg_catalog');");
+    if ($res === false)
+    {
+        pg_close($conn);
+        return false;
+    }
+	$row = pg_fetch_row($res);
+    if ($row === false)
+    {
+        pg_close($conn);
+        return false;
+    }
+	
+	$table_number = $row[0];
+	if ($table_number != 0)
+	{
+		$process->errorMessage = "Database for service " . $service . " is not empty of user defined tables (". $table_number ." found)".";
+		return false;
+	}
+	
+
+    return true;
+}
+
+function wcontrol_msg_pgempty($process)
+{
+    if ($process->errorMessage)
+    {
+        return $process->errorMessage;
+    }
+    else
+    {
+        return "";
+    }
+}
+
 function wcontrol_check_ncurses( & $process)
 {
 	
