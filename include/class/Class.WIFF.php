@@ -620,7 +620,7 @@ require valid-user
      * @param string $paramName the name of the parameter to set
      * @param string $paramValue the value of the parameter to set
      */
-    public function setParam($paramName, $paramValue)
+    public function setParam($paramName, $paramValue, $create = true)
     {
         $xml = new DOMDocument();
         $ret = $xml->load($this->params_filepath);
@@ -632,10 +632,16 @@ require valid-user
 
         $xpath = new DOMXpath($xml);
         $params = $xpath->query("/wiff/parameters/param[@name='$paramName']");
-        if ($params === null)
+        if ($params === null && !$create)
         {
             $this->errorMessage = sprintf("Error executing XPath query '%s' on file '%s'.", "/wiff/parameters/param[@name='$paramName']", $this->params_filepath);
             return false;
+        } else {
+        	$param = $xml->createElement('param');
+        	$param = $xml->getElementsByTagName('parameters')->item(0)->appendChild($param);
+        	$param->setAttribute('name', $paramName);
+        	$param->setAttribute('value', $paramValue);
+
         }
         foreach ($params as $param)
         {

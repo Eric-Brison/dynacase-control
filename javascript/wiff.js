@@ -123,17 +123,17 @@ Ext.onReady(function(){
     
     function displayPasswordWindow(canCancel){
     
-		var fields = [];
-	
-		if(!canCancel){
-			var infoPanel = new Ext.Panel({
-				border: false,
-				html: '<i>Your Wiff is currently not protected by authentification.<br/>Please define a login and a password.</i>',
-				bodyStyle: 'padding-bottom:10px;'
-			});
-			fields.push(infoPanel);
-		}
-	
+        var fields = [];
+        
+        if (!canCancel) {
+            var infoPanel = new Ext.Panel({
+                border: false,
+                html: '<i>Your Wiff is currently not protected by authentification.<br/>Please define a login and a password.</i>',
+                bodyStyle: 'padding-bottom:10px;'
+            });
+            fields.push(infoPanel);
+        }
+        
         var loginField = new Ext.form.TextField({
             fieldLabel: 'Login',
             xtype: 'textfield',
@@ -154,19 +154,19 @@ Ext.onReady(function(){
             inputType: 'password',
             anchor: '-15'
         });
-		
-		fields.push(loginField);
-		fields.push(passwordField);
-		fields.push(confirmPasswordField);
-		
-		if(!canCancel){
-			var infoPanel = new Ext.Panel({
-				border: false,
-				html: '<i>You can change login and password later in Setup.</i>',
-				bodyStyle: 'padding-top:10px;'
-			});
-			fields.push(infoPanel);
-		}
+        
+        fields.push(loginField);
+        fields.push(passwordField);
+        fields.push(confirmPasswordField);
+        
+        if (!canCancel) {
+            var infoPanel = new Ext.Panel({
+                border: false,
+                html: '<i>You can change login and password later in Setup.</i>',
+                bodyStyle: 'padding-top:10px;'
+            });
+            fields.push(infoPanel);
+        }
         
         var win = new Ext.Window({
             title: 'Freedom Web Installer - Define Password',
@@ -178,7 +178,7 @@ Ext.onReady(function(){
                 width: 300,
                 labelWidth: 120,
                 bodyStyle: 'padding:10px',
-				border: false,
+                border: false,
                 items: fields,
                 bbar: [{
                     text: 'Save',
@@ -382,12 +382,95 @@ Ext.onReady(function(){
                                 text: 'Debug Mode OFF',
                                 enableToggle: true,
                                 iconCls: 'x-icon-debug',
+								disabled: true,
+								listeners: {
+									render: function(button){
+										
+										Ext.Ajax.request({
+                                            url: 'wiff.php',
+                                            params: {
+                                                getParam: true,
+                                                paramName: 'debug'
+		                                    },
+                                            success: function(responseObject){
+                                                
+                                                var response = eval('(' + responseObject.responseText + ')');
+                                                if (response.error) {
+                                                    Ext.Msg.alert('Server Error', response.error);
+                                                }
+                                                else {
+													if(response.data == 'yes'){
+														button.setText('Debug Mode ON');
+														button.toggle();
+													} else {
+														button.setText('Debug Mode OFF');
+													}
+													button.enable();
+                                                }
+                                                
+                                            },
+                                            failure: function(responseObject){
+                                            
+                                            }
+                                            
+                                        });
+										
+									}
+								},
                                 toggleHandler: function(button, state){
                                     if (state) {
+										
                                         button.setText('Debug Mode ON');
+										                                        
+                                        Ext.Ajax.request({
+                                            url: 'wiff.php',
+                                            params: {
+                                                setParam: true,
+                                                paramName: 'debug',
+												paramValue: 'yes'
+                                            },
+                                            success: function(responseObject){
+                                                
+                                                var response = eval('(' + responseObject.responseText + ')');
+                                                if (response.error) {
+                                                    Ext.Msg.alert('Server Error', response.error);
+                                                }
+                                                else { 
+                                                }
+                                                
+                                            },
+                                            failure: function(responseObject){
+                                            
+                                            }
+                                            
+                                        });
                                     }
                                     else {
+										
                                         button.setText('Debug Mode OFF');
+                                       
+                                        Ext.Ajax.request({
+                                            url: 'wiff.php',
+                                            params: {
+                                                setParam: true,
+                                                paramName: 'debug',
+												paramValue: 'no'
+                                            },
+                                            success: function(responseObject){
+                                                
+                                                var response = eval('(' + responseObject.responseText + ')');
+                                                if (response.error) {
+                                                    Ext.Msg.alert('Server Error', response.error);
+                                                }
+                                                else {
+                                                }
+                                                
+                                            },
+                                            failure: function(responseObject){
+                                            
+                                            }
+                                            
+                                        });
                                     }
                                 }
                             }]
