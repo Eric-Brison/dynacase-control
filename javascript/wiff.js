@@ -635,7 +635,7 @@ Ext.onReady(function(){
                                         getRepoList: true
                                     },
                                     root: 'data',
-                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path'],
+                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url'],
                                     autoLoad: true
                                 });
                                 
@@ -649,7 +649,7 @@ Ext.onReady(function(){
                                     repoStore.each(function(record){
                                     
                                         repoBoxList.push({
-                                            boxLabel: record.get('description') + (record.get('baseurl') ? ' <i>(' + record.get('baseurl') + ')</i>' : ' <i>(' + record.get('protocol') + '://*****:*****@' + record.get('host') + '/' + record.get('path') + ')</i>'),
+                                            boxLabel: record.get('description') + (record.get('url') ? ' <i>(' + record.get('url') + ')</i>' : ' <i>(' + record.get('protocol') + '://*****:*****@' + record.get('host') + '/' + record.get('path') + ')</i>'),
                                             name: 'repo-' + record.get('name'),
                                             checked: first
                                         });

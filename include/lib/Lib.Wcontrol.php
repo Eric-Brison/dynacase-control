@@ -460,7 +460,7 @@ function wcontrol_check_pgempty( & $process)
 	$table_number = $row[0];
 	if ($table_number != 0)
 	{
-		$process->errorMessage = "Database for service " . $service . " is not empty of user defined tables (". $table_number ." found)".";
+		$process->errorMessage = "Database for service " . $service . " is not empty of user defined tables (". $table_number ." found).";
 		return false;
 	}
 	
