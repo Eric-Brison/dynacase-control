@@ -382,30 +382,31 @@ Ext.onReady(function(){
                                 text: 'Debug Mode OFF',
                                 enableToggle: true,
                                 iconCls: 'x-icon-debug',
-								disabled: true,
-								listeners: {
-									render: function(button){
-										
-										Ext.Ajax.request({
+                                disabled: true,
+                                listeners: {
+                                    render: function(button){
+                                    
+                                        Ext.Ajax.request({
                                             url: 'wiff.php',
                                             params: {
                                                 getParam: true,
                                                 paramName: 'debug'
-		                                    },
+                                            },
                                             success: function(responseObject){
-                                                
+                                            
                                                 var response = eval('(' + responseObject.responseText + ')');
                                                 if (response.error) {
                                                     Ext.Msg.alert('Server Error', response.error);
                                                 }
                                                 else {
-													if(response.data == 'yes'){
-														button.setText('Debug Mode ON');
-														button.toggle();
-													} else {
-														button.setText('Debug Mode OFF');
-													}
-													button.enable();
+                                                    if (response.data == 'yes') {
+                                                        button.setText('Debug Mode ON');
+                                                        button.toggle();
+                                                    }
+                                                    else {
+                                                        button.setText('Debug Mode OFF');
+                                                    }
+                                                    button.enable();
                                                 }
                                                 
                                             },
@@ -414,28 +415,28 @@ Ext.onReady(function(){
                                             }
                                             
                                         });
-										
-									}
-								},
+                                        
+                                    }
+                                },
                                 toggleHandler: function(button, state){
                                     if (state) {
-										
+                                    
                                         button.setText('Debug Mode ON');
-										                                        
+                                        
                                         Ext.Ajax.request({
                                             url: 'wiff.php',
                                             params: {
                                                 setParam: true,
                                                 paramName: 'debug',
-												paramValue: 'yes'
+                                                paramValue: 'yes'
                                             },
                                             success: function(responseObject){
-                                                
+                                            
                                                 var response = eval('(' + responseObject.responseText + ')');
                                                 if (response.error) {
                                                     Ext.Msg.alert('Server Error', response.error);
                                                 }
-                                                else { 
+                                                else {
                                                 }
                                                 
                                             },
@@ -446,18 +447,18 @@ Ext.onReady(function(){
                                         });
                                     }
                                     else {
-										
+                                    
                                         button.setText('Debug Mode OFF');
-                                       
+                                        
                                         Ext.Ajax.request({
                                             url: 'wiff.php',
                                             params: {
                                                 setParam: true,
                                                 paramName: 'debug',
-												paramValue: 'no'
+                                                paramValue: 'no'
                                             },
                                             success: function(responseObject){
-                                                
+                                            
                                                 var response = eval('(' + responseObject.responseText + ')');
                                                 if (response.error) {
                                                     Ext.Msg.alert('Server Error', response.error);
@@ -532,10 +533,10 @@ Ext.onReady(function(){
                                                                     }
                                                                     else {
                                                                         //Ext.Msg.alert('Freedom Web Installer', 'Delete successful.', function(btn){
-                                                                            grid.getStore().reload();
-                                                                            Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
-                                                                        //});
-                                                                        
+                                                                        grid.getStore().reload();
+                                                                        Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
+                                                                    //});
+                                                                    
                                                                     }
                                                                     
                                                                 },
@@ -567,49 +568,89 @@ Ext.onReady(function(){
                                                 var nameField = new Ext.form.TextField({
                                                     fieldLabel: 'Name',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    anchor: '-15'
                                                 });
                                                 
                                                 var descriptionField = new Ext.form.TextField({
                                                     fieldLabel: 'Description',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    anchor: '-15'
                                                 });
+												
+												var authentifiedBox = new Ext.form.Checkbox({
+													fieldLabel: 'Authentified',
+													listeners: {
+														check: function(checkbox, checked){
+															if (checked == true) {
+																baseurlField.disable();
+																protocolField.enable();
+																hostField.enable();
+																pathField.enable();
+																loginField.enable();
+																passwordField.enable();
+																confirmPasswordField.enable();
+															}
+															else {
+																baseurlField.enable();
+																protocolField.disable();
+																hostField.disable();
+																pathField.disable();
+																loginField.disable();
+																passwordField.disable();
+																confirmPasswordField.disable();
+															}
+														}
+													}
+												});
                                                 
                                                 var baseurlField = new Ext.form.TextField({
                                                     fieldLabel: 'Base Url',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    anchor: '-15'
                                                 });
                                                 
                                                 var protocolField = new Ext.form.TextField({
                                                     fieldLabel: 'Protocol',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    anchor: '-15',
+													disabled: true
                                                 });
                                                 
                                                 var hostField = new Ext.form.TextField({
                                                     fieldLabel: 'Host',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    anchor: '-15',
+													disabled: true
                                                 });
                                                 
                                                 var pathField = new Ext.form.TextField({
                                                     fieldLabel: 'Path',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    anchor: '-15',
+													disabled: true
                                                 });
                                                 
                                                 var loginField = new Ext.form.TextField({
                                                     fieldLabel: 'Login',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    anchor: '-15',
+													disabled: true
                                                 });
                                                 
                                                 var passwordField = new Ext.form.TextField({
                                                     fieldLabel: 'Password',
                                                     xtype: 'textfield',
-													anchor: '-15'
+                                                    inputType: 'password',
+                                                    anchor: '-15',
+													disabled: true
+                                                });
+                                                
+                                                var confirmPasswordField = new Ext.form.TextField({
+                                                    fieldLabel: 'Confirm Password',
+                                                    xtype: 'textfield',
+                                                    inputType: 'password',
+                                                    anchor: '-15',
+													disabled: true
                                                 });
                                                 
                                                 var win = new Ext.Window({
@@ -620,8 +661,10 @@ Ext.onReady(function(){
                                                         xtype: 'form',
                                                         height: 300,
                                                         width: 300,
-                                                        bodyStyle: 'padding:5px',
-                                                        items: [nameField, descriptionField, baseurlField, protocolField, hostField, pathField, loginField, passwordField],
+														labelWidth: 120,
+														border: false,
+                                                        bodyStyle: 'padding:5px;',
+                                                        items: [nameField, descriptionField, authentifiedBox, baseurlField, protocolField, hostField, pathField, loginField, passwordField, confirmPasswordField],
                                                         bbar: [{
                                                             text: 'Save',
                                                             iconCls: 'x-icon-ok',
@@ -633,8 +676,12 @@ Ext.onReady(function(){
                                                                 var newHost = hostField.getValue();
                                                                 var newPath = pathField.getValue();
                                                                 var newLogin = loginField.getValue();
-                                                                var newPassword = passwordField.getValue();
+                                                                var newPassword = passwordField.getValue();                                                                
+                                                                var confirmNewPassword = confirmPasswordField.getValue();
                                                                 
+                                                                if (newPassword != confirmNewPassword) {
+                                                                    Ext.Msg.alert('Freedom Web Installer', 'Provided passwords are not the same.');                                                                    
+                                                                }
                                                                 
                                                                 mask = new Ext.LoadMask(Ext.getBody(), {
                                                                     msg: 'Saving...'
@@ -1909,8 +1956,8 @@ Ext.onReady(function(){
     function executeProcessList(module, phase, operation){
     
         processList = currentProcessList;
-		
-		currentPhase = phase ;
+        
+        currentPhase = phase;
         
         if (processList.length != 0) {
         
