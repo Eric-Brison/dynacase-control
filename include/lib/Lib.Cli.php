@@ -160,10 +160,9 @@ function wiff_getParamValue($paramName) {
   }
 
   $wiff = WIFF::getInstance();
-
   $context = $wiff->getContext($wiffContextName);
   if( $context === false ) {
-    error_log(sprintf("Error getting context '%s'!", $wiffContextName));
+    error_log(sprintf("Error getting context '%s': %s", $wiffContextName, $wiff->errorMessage));
     return false;
   }
 

@@ -531,10 +531,10 @@ Ext.onReady(function(){
                                                                         Ext.Msg.alert('Server Error', response.error);
                                                                     }
                                                                     else {
-                                                                        Ext.Msg.alert('Freedom Web Installer', 'Delete successful.', function(btn){
+                                                                        //Ext.Msg.alert('Freedom Web Installer', 'Delete successful.', function(btn){
                                                                             grid.getStore().reload();
                                                                             Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
-                                                                        });
+                                                                        //});
                                                                         
                                                                     }
                                                                     
@@ -566,42 +566,50 @@ Ext.onReady(function(){
                                             
                                                 var nameField = new Ext.form.TextField({
                                                     fieldLabel: 'Name',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var descriptionField = new Ext.form.TextField({
                                                     fieldLabel: 'Description',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var baseurlField = new Ext.form.TextField({
                                                     fieldLabel: 'Base Url',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var protocolField = new Ext.form.TextField({
                                                     fieldLabel: 'Protocol',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var hostField = new Ext.form.TextField({
                                                     fieldLabel: 'Host',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var pathField = new Ext.form.TextField({
                                                     fieldLabel: 'Path',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var loginField = new Ext.form.TextField({
                                                     fieldLabel: 'Login',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var passwordField = new Ext.form.TextField({
                                                     fieldLabel: 'Password',
-                                                    xtype: 'textfield'
+                                                    xtype: 'textfield',
+													anchor: '-15'
                                                 });
                                                 
                                                 var win = new Ext.Window({
@@ -670,8 +678,6 @@ Ext.onReady(function(){
                                                                     
                                                                 });
                                                                 
-                                                                
-                                                                win.close();
                                                             }
                                                         }, {
                                                             text: 'Cancel',
@@ -1903,6 +1909,8 @@ Ext.onReady(function(){
     function executeProcessList(module, phase, operation){
     
         processList = currentProcessList;
+		
+		currentPhase = phase ;
         
         if (processList.length != 0) {
         
@@ -1931,7 +1939,7 @@ Ext.onReady(function(){
                         processpanel[module.name].parambutton.disable();
                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                         processList[process].executed = true;
-                        executeProcessList(module, phase, operation);
+                        executeProcessList(module, currentPhase, operation);
                     }
                 });
                 
@@ -1949,7 +1957,7 @@ Ext.onReady(function(){
                         processpanel[module.name].retrybutton.disable();
                         processpanel[module.name].parambutton.disable();
                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
-                        executeProcessList(module, phase, operation);
+                        executeProcessList(module, currentPhase, operation);
                     }
                 });
                 
@@ -1973,7 +1981,7 @@ Ext.onReady(function(){
                                     case 'ok':
                                         modulepanel.setModuleIcon(module.name, 'x-icon-loading');
                                         processList[process].executed = true;
-                                        executeProcessList(module, phase, operation);
+                                        executeProcessList(module, currentPhase, operation);
                                         break;
                                     case 'cancel':
                                         break;

@@ -33,8 +33,9 @@ class Repository
         if ($this->use != '')
         {
 
+			$wiff = WIFF::getInstance();
             $xml = new DOMDocument();
-            $xml->load(WIFF::params_filepath);
+            $xml->load($wiff->params_filepath);
             if ($xml === false)
             {
                 $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->contexts_filepath);
@@ -114,6 +115,35 @@ class Repository
         }
         return $this->url;
     }
+	
+	/**
+	 * Return true if repository has a content.xml file
+	 * @return 
+	 */
+	public function isValid()
+	{
+		require_once ('class/Class.WIFF.php');
+        require_once ('class/Class.Module.php');
+
+        $wiff = WIFF::getInstance();
+        $tmpfile = $wiff->downloadUrl($this->contenturl);
+        if ($tmpfile === false)
+        {
+            $this->errorMessage = $wiff->errorMessage;
+            return false;
+        }
+
+        $xml = new DOMDocument();
+        $ret = $xml->load($tmpfile);
+        if ($ret === false)
+        {
+            unlink($tmpfile);
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $tmpfile);
+            return false;
+        }
+		
+		return true;
+	}
 
     /**
      * Get Module list (available modules on repository)

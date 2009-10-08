@@ -323,20 +323,27 @@ require valid-user
         $repository->setAttribute('name', $name);
         $repository->setAttribute('description', $description);
         $repository->setAttribute('baseurl', $baseurl);
-		$repository->setAttribute('protocol', $protocol);
+        $repository->setAttribute('protocol', $protocol);
         $repository->setAttribute('host', $host);
         $repository->setAttribute('path', $path);
         $repository->setAttribute('login', $login);
         $repository->setAttribute('password', $password);
 
-        $ret = $xml->save($this->params_filepath);
-        if ($ret === false)
+        $repositoryObject = new Repository($repository);
+        if ($repositoryObject->isValid())
         {
-            $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+            $ret = $xml->save($this->params_filepath);
+            if ($ret === false)
+            {
+                $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+                return false;
+            }
+            return true;
+        } else
+        {
+            $this->errorMessage = "Repository is not a valid module repository.";
             return false;
         }
-
-        return true;
 
     }
 
@@ -597,7 +604,7 @@ require valid-user
     }
 
     /**
-     * Get a specific parameter value 
+     * Get a specific parameter value
      * @return the value of the parameter or false in case of errors
      * @param string $paramName the parameter name
      * @param boolean $strict if not found, should method report an error
@@ -610,10 +617,11 @@ require valid-user
         {
             return $plist[$paramName];
         }
-		
-		if($strict){
-        	$this->errorMessage = sprintf("Parameter '%s' not found in contexts parameters.", $paramName);
-		}
+
+        if ($strict)
+        {
+            $this->errorMessage = sprintf("Parameter '%s' not found in contexts parameters.", $paramName);
+        }
         return false;
     }
 
@@ -640,21 +648,22 @@ require valid-user
             $this->errorMessage = sprintf("Error executing XPath query '%s' on file '%s'.", "/wiff/parameters/param[@name='$paramName']", $this->params_filepath);
             return false;
         }
-		
-		$found = false ;
-		
+
+        $found = false;
+
         foreach ($params as $param)
-        {	
-			$found = true ;
+        {
+            $found = true;
             $param->setAttribute('value', $paramValue);
         }
-		
-		if(!$found && $create){
-			$param = $xml->createElement('param');
-        	$param = $xml->getElementsByTagName('parameters')->item(0)->appendChild($param);
-        	$param->setAttribute('name', $paramName);
-        	$param->setAttribute('value', $paramValue);
-		}
+
+        if (!$found && $create)
+        {
+            $param = $xml->createElement('param');
+            $param = $xml->getElementsByTagName('parameters')->item(0)->appendChild($param);
+            $param->setAttribute('name', $paramName);
+            $param->setAttribute('value', $paramValue);
+        }
 
         $ret = $xml->save($this->params_filepath);
         if ($ret === false)
