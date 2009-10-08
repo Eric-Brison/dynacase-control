@@ -23,6 +23,12 @@ checkInitServer();
 require_once ('class/Class.WIFF.php');
 require_once ('class/Class.JSONAnswer.php');
 
+// Autoload required classes
+function __autoload($class_name)
+{
+    require_once 'class/Class.'.$class_name.'.php';
+}
+
 // Disabling magic quotes at runtime
 // http://fr3.php.net/manual/en/security.magicquotes.disabling.php
 if (get_magic_quotes_gpc())
@@ -32,7 +38,6 @@ if (get_magic_quotes_gpc())
         $value = is_array($value)?
         array_map('stripslashes_deep', $value):
             stripslashes($value);
-
             return $value;
         }
 
@@ -218,8 +223,8 @@ if (get_magic_quotes_gpc())
             answer(null, $wiff->errorMessage);
         }
     }
-	
-	// Request to get a wiff parameter value
+
+    // Request to get a wiff parameter value
     if ( isset ($_REQUEST['getParam']))
     {
         $value = $wiff->getParam($_REQUEST['paramName']);

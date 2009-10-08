@@ -147,7 +147,6 @@ function wcontrol_check_phpfunction($process)
 
 function wcontrol_msg_phpfunction($process)
 {
-	//return "TEST " . function_exists('ncurses_init') . " END TEST.";
     return sprintf("Checking if the PHP function '%s' exists", $process->getAttribute('function'));
 }
 

@@ -16,8 +16,8 @@ class Process
     private $type;
 
     private $phase;
-	
-	public $errorMessage;
+
+    public $errorMessage;
 
     public function __construct($xmlStr = "", $phase)
     {
@@ -49,7 +49,7 @@ class Process
         $this->help = $node->getElementsByTagName('help')->item(0)->nodeValue;
 
         return;
-		
+
     }
 
     /**
@@ -59,27 +59,32 @@ class Process
      */
     public function execute()
     {
-      require_once('class/Class.WIFF.php');
-      require_once ('lib/Lib.Wcontrol.php');
-	
-	$wiff = WIFF::getInstance();
-	
-	putenv("WIFF_CONTEXT_NAME=". $this->phase->module->context->name);
-	putenv("WIFF_CONTEXT_ROOT=". $this->phase->module->context->root);
-	
-	$cwd = getcwd();
+        require_once ('class/Class.WIFF.php');
+        require_once ('lib/Lib.Wcontrol.php');
 
-	$ret = chdir($this->phase->module->context->root);
-	if( $ret === false ) {
-	  return array(
-		       'ret' => false,
-		       'output' => sprintf("Could not chdir to %s.", $this->phase->module->context->root)
-		       );
-	}
+        $wiff = WIFF::getInstance();
 
-	$result = wcontrol_eval_process($this);
+        putenv("WIFF_CONTEXT_NAME=".$this->phase->module->context->name);
+        putenv("WIFF_CONTEXT_ROOT=".$this->phase->module->context->root);
 
-	chdir($cwd);
+        $cwd = getcwd();
+
+        $ret = chdir($this->phase->module->context->root);
+        if ($ret === false)
+        {
+            return array (
+            'ret'=>false,
+            'output'=>sprintf("Could not chdir to %s.", $this->phase->module->context->root)
+            );
+        }
+
+        $result = wcontrol_eval_process($this);
+
+        chdir($cwd);
+		
+		if(!$return){
+			Debug::log($this->errorMessage);
+		}
 
         return $result;
     }
