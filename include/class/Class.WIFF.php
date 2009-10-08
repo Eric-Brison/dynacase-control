@@ -597,11 +597,12 @@ require valid-user
     }
 
     /**
-     * Get a specific parameter value
+     * Get a specific parameter value 
      * @return the value of the parameter or false in case of errors
      * @param string $paramName the parameter name
+     * @param boolean $strict if not found, should method report an error
      */
-    public function getParam($paramName)
+    public function getParam($paramName, $strict = false)
     {
         $plist = $this->getParamList();
 
@@ -609,8 +610,10 @@ require valid-user
         {
             return $plist[$paramName];
         }
-
-        $this->errorMessage = sprintf("Parameter '%s' not found in contexts parameters.", $paramName);
+		
+		if($strict){
+        	$this->errorMessage = sprintf("Parameter '%s' not found in contexts parameters.", $paramName);
+		}
         return false;
     }
 
@@ -632,21 +635,26 @@ require valid-user
 
         $xpath = new DOMXpath($xml);
         $params = $xpath->query("/wiff/parameters/param[@name='$paramName']");
-        if ($params === null && !$create)
+        if ($params === null)
         {
             $this->errorMessage = sprintf("Error executing XPath query '%s' on file '%s'.", "/wiff/parameters/param[@name='$paramName']", $this->params_filepath);
             return false;
-        } else {
-        	$param = $xml->createElement('param');
+        }
+		
+		$found = false ;
+		
+        foreach ($params as $param)
+        {	
+			$found = true ;
+            $param->setAttribute('value', $paramValue);
+        }
+		
+		if(!$found && $create){
+			$param = $xml->createElement('param');
         	$param = $xml->getElementsByTagName('parameters')->item(0)->appendChild($param);
         	$param->setAttribute('name', $paramName);
         	$param->setAttribute('value', $paramValue);
-
-        }
-        foreach ($params as $param)
-        {
-            $param->setAttribute('value', $paramValue);
-        }
+		}
 
         $ret = $xml->save($this->params_filepath);
         if ($ret === false)
