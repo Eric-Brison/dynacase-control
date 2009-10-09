@@ -297,6 +297,12 @@ require valid-user
     {
         require_once ('class/Class.Repository.php');
 
+		if ($name == '')
+        {
+            $this->errorMessage = "A name must be provided.";
+            return false;
+        }
+
         $xml = new DOMDocument();
         $xml->load($this->params_filepath);
         if ($xml === false)
