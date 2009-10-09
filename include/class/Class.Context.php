@@ -34,6 +34,78 @@ class Context
     {
         return $this->$property;
     }
+	
+	/**
+	 * Import archive in Context
+	 * @return 
+	 * @param object $name
+	 */
+	public function importArchive($archive)
+	{
+		require_once ('class/Class.WIFF.php');
+		require_once ('class/Class.Module.php');
+
+        $wiff = WIFF::getInstance();		
+		
+		$module = new Module($this);
+		
+		$archiveName = basename($archive);
+		
+		$module->tmpfile = $archive;
+		if ($module->tmpfile === false)
+		{
+			$this->errorMessage = "No archive provided.S";
+            return false;
+		}
+		
+		$info = $module->getInfoXml();
+		
+		$infoXML = new DOMDocument();
+		$ret = $infoXML->loadXML($info);
+
+        $module = $infoXML->firstChild;
+
+        $contextsXML = new DOMDocument();
+        $contextsXML->load($wiff->contexts_filepath);
+        $contextsXPath = new DOMXPath($contextsXML);
+
+        $module = $contextsXML->importNode($module, true); // Import module to contexts xml document
+        $module->setAttribute('status', 'downloaded');
+        $module->setAttribute('tmpfile', $this->tmpfile);
+		
+		// Get <modules> node
+        $modulesNodeList = $contextsXPath->query("/contexts/context[@name = '".$this->context->name."']/modules");
+        if ($modulesNodeList->length <= 0)
+        {
+            $this->errorMessage = sprintf("Found no <modules> for context '%s' in '%s'.", $this->context->name);
+            return false;
+        }
+        $modulesNode = $modulesNodeList->item(0);
+
+        // Look for an existing <module> node
+        $existingModuleNodeList = $contextsXPath->query("/contexts/context[@name='".$this->context->name."']/modules/module[@name='".$this->name."']");
+        if ($existingModuleNodeList->length <= 0)
+        {
+            // No corresponding module was found, so just append the current module
+            error_log("Creating a new <module> node.");
+            $modulesNode->appendChild($module);
+        } else
+        {
+            // A corresponding module was found, so replace it
+            error_log("Replacing existing <module> node.");
+            if ($existingModuleNodeList->length > 1)
+            {
+                $this->errorMessage = sprintf("Found more than one <module> with name='%s' in '%s'.", $this->name, $wiff->contexts_filepath);
+                return false;
+            }
+            $existingModuleNode = $existingModuleNodeList->item(0);
+            $modulesNode->replaceChild($module, $existingModuleNode);
+        }
+		
+		$contextsXML->save($wiff->contexts_filepath);
+		
+		return $module->tmpfile;
+	}
 
     /**
      * Activate repository for Context

@@ -250,6 +250,21 @@ if (get_magic_quotes_gpc())
         }
     }
 
+    // Request to import a web installer archive to a given context
+    if ( isset ($_REQUEST['importArchive']))
+    {
+    	answer(true);
+//        $context = $wiff->getContext($_REQUEST['context']);
+//        $context->importArchive( $_FILES['archive']['name']);
+//        if (!$context->errorMessage)
+//        {
+//            answer(true);
+//        } else
+//        {
+//            answer(null, $context->errorMessage);
+//        }
+    }
+
     // Request to get global repository list
     if ( isset ($_REQUEST['getRepoList']))
     {

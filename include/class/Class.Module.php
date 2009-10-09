@@ -56,12 +56,15 @@ class Module
      */
     private $errorMessage = '';
 
-    public function __construct($context, $repository, $xmlNode, $isInstalled = false)
+    public function __construct($context, $repository = null, $xmlNode = null, $isInstalled = false)
     {
         $this->context = $context;
         $this->repository = $repository;
 
-        $this->parseXmlNode($xmlNode);
+        if ($xmlNode)
+        {
+            $this->parseXmlNode($xmlNode);
+        }
 
         $this->isInstalled = $isInstalled;
 
@@ -243,7 +246,7 @@ class Module
 
         $contextsXML->save($wiff->contexts_filepath);
 
-        return $this->tmpfile;
+        return $module;
     }
 
     /**

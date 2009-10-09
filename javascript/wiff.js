@@ -1117,41 +1117,75 @@ Ext.onReady(function(){
                     id: data[i].name,
                     bodyStyle: 'overflow-y:auto;',
                     items: [{
-                        xtype: 'panel',
+                        xtype: 'form',
+						layout: 'anchor',
                         title: 'Context Information',
                         style: 'padding:10px;font-size:small;',
                         bodyStyle: 'padding:5px;',
+						fileUpload: true,
+						method: 'POST',
+    					enctype: 'multipart/form-data',
+						url: 'wiff.php',
+						labelWidth: 0,
 						items: [{
 							xtype: 'panel',
                        		html: contextInfoHtml,
 							border: false
-						},{				 
-                            xtype: 'fileuploadfield',
-							buttonOnly: true,
-//							buttonOffset:0,
-							buttonCfg: {
-								text: 'Import Archive',
-							    //iconCls: 'x-icon-import'
-							},
-							listeners: {
-					            'fileselected': function(fb, v){
-					                //var el = Ext.fly('fi-button-msg');
-					                //el.update('<b>Selected:</b> '+v);
-//					                if(!el.isVisible()){
-//					                    el.slideIn('t', {
-//					                        duration: .2,
-//					                        easing: 'easeIn',
-//					                        callback: function(){
-//					                            el.highlight();
-//					                        }
-//					                    });
-//					                }else{
-//					                    el.highlight();
-//					                }
-								Ext.Msg.alert('Freedom Web Installer','File : ' + v);
-					            }
-					        }
-						
+//						},{
+//                            xtype: 'hidden',
+//                            name: 'importArchive',
+//                            value: true
+//                        },{
+//                            xtype: 'hidden',
+//                            name: 'context',
+//                            value: data[i].name
+//                        },{
+//                            xtype: 'fileuploadfield',
+//							buttonOnly: true,
+//							name: 'archive',
+////							buttonOffset:0,
+//							buttonCfg: {
+//								text: 'Import Archive',
+//							    //iconCls: 'x-icon-import'
+//							},
+//							listeners: {
+//					            'fileselected': function(fb, v){
+//									
+//									// Create hidden iframe target to send form in background
+//									var hiddenTarget = function(){
+//										if (! this._hiddenTarget) {
+//									      this._hiddenTarget='fdlhiddeniframe';									      
+//									      var o=document.createElement("div");
+//									      o.innerHTML='<iframe style="display:none;width:100%" id="'+this._hiddenTarget+'" name="'+this._hiddenTarget+'"></iframe>';
+//									      document.body.appendChild(o);
+//									    }
+//									    return this._hiddenTarget;
+//									}
+//				
+//									var form = fb.ownerCt.getForm().getEl().dom;
+//									
+//									form.submit({
+////										params: {
+////											importArchive: true,
+////											context: fb.ownerCt.ownerCt.id,
+////										},
+//										success: function(form,action){
+//											console.log('Import',action);
+//											//Ext.Msg.alert('Success', action.result.msg);
+//											Ext.Msg.alert('Freedom Web Installer', 'Archive upload successful.',function(btn){
+//												console.log('Import',action);
+//												//download_success(module, operation, responseObject);
+//											});
+//										},
+//										failure: function(form,action){
+//											Ext.Msg.alert('Freedom Web Installer', action.result.error);
+//										},
+//										waitMsg: 'Uploading Archive...'
+//									});
+//
+//					            }
+//					        }
+//						
 						}]
                     }, {
                         id: data[i].name + '-installed',
