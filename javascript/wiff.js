@@ -1828,7 +1828,7 @@ Ext.onReady(function(){
                     Ext.Msg.alert('Freedom Web Installer', 'Install successful', function(){
                         installedStore[currentContext].load();
                         availableStore[currentContext].load();
-                        //globalwin.close();
+                        globalwin.close();
                     });
                 }
                 //})
