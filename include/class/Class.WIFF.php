@@ -155,9 +155,8 @@ require valid-user
 </Limit>"
         );
 
-	$salt = $this->genSalt();
         fwrite($passwordFile,
-	       $login.':'.crypt($password, $salt)
+	       sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
         );
 
         fclose($accessFile);
@@ -165,16 +164,6 @@ require valid-user
 
         return true;
 
-    }
-
-    /**
-     * Generate a 2 char salt for 3DES crypt
-     */
-    private function genSalt() {
-      $salt_space = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-      $s1 = $salt_space[rand(0, strlen($salt_space)-1)];
-      $s2 = $salt_space[rand(0, strlen($salt_space)-1)];
-      return "$s1$s2";
     }
 
     /**
