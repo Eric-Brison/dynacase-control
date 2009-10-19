@@ -416,7 +416,8 @@ Ext.onReady(function(){
                     title: 'Freedom <br/> Web Installer',
                     html: "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Web Installer for Freedom (WIFF)</h1>" +
                     "<p style='margin-bottom:30px;'>If you need help, follow these links to documentation wiki. Subscriptions and contributions are much appreciated.</p>" +
-                    "<ul style='margin-left:30px;list-style-type: square;' ><li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff'><h2>Introduction</h2></a>" +
+                    "<ul style='margin-left:30px;list-style-type: square;' >" +
+                    "<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff' target='_blank'><h2>Introduction</h2></a></li>" +
                     "<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:installation' target='_blank'><h2>How to install WIFF ?</h2></a></li>" +
                     "<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:parametrage' target='_blank'><h2>How to setup WIFF ?</h2></a></li>" +
                     "<li><a href='http://www.freedom-ecm.org/doku.php?id=documentation:wiff:users:createcontext' target='_blank'><h2>How to create a context ?</h2></a></li>" +
