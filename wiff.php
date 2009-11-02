@@ -26,16 +26,16 @@ require_once ('class/Class.JSONAnswer.php');
 // Autoload required classes
 function __autoload($class_name)
 {
-    require_once 'class/Class.'.$class_name.'.php';
+  require_once 'class/Class.'.$class_name.'.php';
 }
 
 // Disabling magic quotes at runtime
 // http://fr3.php.net/manual/en/security.magicquotes.disabling.php
 if (get_magic_quotes_gpc())
-{
+  {
     function stripslashes_deep($value)
     {
-        $value = is_array($value)?
+      $value = is_array($value)?
         array_map('stripslashes_deep', $value):
             stripslashes($value);
             return $value;
