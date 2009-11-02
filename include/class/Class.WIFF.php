@@ -156,7 +156,7 @@ require valid-user
         );
 
         fwrite($passwordFile,
-        $login.':'.crypt($password)
+	       sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
         );
 
         fclose($accessFile);

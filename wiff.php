@@ -60,7 +60,7 @@ if (get_magic_quotes_gpc())
         'DOMDocument'
         ) as $class)
         {
-            if (!class_exists($class))
+	  if (!class_exists($class, false))
             {
                 array_push($errors, sprintf("PHP class '%s' not found.", $class));
             }
