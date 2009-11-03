@@ -6,6 +6,9 @@
   </repositories>
 
   <parameters>
+	<param name="wiff-update-host" value="ftp://ftp.freedom-ecm.org/" /> 
+	<param name="wiff-update-path" value="2.14/tarball/" />
+	<param name="wiff-update-file" value="freedom-wiff-current.tar.gz" />
     <param name="use-proxy" value="no" />
     <param name="proxy-host" value="" />
     <param name="proxy-port" value="" />

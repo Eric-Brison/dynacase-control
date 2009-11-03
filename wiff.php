@@ -26,16 +26,16 @@ require_once ('class/Class.JSONAnswer.php');
 // Autoload required classes
 function __autoload($class_name)
 {
-    require_once 'class/Class.'.$class_name.'.php';
+  require_once 'class/Class.'.$class_name.'.php';
 }
 
 // Disabling magic quotes at runtime
 // http://fr3.php.net/manual/en/security.magicquotes.disabling.php
 if (get_magic_quotes_gpc())
-{
+  {
     function stripslashes_deep($value)
     {
-        $value = is_array($value)?
+      $value = is_array($value)?
         array_map('stripslashes_deep', $value):
             stripslashes($value);
             return $value;
@@ -160,6 +160,13 @@ if (get_magic_quotes_gpc())
             answer(null, $wiff->errorMessage);
         }
     }
+	
+	// Request PHP Info
+	if ( isset ($_REQUEST['phpInfo']))
+	{
+		phpinfo();
+		exit;
+	}
 
     // Request installer available version
     if ( isset ($_REQUEST['availVersion']))
@@ -253,16 +260,17 @@ if (get_magic_quotes_gpc())
     // Request to import a web installer archive to a given context
     if ( isset ($_REQUEST['importArchive']))
     {
-    	answer(true);
-//        $context = $wiff->getContext($_REQUEST['context']);
-//        $context->importArchive( $_FILES['archive']['name']);
-//        if (!$context->errorMessage)
-//        {
-//            answer(true);
-//        } else
-//        {
-//            answer(null, $context->errorMessage);
-//        }
+    	//answer(null,basename( $_FILES['module']['tmp_name']));
+		
+        $context = $wiff->getContext($_REQUEST['context']);
+        $moduleFile = $context->uploadModule();
+        if (!$context->errorMessage)
+        {
+            answer($moduleFile);
+        } else
+        {
+            answer(null, $context->errorMessage);
+        }
     }
 
     // Request to get global repository list
@@ -353,6 +361,22 @@ if (get_magic_quotes_gpc())
         $context = $wiff->getContext($_REQUEST['context']);
 
         $dependencyList = $context->getModuleDependencies($_REQUEST['modulelist']);
+
+        if ($dependencyList === false)
+        {
+            answer(null, $context->errorMessage);
+        } else
+        {
+            answer($dependencyList);
+        }
+    }
+	
+	// Request to get dependency module list for an imported module
+    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['file']) && isset ($_REQUEST['getLocalModuleDependencies']))
+    {
+        $context = $wiff->getContext($_REQUEST['context']);
+
+        $dependencyList = $context->getLocalModuleDependencies($_REQUEST['file']);
 
         if ($dependencyList === false)
         {
