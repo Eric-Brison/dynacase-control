@@ -160,6 +160,12 @@ if (get_magic_quotes_gpc())
             answer(null, $wiff->errorMessage);
         }
     }
+	
+	// Request PHP Info
+	if ( isset ($_REQUEST['phpInfo']))
+	{
+		phpinfo();
+	}
 
     // Request installer available version
     if ( isset ($_REQUEST['availVersion']))

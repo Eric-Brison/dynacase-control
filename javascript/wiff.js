@@ -549,6 +549,7 @@ Ext.onReady(function(){
                     items: [{
                         title: 'Setup',
                         iconCls: 'x-icon-setup',
+						bodyStyle: 'overflow:auto;',
                         items: [{
                             title: 'WIFF Information',
                             style: 'padding:10px;font-size:small;',
@@ -1040,7 +1041,35 @@ Ext.onReady(function(){
                                     
                                 }
                             }
-                        }]
+                        },new Ext.ux.MediaPanel({
+							title: 'PHP Info',
+							style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
+							height: 300,
+							collapsible: true,
+							iconCls: 'x-icon-php',
+							mediaCfg:{
+			                    mediaType   : 'HTM',
+			                    url    : 'wiff.php?phpInfo=true',
+			                    style  : {display:'inline', width:'100px',height:'80px'},
+			                    params: {
+			                         wmode     :'opaque'
+			                        ,scale     :'exactfit'
+			                        ,salign    :'t'
+			                      }
+			                 }
+			            })
+//						,{
+//							title: 'Php Config',
+//                            style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
+//                            listeners: {
+//								render: function(panel){
+//									panel.load({url:'wiff.php?phpInfo=true'});
+//								}
+//							},
+//							collapsible: true,
+//							iconCls: 'x-icon-php'
+//						}
+						]
                     
                     
                     }]
@@ -1467,8 +1496,8 @@ Ext.onReady(function(){
 											inputFileEl.appendTo(button.container.importForm.getEl());
 											
 											button.container.importForm.submit({
-												waitTitle: 'WaitTitle',
-												waitMsg: 'WaitMsg',
+												waitTitle: 'Module Import',
+												waitMsg: 'Importing...',
 												params: {
 													importArchive: true,
 													context: currentContext
@@ -1505,7 +1534,10 @@ Ext.onReady(function(){
                                             for (var i = 0; i < selections.length; i++) {
                                                 modules.push(selections[i].get('name'));
                                             }
-                                            upgrade(modules);
+											if (modules.length != 0) {
+												upgrade(modules);
+											} else {
+											}
                                         }
                                     }, {
                                         text: 'Refresh',
