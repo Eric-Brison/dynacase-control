@@ -253,16 +253,17 @@ if (get_magic_quotes_gpc())
     // Request to import a web installer archive to a given context
     if ( isset ($_REQUEST['importArchive']))
     {
-    	answer(true);
-//        $context = $wiff->getContext($_REQUEST['context']);
-//        $context->importArchive( $_FILES['archive']['name']);
-//        if (!$context->errorMessage)
-//        {
-//            answer(true);
-//        } else
-//        {
-//            answer(null, $context->errorMessage);
-//        }
+    	//answer(null,basename( $_FILES['module']['tmp_name']));
+		
+        $context = $wiff->getContext($_REQUEST['context']);
+        $moduleFile = $context->uploadModule();
+        if (!$context->errorMessage)
+        {
+            answer($moduleFile);
+        } else
+        {
+            answer(null, $context->errorMessage);
+        }
     }
 
     // Request to get global repository list
@@ -353,6 +354,22 @@ if (get_magic_quotes_gpc())
         $context = $wiff->getContext($_REQUEST['context']);
 
         $dependencyList = $context->getModuleDependencies($_REQUEST['modulelist']);
+
+        if ($dependencyList === false)
+        {
+            answer(null, $context->errorMessage);
+        } else
+        {
+            answer($dependencyList);
+        }
+    }
+	
+	// Request to get dependency module list for an imported module
+    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['file']) && isset ($_REQUEST['getLocalModuleDependencies']))
+    {
+        $context = $wiff->getContext($_REQUEST['context']);
+
+        $dependencyList = $context->getLocalModuleDependencies($_REQUEST['file']);
 
         if ($dependencyList === false)
         {
