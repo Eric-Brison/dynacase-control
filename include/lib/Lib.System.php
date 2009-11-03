@@ -21,7 +21,7 @@ class LibSystem {
     if( $path_env == false ) {
       return false;
     }
-    foreach (preg_split("/:/", $path_env) as $path) {
+    foreach (split(":", $path_env) as $path) {
       if( file_exists("$path/$cmdname") ) {
 	return "$path/$cmdname";
       }

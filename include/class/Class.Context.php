@@ -34,103 +34,78 @@ class Context
     {
         return $this->$property;
     }
+	
+	/**
+	 * Import archive in Context
+	 * @return 
+	 * @param object $name
+	 */
+	public function importArchive($archive)
+	{
+		require_once ('class/Class.WIFF.php');
+		require_once ('class/Class.Module.php');
 
-    /**
-     * Import archive in Context
-     * @return
-     * @param object $name
-     */
-    public function importArchive($archive)
-    {
-        require_once ('class/Class.WIFF.php');
-        require_once ('class/Class.Module.php');
-
-        $wiff = WIFF::getInstance();
-        if ($wiff === false)
-        {
-            $this->errorMessage = sprintf("Could not get context.");
+        $wiff = WIFF::getInstance();		
+		
+		$module = new Module($this);
+		
+		$archiveName = basename($archive);
+		
+		$module->tmpfile = $archive;
+		if ($module->tmpfile === false)
+		{
+			$this->errorMessage = "No archive provided.S";
             return false;
-        }
+		}
+		
+		$info = $module->getInfoXml();
+		
+		$infoXML = new DOMDocument();
+		$ret = $infoXML->loadXML($info);
 
-        $module = new Module($this);
-
-        // Set package file to tmpfile archive
-        $module->tmpfile = $archive;
-        if ($module->tmpfile === false)
-        {
-            $this->errorMessage = sprintf("No archive provided.");
-            return false;
-        }
-
-        // Load module attributes from info.xml
-        $moduleXML = $module->loadInfoXml();
-        if ($moduleXML === false)
-        {
-            $this->errorMessage = sprintf("Could not load info xml: '%s'.", $module->errorMessage);
-            return false;
-        }
+        $module = $infoXML->firstChild;
 
         $contextsXML = new DOMDocument();
-        $contextsXML->preserveWhiteSpace = false;
-        $contextsXML->formatOutput = true;
-        $ret = $contextsXML->load($wiff->contexts_filepath);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf("Could not load contexts.xml");
-            return false;
-        }
-
-        $importedXML = $contextsXML->importNode($moduleXML, true); // Import module to contexts xml document
-        if ($importedXML === false)
-        {
-            $this->errorMessage = sprintf("Could not import module node.");
-            return false;
-        }
-        $moduleXML = $importedXML;
-
-        $moduleXML->setAttribute('status', 'downloaded');
-        $moduleXML->setAttribute('tmpfile', $archive);
-
-        // Get <modules> node
+        $contextsXML->load($wiff->contexts_filepath);
         $contextsXPath = new DOMXPath($contextsXML);
-        $modulesNodeList = $contextsXPath->query("/contexts/context[@name = '".$this->name."']/modules");
+
+        $module = $contextsXML->importNode($module, true); // Import module to contexts xml document
+        $module->setAttribute('status', 'downloaded');
+        $module->setAttribute('tmpfile', $this->tmpfile);
+		
+		// Get <modules> node
+        $modulesNodeList = $contextsXPath->query("/contexts/context[@name = '".$this->context->name."']/modules");
         if ($modulesNodeList->length <= 0)
         {
-            $this->errorMessage = sprintf("Found no modules node for context '%s'.", $this->name);
+            $this->errorMessage = sprintf("Found no <modules> for context '%s' in '%s'.", $this->context->name);
             return false;
         }
         $modulesNode = $modulesNodeList->item(0);
 
-
         // Look for an existing <module> node
-        $existingModuleNodeList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$module->name."']");
+        $existingModuleNodeList = $contextsXPath->query("/contexts/context[@name='".$this->context->name."']/modules/module[@name='".$this->name."']");
         if ($existingModuleNodeList->length <= 0)
         {
             // No corresponding module was found, so just append the current module
             error_log("Creating a new <module> node.");
-            $modulesNode->appendChild($moduleXML);
+            $modulesNode->appendChild($module);
         } else
         {
             // A corresponding module was found, so replace it
             error_log("Replacing existing <module> node.");
             if ($existingModuleNodeList->length > 1)
             {
-                $this->errorMessage = sprintf("Found more than one <module> with name='%s' in '%s'.", $module->name, $wiff->contexts_filepath);
+                $this->errorMessage = sprintf("Found more than one <module> with name='%s' in '%s'.", $this->name, $wiff->contexts_filepath);
                 return false;
             }
             $existingModuleNode = $existingModuleNodeList->item(0);
-            $modulesNode->replaceChild($moduleXML, $existingModuleNode);
+            $modulesNode->replaceChild($module, $existingModuleNode);
         }
-
-        $ret = $contextsXML->save($wiff->contexts_filepath);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf("Error saving contexts.xml '%s'.", $wiff->contexts_filepath);
-            return false;
-        }
-
-        return $module->tmpfile;
-    }
+		
+		$contextsXML->save($wiff->contexts_filepath);
+		
+		return $module->tmpfile;
+	}
 
     /**
      * Activate repository for Context
@@ -175,7 +150,7 @@ class Context
 
         // Check this repository is not already in context
         //$contextRepoList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories/access[@name='".$name."']");
-        $contextRepoList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories/access[@use='".$name."']");
+		$contextRepoList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/repositories/access[@use='".$name."']");
         if ($contextRepoList->length > 0)
         {
             // If more than zero repository with name
@@ -187,13 +162,13 @@ class Context
         $wiffRepoList = $paramsXPath->query("/wiff/repositories/access[@name='".$name."']");
         if ($wiffRepoList->length == 0)
         {
-            $this->errorMessage = "No repository with name ".$name.".";
+            $this->errorMessage = "No repository with name " . $name .".";
             return false;
         } else if ($wiffRepoList->length > 1)
-        {
+		{
             $this->errorMessage = "Duplicate repository with same name";
             return false;
-        }
+		}
 
         // Add repository to this context
         $node = $contextsXml->createElement('access');
@@ -201,9 +176,9 @@ class Context
 
         $repository->setAttribute('use', $name);
 
-        //        $repository = $contextsXml->importNode($wiffRepoList->item(0), true); // Node must be imported from params document.
-        //
-        //        $repository = $contextList->item(0)->getElementsByTagName('repositories')->item(0)->appendChild($repository);
+//        $repository = $contextsXml->importNode($wiffRepoList->item(0), true); // Node must be imported from params document.
+//
+//        $repository = $contextList->item(0)->getElementsByTagName('repositories')->item(0)->appendChild($repository);
 
         $ret = $contextsXml->save($wiff->contexts_filepath);
         if ($ret === false)
@@ -538,40 +513,26 @@ class Context
      *         install order, or false in case of error
      * @param the module name list
      */
-    public function getModuleDependencies($namelist, $local = false)
+    public function getModuleDependencies($namelist)
     {
-        /*
-         $modsAvail = $this->getAvailableModuleList();
-         if ($modsAvail === false)
-         {
-         return false;
-         }
-         */
+        $modsAvail = $this->getAvailableModuleList();
+        if ($modsAvail === false)
+        {
+            return false;
+        }
 
         $depsList = array ();
 
         foreach ($namelist as $name)
         {
-            if ($local == false)
+            $module = $this->getModuleAvail($name);
+            if ($module === false)
             {
-                $module = $this->getModuleAvail($name);
-                if ($module === false)
-                {
-                    $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
-                    return false;
-                }
-
-                array_push($depsList, $module);
-            } else
-            {
-                $module = $this->getModule($name);
-                if ($module === false)
-                {
-                    $this->errorMessage = sprintf("Local module '%s' not found in contexts.xml.", $name);
-                    return false;
-                }
-                array_push($depsList, $module);
+                $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+                return false;
             }
+
+            array_push($depsList, $module);
         }
 
 
@@ -731,8 +692,8 @@ class Context
      */
     private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = '', $version = '')
     {
-
-        $installedModule = $this->moduleIsInstalled($targetModule);
+    	
+		$installedModule = $this->moduleIsInstalled($targetModule);		
 
         if ($operator != '')
         {
@@ -759,8 +720,8 @@ class Context
         {
             return (bool)$installedModule;
         }
-
-        if ($installedModule->status != 'installed')
+		
+		if ($installedModule->status != 'installed')
         {
             return false;
         }
@@ -815,101 +776,6 @@ class Context
         error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstart));
         system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstart), $ret));
         return $ret;
-    }
-
-    public function uploadModule()
-    {
-        require_once ('lib/Lib.System.php');
-
-        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
-        if ($tmpfile === false)
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
-            return false;
-        }
-
-        if (!array_key_exists('module', $_FILES))
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Missing 'module' in uploaded files."));
-            unlink($tmpfile);
-            return false;
-        }
-
-        $ret = move_uploaded_file($_FILES['module']['tmp_name'], $tmpfile);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Could not move uploaded file to temporary file '%s'.", $tmpfile));
-            unlink($tmpfile);
-            return false;
-        }
-
-        $ret = $this->importArchive($tmpfile);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Failed to import archive: '%s'.", $this->errorMessage));
-            return false;
-        }
-
-        return $tmpfile;
-    }
-
-    public function getModuleNameFromTmpFile($moduleFilePath)
-    {
-        $wiff = WIFF::getInstance();
-        if ($wiff === false)
-        {
-            $this->errorMessage = sprintf("Could not get context.");
-            return false;
-        }
-
-        $xml = new DOMDocument();
-        $ret = $xml->load($wiff->contexts_filepath);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf("Could not load contexts.xml from '%s'", $wiff->contexts_filepath);
-            return false;
-        }
-
-        $xpath = new DOMXPath($xml);
-
-        $res = $xpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@tmpfile='%s']", $this->name, $moduleFilePath));
-        if ($res->length <= 0)
-        {
-            $this->errorMessage = sprintf("Could not find module with tmpfile '%s'", $moduleFilePath);
-            return false;
-        }
-        if ($res->length > 1)
-        {
-            $this->errorMessage = sprintf("Found more than one module with tmpfile '%s'", $moduleFilePath);
-            return false;
-        }
-
-        $module = $res->item(0);
-
-        return $module->getAttribute('name');
-    }
-
-    public function getLocalModuleDependencies($moduleFilePath)
-    {
-        $moduleName = $this->getModuleNameFromTmpFile($moduleFilePath);
-        if ($moduleName === false)
-        {
-            $this->errorMessage = sprintf("Could not get module name from filepath '%s' in contexts.xml: %s", $moduleFilePath, $this->errorMessage);
-            return false;
-        }
-
-        $module = $this->getModule($moduleName);
-        if ($module === false)
-        {
-            $this->errorMessage = sprintf("Could not get module with name '%s' in contexts.xml: %s", $moduleName, $this->errorMessage);
-            return false;
-        }
-
-        error_log(sprintf(">>> moduleName = %s", $moduleName));
-
-        $deps = $this->getModuleDependencies( array ($moduleName), true);
-
-        return $deps;
     }
 
 }
