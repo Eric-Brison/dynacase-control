@@ -133,6 +133,18 @@ class WIFF
 
     }
 
+	public function getLogin()
+	{
+		if(!$this->hasPasswordFile()){
+			return false;
+		} else {
+			@$passwordFile = fopen('.htpasswd', 'r');
+			$explode = explode(':',fgets($passwordFile,100));
+			$login = $explode[0];
+			return $login;
+		}
+	}
+	
     public function hasPasswordFile()
     {
 

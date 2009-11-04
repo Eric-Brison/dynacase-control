@@ -1,271 +1,6 @@
 /**
  * @author Clément Laballe
  */
-// Include Ext.ux.InputButton to handle file input (webinst archive import)
-// See thread http://www.extjs.com/forum/showthread.php?p=402903
-// See website http://github.com/BigLep/ExtJsExtensions/tree/v3/src/FileUploadField/
-/*!
-* Ext JS Library 3.0.2
-* Copyright(c) 2006-2009 Ext JS, LLC
-* licensing@extjs.com
-* http://www.extjs.com/license
-*/
-/*
-* Modications made to the Ext provided Ext.ux.form.FileUploadField.
-* Changes between CHANGE and END CHANGE were made from the original.
-*/
-Ext.ns('Ext.ux.form');
- 
-/**
-* @class Ext.ux.form.FileUploadField
-* @extends Ext.form.TextField
-* Creates a file upload field.
-* @xtype fileuploadfield
-*/
-Ext.ux.form.FileUploadField = Ext.extend(Ext.form.TextField, {
-    /**
-* @cfg {String} buttonText The button text to display on the upload button (defaults to
-* 'Browse...'). Note that if you supply a value for {@link #buttonCfg}, the buttonCfg.text
-* value will be used instead if available.
-*/
-    buttonText: 'Browse...',
-    /**
-* @cfg {Boolean} buttonOnly True to display the file upload field as a button with no visible
-* text field (defaults to false). If true, all inherited TextField members will still be available.
-*/
-    buttonOnly: false,
-    /**
-* @cfg {Number} buttonOffset The number of pixels of space reserved between the button and the text field
-* (defaults to 3). Note that this only applies if {@link #buttonOnly} = false.
-*/
-    buttonOffset: 3,
-    /**
-* @cfg {Object} buttonCfg A standard {@link Ext.Button} config object.
-*/
- 
-    // private
-    readOnly: true,
- 
-    /**
-* @hide
-* @method autoSize
-*/
-    autoSize: Ext.emptyFn,
- 
-    // private
-    initComponent: function(){
-        Ext.ux.form.FileUploadField.superclass.initComponent.call(this);
- 
-        this.addEvents(
-            /**
-* @event fileselected
-* Fires when the underlying file input field's value has changed from the user
-* selecting a new file from the system file selection dialog.
-* @param {Ext.ux.form.FileUploadField} this
-* @param {String} value The file value returned by the underlying file input field
-*/
-            'fileselected'
-        );
-    },
- 
-    // private
-    onRender : function(ct, position){
-        Ext.ux.form.FileUploadField.superclass.onRender.call(this, ct, position);
- 
-        this.wrap = this.el.wrap({cls:'x-form-field-wrap x-form-file-wrap'});
-        // CHANGE
-        this.wrap.on({
-            'mousemove': this.onButtonMouseMove,
-            'mouseover': this.onButtonMouseMove,
-            scope: this
-        });
-        // END CHANGE
-        this.el.addClass('x-form-file-text');
-        this.el.dom.removeAttribute('name');
-        
- 
-        var btnCfg = Ext.applyIf(this.buttonCfg || {}, {
-            text: this.buttonText
-        });
-        this.button = new Ext.Button(Ext.apply(btnCfg, {
-            renderTo: this.wrap,
-            // CHANGE
-            // cls: 'x-form-file-btn' + (btnCfg.iconCls ? ' x-btn-icon' : '')
-            // http://www.extjs.com/forum/showthread.php?t=82344
-            cls: 'x-form-file-btn'
-            // END CHANGE
-        }));
-        
-        // CHANGE
-        // Moved this below to guarantee the button has already been instantiated.
-        this.createFileInput();
-        // END CHANGE
-        
-        if(this.buttonOnly){
-            this.el.hide();
-            this.wrap.setWidth(this.button.getEl().getWidth());
-        }
- 
-        // CHANGE
-        //this.bindListeners();
-        // END CHANGE
-        this.resizeEl = this.positionEl = this.wrap;
-    },
-    
-    
-    
-    bindListeners: function(){
-        this.fileInput.on({
-            scope: this,
-            mouseenter: function() {
-                this.button.addClass(['x-btn-over','x-btn-focus'])
-            },
-            mouseleave: function(){
-                this.button.removeClass(['x-btn-over','x-btn-focus','x-btn-click'])
-            },
-            mousedown: function(){
-                this.button.addClass('x-btn-click')
-            },
-            mouseup: function(){
-                this.button.removeClass(['x-btn-over','x-btn-focus','x-btn-click'])
-            },
-            change: function(){
-                var v = this.fileInput.dom.value;
-                this.setValue(v);
-                this.fireEvent('fileselected', this, v);
-            }
-        });
-    },
-    
-    createFileInput : function() {
-        this.fileInput = this.wrap.createChild({
-            // CHANGE
-            // id: this.getFileInputId(),
-            // END CHANGE
-            name: this.name||this.getId(),
-            cls: 'x-form-file',
-            tag: 'input',
-            type: 'file',
-            size: 1
-        });
-        
-        // CHANGE
-        if (this.button.tooltip) {
-            if(Ext.isObject(this.button.tooltip)){
-                Ext.QuickTips.register(Ext.apply({
-                      target: this.fileInput
-                }, this.button.tooltip));
-            }else{
-                this.fileInput.dom[this.button.tooltipType] = this.button.tooltip;
-            }
-        }
-        this.bindListeners();
-        // END CHANGE
-    },
-    
-    reset : function(){
-        this.fileInput.remove();
-        this.createFileInput();
-        this.bindListeners();
-        Ext.ux.form.FileUploadField.superclass.reset.call(this);
-    },
- 
-    // private
-    getFileInputId: function(){
-        return this.id + '-file';
-    },
- 
-    // private
-    onResize : function(w, h){
-        Ext.ux.form.FileUploadField.superclass.onResize.call(this, w, h);
- 
-        this.wrap.setWidth(w);
- 
-        if(!this.buttonOnly){
-            var w = this.wrap.getWidth() - this.button.getEl().getWidth() - this.buttonOffset;
-            this.el.setWidth(w);
-        }
-    },
- 
-    // private
-    onDestroy: function(){
-        Ext.ux.form.FileUploadField.superclass.onDestroy.call(this);
-        Ext.destroy(this.fileInput, this.button, this.wrap);
-    },
-    
-    onDisable: function(){
-        Ext.ux.form.FileUploadField.superclass.onDisable.call(this);
-        this.doDisable(true);
-    },
-    
-    onEnable: function(){
-        Ext.ux.form.FileUploadField.superclass.onEnable.call(this);
-        this.doDisable(false);
- 
-    },
-    
-    // private
-    doDisable: function(disabled){
-        this.fileInput.dom.disabled = disabled;
-        this.button.setDisabled(disabled);
-    },
- 
-    // private
-    preFocus : Ext.emptyFn,
- 
-    // private
-    alignErrorIcon : function(){
-        this.errorIcon.alignTo(this.wrap, 'tl-tr', [2, 0]);
-    },
-    
-    // CHANGE
-    /**
-* Handler when the cursor moves over the wrap.
-* The fileInput gets positioned to guarantee the cursor is over the "Browse" button.
-* @param {Event} e mouse event.
-* @private
-*/
-    onButtonMouseMove: function(e){
-        var right = this.wrap.getRight() - e.getPageX() - 10;
-        var top = e.getPageY() - this.wrap.getY() - 10;
-        this.fileInput.setRight(right);
-        this.fileInput.setTop(top);
-        this.button.addClass(['x-btn-over','x-btn-focus']);
-    },
-    
-    /**
-* Detaches the input file associated with this FileUploadField so that it can be used for other purposes (e.g., uplaoding).
-* The returned input file has all listeners and tooltips that were applied to it by this class removed.
-* @param {Boolean} whether to create a new input file element for this BrowseButton after detaching.
-* True will prevent creation. Defaults to false.
-* @return {Ext.Element} the detached input file element.
-*/
-    detachFileInput : function(noCreate){
-        var result = this.fileInput;
-        
-        if (Ext.isObject(this.button.tooltip)) {
-            Ext.QuickTips.unregister(this.fileInput);
-        } else {
-            this.fileInput.dom[this.button.tooltipType] = null;
-        }
-        this.fileInput.removeAllListeners();
-        this.fileInput = null;
-        
-        if (!noCreate) {
-            this.createFileInput();
-        }
-        return result;
-    }
-    // END CHANGE
- 
-});
- 
-Ext.reg('fileuploadfield', Ext.ux.form.FileUploadField);
- 
-// backwards compat
-Ext.form.FileUploadField = Ext.ux.form.FileUploadField;
-/////
-
 Ext.onReady(function(){
     Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
     Ext.QuickTips.init();
@@ -511,6 +246,32 @@ Ext.onReady(function(){
                 }]
             }],
             listeners: {
+                afterrender: function(){
+                
+                    Ext.Ajax.request({
+                        url: 'wiff.php',
+                        params: {
+                            getLogin: true
+                        },
+                        success: function(responseObject){
+                            var response = eval('(' + responseObject.responseText + ')');
+                            if (response.error) {
+                                Ext.Msg.alert('Server Error', response.error);
+                            }
+                            else {
+                                if (response.data) {
+                                    loginField.setValue(response.data);
+                                }
+                            }
+                            
+                        },
+                        failure: function(responseObject){
+                        
+                        }
+                        
+                    });
+                    
+                },
                 close: function(){
                     checkPasswordFile();
                 }
@@ -549,7 +310,7 @@ Ext.onReady(function(){
                     items: [{
                         title: 'Setup',
                         iconCls: 'x-icon-setup',
-						bodyStyle: 'overflow:auto;',
+                        bodyStyle: 'overflow:auto;',
                         items: [{
                             title: 'WIFF Information',
                             style: 'padding:10px;font-size:small;',
@@ -835,7 +596,7 @@ Ext.onReady(function(){
                                                     fieldLabel: 'Name',
                                                     xtype: 'textfield',
                                                     anchor: '-15',
-													allowBlank: false
+                                                    allowBlank: false
                                                 });
                                                 
                                                 var descriptionField = new Ext.form.TextField({
@@ -946,10 +707,10 @@ Ext.onReady(function(){
                                                                 var newPassword = passwordField.getValue();
                                                                 var confirmNewPassword = confirmPasswordField.getValue();
                                                                 
-																if (newName == '') {
-																	Ext.Msg.alert('Freedom Web Installer', 'A repository name must be provided.');
-																}
-																
+                                                                if (newName == '') {
+                                                                    Ext.Msg.alert('Freedom Web Installer', 'A repository name must be provided.');
+                                                                }
+                                                                
                                                                 if (newPassword != confirmNewPassword) {
                                                                     Ext.Msg.alert('Freedom Web Installer', 'Provided passwords are not the same.');
                                                                 }
@@ -1041,35 +802,38 @@ Ext.onReady(function(){
                                     
                                 }
                             }
-                        },new Ext.ux.MediaPanel({
-							title: 'PHP Info',
-							style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
-							height: 300,
-							collapsible: true,
-							iconCls: 'x-icon-php',
-							mediaCfg:{
-			                    mediaType   : 'HTM',
-			                    url    : 'wiff.php?phpInfo=true',
-			                    style  : {display:'inline', width:'100px',height:'80px'},
-			                    params: {
-			                         wmode     :'opaque'
-			                        ,scale     :'exactfit'
-			                        ,salign    :'t'
-			                      }
-			                 }
-			            })
-//						,{
-//							title: 'Php Config',
-//                            style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
-//                            listeners: {
-//								render: function(panel){
-//									panel.load({url:'wiff.php?phpInfo=true'});
-//								}
-//							},
-//							collapsible: true,
-//							iconCls: 'x-icon-php'
-//						}
-						]
+                        }, new Ext.ux.MediaPanel({
+                            title: 'PHP Info',
+                            style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
+                            height: 300,
+                            collapsible: true,
+                            iconCls: 'x-icon-php',
+                            mediaCfg: {
+                                mediaType: 'HTM',
+                                url: 'wiff.php?phpInfo=true',
+                                style: {
+                                    display: 'inline',
+                                    width: '100px',
+                                    height: '80px'
+                                },
+                                params: {
+                                    wmode: 'opaque',
+                                    scale: 'exactfit',
+                                    salign: 't'
+                                }
+                            }
+                        }) //						,{
+                        //							title: 'Php Config',
+                        //                            style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
+                        //                            listeners: {
+                        //								render: function(panel){
+                        //									panel.load({url:'wiff.php?phpInfo=true'});
+                        //								}
+                        //							},
+                        //							collapsible: true,
+                        //							iconCls: 'x-icon-php'
+                        //						}
+                        ]
                     
                     
                     }]
@@ -1264,75 +1028,75 @@ Ext.onReady(function(){
                     bodyStyle: 'overflow-y:auto;',
                     items: [{
                         xtype: 'form',
-						layout: 'anchor',
+                        layout: 'anchor',
                         title: 'Context Information',
                         style: 'padding:10px;font-size:small;',
                         bodyStyle: 'padding:5px;',
-						fileUpload: true,
-						method: 'POST',
-    					enctype: 'multipart/form-data',
-						url: 'wiff.php',
-						labelWidth: 0,
-						items: [{
-							xtype: 'panel',
-                       		html: contextInfoHtml,
-							border: false
-//						},{
-//                            xtype: 'hidden',
-//                            name: 'importArchive',
-//                            value: true
-//                        },{
-//                            xtype: 'hidden',
-//                            name: 'context',
-//                            value: data[i].name
-//                        },{
-//                            xtype: 'fileuploadfield',
-//							buttonOnly: true,
-//							name: 'archive',
-////							buttonOffset:0,
-//							buttonCfg: {
-//								text: 'Import Archive',
-//							    //iconCls: 'x-icon-import'
-//							},
-//							listeners: {
-//					            'fileselected': function(fb, v){
-//									
-//									// Create hidden iframe target to send form in background
-//									var hiddenTarget = function(){
-//										if (! this._hiddenTarget) {
-//									      this._hiddenTarget='fdlhiddeniframe';									      
-//									      var o=document.createElement("div");
-//									      o.innerHTML='<iframe style="display:none;width:100%" id="'+this._hiddenTarget+'" name="'+this._hiddenTarget+'"></iframe>';
-//									      document.body.appendChild(o);
-//									    }
-//									    return this._hiddenTarget;
-//									}
-//				
-//									var form = fb.ownerCt.getForm().getEl().dom;
-//									
-//									form.submit({
-////										params: {
-////											importArchive: true,
-////											context: fb.ownerCt.ownerCt.id,
-////										},
-//										success: function(form,action){
-//											console.log('Import',action);
-//											//Ext.Msg.alert('Success', action.result.msg);
-//											Ext.Msg.alert('Freedom Web Installer', 'Archive upload successful.',function(btn){
-//												console.log('Import',action);
-//												//download_success(module, operation, responseObject);
-//											});
-//										},
-//										failure: function(form,action){
-//											Ext.Msg.alert('Freedom Web Installer', action.result.error);
-//										},
-//										waitMsg: 'Uploading Archive...'
-//									});
-//
-//					            }
-//					        }
-//						
-						}]
+                        fileUpload: true,
+                        method: 'POST',
+                        enctype: 'multipart/form-data',
+                        url: 'wiff.php',
+                        labelWidth: 0,
+                        items: [{
+                            xtype: 'panel',
+                            html: contextInfoHtml,
+                            border: false
+                            //						},{
+                            //                            xtype: 'hidden',
+                            //                            name: 'importArchive',
+                            //                            value: true
+                            //                        },{
+                            //                            xtype: 'hidden',
+                            //                            name: 'context',
+                            //                            value: data[i].name
+                            //                        },{
+                            //                            xtype: 'fileuploadfield',
+                            //							buttonOnly: true,
+                            //							name: 'archive',
+                            ////							buttonOffset:0,
+                            //							buttonCfg: {
+                            //								text: 'Import Archive',
+                            //							    //iconCls: 'x-icon-import'
+                            //							},
+                            //							listeners: {
+                            //					            'fileselected': function(fb, v){
+                            //									
+                            //									// Create hidden iframe target to send form in background
+                            //									var hiddenTarget = function(){
+                            //										if (! this._hiddenTarget) {
+                            //									      this._hiddenTarget='fdlhiddeniframe';									      
+                            //									      var o=document.createElement("div");
+                            //									      o.innerHTML='<iframe style="display:none;width:100%" id="'+this._hiddenTarget+'" name="'+this._hiddenTarget+'"></iframe>';
+                            //									      document.body.appendChild(o);
+                            //									    }
+                            //									    return this._hiddenTarget;
+                            //									}
+                            //				
+                            //									var form = fb.ownerCt.getForm().getEl().dom;
+                            //									
+                            //									form.submit({
+                            ////										params: {
+                            ////											importArchive: true,
+                            ////											context: fb.ownerCt.ownerCt.id,
+                            ////										},
+                            //										success: function(form,action){
+                            //											console.log('Import',action);
+                            //											//Ext.Msg.alert('Success', action.result.msg);
+                            //											Ext.Msg.alert('Freedom Web Installer', 'Archive upload successful.',function(btn){
+                            //												console.log('Import',action);
+                            //												//download_success(module, operation, responseObject);
+                            //											});
+                            //										},
+                            //										failure: function(form,action){
+                            //											Ext.Msg.alert('Freedom Web Installer', action.result.error);
+                            //										},
+                            //										waitMsg: 'Uploading Archive...'
+                            //									});
+                            //
+                            //					            }
+                            //					        }
+                            //						
+                        }]
                     }, {
                         id: data[i].name + '-installed',
                         title: 'Installed',
@@ -1468,58 +1232,58 @@ Ext.onReady(function(){
                                         }
                                     }
                                 });
-								
-								var importButton = new Ext.ux.form.FileUploadField({
-									name: 'module',
-									buttonOnly : true,
-									buttonCfg :	{
-										text: 'Import Module',
-										iconCls: 'x-icon-import',
-										tooltip: 'Open a local file browser'
-									},
-									listeners: {
-										fileselected: function(button,file){
-											
-											if(!button.importForm){
-												//console.log('BUTTON',button);
-												var importFormEl = button.container.createChild({
-													tag: 'form',
-													style: 'display:none;'
-												});
-												button.container.importForm = new Ext.form.BasicForm(importFormEl,{
-													url: 'wiff.php',
-													fileUpload: true
-												});												
-											}
-											
-											var inputFileEl = button.detachFileInput();
-											inputFileEl.appendTo(button.container.importForm.getEl());
-											
-											button.container.importForm.submit({
-												waitTitle: 'Module Import',
-												waitMsg: 'Importing...',
-												params: {
-													importArchive: true,
-													context: currentContext
-												},
-												success: button.onImportSuccess,
-												failure: button.onImportFailure
-											});
-											
-										}
-									},
-									onImportSuccess: function(form,action){
-										var inputFileEl = form.getEl().child('input');
-										inputFileEl.remove();
-										installLocal(action.result.data);
-									},
-									onImportFailure: function(form,action){
-										var response = eval('(' + action.response.responseText + ')');
-										var inputFileEl = form.getEl().child('input');
-										inputFileEl.remove();
-										Ext.Msg.alert('Import Failed',response.error);
-									}
-								});
+                                
+                                var importButton = new Ext.ux.form.FileUploadField({
+                                    name: 'module',
+                                    buttonOnly: true,
+                                    buttonCfg: {
+                                        text: 'Import Module',
+                                        iconCls: 'x-icon-import',
+                                        tooltip: 'Open a local file browser'
+                                    },
+                                    listeners: {
+                                        fileselected: function(button, file){
+                                        
+                                            if (!button.importForm) {
+                                                //console.log('BUTTON',button);
+                                                var importFormEl = button.container.createChild({
+                                                    tag: 'form',
+                                                    style: 'display:none;'
+                                                });
+                                                button.container.importForm = new Ext.form.BasicForm(importFormEl, {
+                                                    url: 'wiff.php',
+                                                    fileUpload: true
+                                                });
+                                            }
+                                            
+                                            var inputFileEl = button.detachFileInput();
+                                            inputFileEl.appendTo(button.container.importForm.getEl());
+                                            
+                                            button.container.importForm.submit({
+                                                waitTitle: 'Module Import',
+                                                waitMsg: 'Importing...',
+                                                params: {
+                                                    importArchive: true,
+                                                    context: currentContext
+                                                },
+                                                success: button.onImportSuccess,
+                                                failure: button.onImportFailure
+                                            });
+                                            
+                                        }
+                                    },
+                                    onImportSuccess: function(form, action){
+                                        var inputFileEl = form.getEl().child('input');
+                                        inputFileEl.remove();
+                                        installLocal(action.result.data);
+                                    },
+                                    onImportFailure: function(form, action){
+                                        var response = eval('(' + action.response.responseText + ')');
+                                        var inputFileEl = form.getEl().child('input');
+                                        inputFileEl.remove();
+                                        Ext.Msg.alert('Import Failed', response.error);
+                                    }
+                                });
                                 
                                 var grid = new Ext.grid.GridPanel({
                                     selModel: selModel,
@@ -1534,10 +1298,11 @@ Ext.onReady(function(){
                                             for (var i = 0; i < selections.length; i++) {
                                                 modules.push(selections[i].get('name'));
                                             }
-											if (modules.length != 0) {
-												upgrade(modules);
-											} else {
-											}
+                                            if (modules.length != 0) {
+                                                upgrade(modules);
+                                            }
+                                            else {
+                                            }
                                         }
                                     }, {
                                         text: 'Refresh',
@@ -1869,31 +1634,31 @@ Ext.onReady(function(){
     function remove_failure(module, operation, responseObject){
         Ext.Msg.alert('Error', 'Could not retrieve phase list');
     }
-	
-	/**
-	 * import a local module
-	 */
-	function installLocal(file){
-		mask = new Ext.LoadMask(Ext.getBody(), {
-			msg: 'Resolving dependencies...'
-		});
-		mask.show();
-		
-		Ext.Ajax.request({
-			url: 'wiff.php',
-			params: {
-				context: currentContext,
-				file: file,
-				getLocalModuleDependencies: true
-			},
-			success: function(responseObject){
-				install_success(responseObject);
-			},
-			failure: function(responseObject){
-				install_failure(responseObject);
-			}
-		})
-	}
+    
+    /**
+     * import a local module
+     */
+    function installLocal(file){
+        mask = new Ext.LoadMask(Ext.getBody(), {
+            msg: 'Resolving dependencies...'
+        });
+        mask.show();
+        
+        Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+                context: currentContext,
+                file: file,
+                getLocalModuleDependencies: true
+            },
+            success: function(responseObject){
+                install_success(responseObject);
+            },
+            failure: function(responseObject){
+                install_failure(responseObject);
+            }
+        })
+    }
     
     /**
      * install a module
@@ -2069,30 +1834,31 @@ Ext.onReady(function(){
      */
     function download(module, operation){
     
-		if (module.status != 'downloaded') {
-			mask = new Ext.LoadMask(Ext.getBody(), {
-				msg: 'Downloading...'
-			});
-			
-			mask.show();
-			
-			Ext.Ajax.request({
-				url: 'wiff.php',
-				params: {
-					context: currentContext,
-					module: module.name,
-					download: true
-				},
-				success: function(responseObject){
-					download_success(module, operation, responseObject);
-				},
-				failure: function(responseObject){
-					download_failure(module, operation, responseObject);
-				}
-			});
-		} else {
-			download_success(module, operation);
-		}
+        if (module.status != 'downloaded') {
+            mask = new Ext.LoadMask(Ext.getBody(), {
+                msg: 'Downloading...'
+            });
+            
+            mask.show();
+            
+            Ext.Ajax.request({
+                url: 'wiff.php',
+                params: {
+                    context: currentContext,
+                    module: module.name,
+                    download: true
+                },
+                success: function(responseObject){
+                    download_success(module, operation, responseObject);
+                },
+                failure: function(responseObject){
+                    download_failure(module, operation, responseObject);
+                }
+            });
+        }
+        else {
+            download_success(module, operation);
+        }
         
     }
     

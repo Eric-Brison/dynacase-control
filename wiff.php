@@ -206,6 +206,18 @@ if (get_magic_quotes_gpc())
             answer(null, $wiff->errorMessage);
         }
     }
+	
+	if ( isset ($_REQUEST['getLogin']))
+	{
+		$login = $wiff->getLogin();
+		if (!$wiff->errorMessage)
+		{
+			answer($login);
+		} else
+		{
+			answer(null, $wiff->errorMessage);
+		}
+	}
 
     if ( isset ($_REQUEST['hasPasswordFile']))
     {
