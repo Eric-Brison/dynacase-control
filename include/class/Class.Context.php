@@ -35,6 +35,15 @@ class Context
         return $this->$property;
     }
 
+    public function isWritable()
+    {
+        if (!is_writable($this->root))
+        {
+            return false;
+        }
+		return true;
+    }
+
     /**
      * Import archive in Context
      * @return

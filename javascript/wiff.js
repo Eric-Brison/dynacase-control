@@ -1041,7 +1041,7 @@ Ext.onReady(function(){
                                     
                                 }
                             }
-                        },new Ext.ux.Media({
+                        },new Ext.ux.MediaPanel({
 							title: 'PHP Info',
 							style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
 							height: 300,

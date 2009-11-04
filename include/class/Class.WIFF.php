@@ -45,6 +45,11 @@ class WIFF
         {
             self::$instance = new WIFF();
         }
+		if(!self::$instance->isWritable())
+		{
+			self::$instance->errorMessage = 'Cannot write configuration files';
+		}
+		
         return self::$instance;
     }
 
@@ -457,7 +462,16 @@ require valid-user
                     $repoList[] = new Repository($repository);
                 }
 
-                $contextList[] = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
+                
+				$context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
+
+				if(!$context->isWritable())
+				{
+					$this->errorMessage = sprintf("Apache user does not have write rights for context '%s'.", $context->name);
+					return false;
+				}
+
+				$contextList[] = $context;
 
             }
 
@@ -503,13 +517,31 @@ require valid-user
             }
 
             $this->errorMessage = null;
-            return new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList);
-        }
+            $context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList);
+        
+			if(!$context->isWritable())
+			{
+				$this->errorMessage = sprintf("Context '%s' configuration is not writable.", $context->name);
+	            return false;
+			}
+			
+			return $context ;
+				
+		}
 
         $this->errorMessage = sprintf("Context '%s' not found.", $name);
         return false;
 
     }
+	
+	public function isWritable()
+	{
+		if(!is_writable($this->contexts_filepath) || !is_writable($this->params_filepath))
+		{
+			return false;
+		}
+		return true;
+	}
 
     /**
      * Create Context

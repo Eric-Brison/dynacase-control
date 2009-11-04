@@ -359,6 +359,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['modulelist']) && isset ($_REQUEST['getModuleDependencies']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $dependencyList = $context->getModuleDependencies($_REQUEST['modulelist']);
 
@@ -375,6 +379,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['file']) && isset ($_REQUEST['getLocalModuleDependencies']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $dependencyList = $context->getLocalModuleDependencies($_REQUEST['file']);
 
@@ -391,6 +399,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['download']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $module = $context->getModuleAvail($_REQUEST['module']);
 
@@ -408,6 +420,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['unpack']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $module = $context->getModule($_REQUEST['module']);
 
@@ -427,6 +443,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['activateRepo']) && isset ($_REQUEST['repo']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         if (!$wiff->errorMessage)
         {
@@ -454,6 +474,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['deactivateRepo']) && isset ($_REQUEST['repo']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         if (!$wiff->errorMessage)
         {
@@ -480,6 +504,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getInstalledModuleList']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         if (!$wiff->errorMessage)
         {
@@ -504,6 +532,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getAvailableModuleList']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         if (!$wiff->errorMessage)
         {
@@ -528,6 +560,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getPhaseList']) && isset ($_REQUEST['operation']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $module = $context->getModule($_REQUEST['module']);
 
@@ -614,6 +650,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getParameterList']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $module = $context->getModule($_REQUEST['module']);
         if (!$module)
@@ -632,6 +672,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $module = $context->getModule($_REQUEST['module']);
         if (!$module)
@@ -725,6 +769,10 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
     {
         $context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
 
         $module = $context->getModule($_REQUEST['module']);
         if (!$module)
