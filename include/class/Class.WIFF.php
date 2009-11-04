@@ -9,8 +9,9 @@ class WIFF
     const contexts_filepath = 'conf/contexts.xml';
     const params_filepath = 'conf/params.xml';
 
-    const available_host = "ftp://ftp.freedom-ecm.org/";
-    const available_url = "2.14/tarball/";
+    public $available_host ;
+    public $available_url ;
+	public $available_file ; 
 
     public $contexts_filepath = '';
     public $params_filepath = '';
@@ -31,6 +32,11 @@ class WIFF
 
         $this->contexts_filepath = $wiff_root.WIFF::contexts_filepath;
         $this->params_filepath = $wiff_root.WIFF::params_filepath;
+		
+		$this->available_host = $this->getParam('wiff-update-host');
+		$this->available_url = $this->getParam('wiff-update-path');
+		$this->available_file = $this->getParam('wiff-update-file');
+		
     }
 
     public static function getInstance()
@@ -82,7 +88,7 @@ class WIFF
     public function getAvailVersion()
     {
 
-        $tmpfile = $this->downloadUrl(self::available_host.self::available_url.'content.xml');
+        $tmpfile = $this->downloadUrl($this->available_host.$this->available_url.'content.xml');
         if ($tmpfile === false)
         {
             $this->errorMessage = 'Error when retrieving repository for wiff update.';
@@ -213,7 +219,7 @@ require valid-user
      */
     private function download()
     {
-        $this->archiveFile = $this->downloadUrl(self::available_host.self::available_url.'freedom-wiff-current.tar.gz');
+        $this->archiveFile = $this->downloadUrl($this->available_host.$this->available_url.$this->available_file);
         return $this->archiveFile;
     }
 
@@ -251,9 +257,29 @@ require valid-user
      */
     public function update()
     {
+    	$this->updateParam();
         $this->download();
         $this->unpack();
     }
+	
+	public function updateParam()
+	{
+		$available_host = $this->getParam('wiff-update-host');
+		if(!$available_host)
+		{
+			$this->setParam('wiff-update-host','ftp://ftp.freedom-ecm.org/');
+		}
+		$available_url = $this->getParam('wiff-update-path');
+		if(!$available_url)
+		{
+			$this->setParam('wiff-update-path','2.14/tarball/');
+		}
+		$available_file = $this->getParam('wiff-update-file');
+		if(!available_file)
+		{
+			$this->setParam('wiff-update-file','freedom-wiff-current.tar.gz');
+		}
+	}
 
     /**
      * Get global repository list
