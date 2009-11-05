@@ -1211,19 +1211,18 @@ Ext.onReady(function(){
                                         field: 'name',
                                         direction: "ASC"
                                     },
-                                    listeners: {
-                                        beforeload: function(store, options){
-											return false;
-                                            Ext.Msg.alert('Freedom Web Installer', 'Here I could ask for repository login/password', function(){
-                                                return false;
-                                            });
-                                        },
-                                        load: function(){
-                                            console.log('LOAD');
-                                        },
-                                        exception: function(){
-                                            console.log('Exception on load');
-                                        }
+                                    listeners: { //                                        beforeload: function(store, options){
+                                        //											return false;
+                                        //                                            Ext.Msg.alert('Freedom Web Installer', 'Here I could ask for repository login/password', function(){
+                                        //                                                return false;
+                                        //                                            });
+                                        //                                        },
+                                        //                                        load: function(){
+                                        //                                            console.log('LOAD');
+                                        //                                        },
+                                        //                                        exception: function(){
+                                        //                                            console.log('Exception on load');
+                                        //                                        }
                                     }
                                 });
                                 
@@ -1573,7 +1572,7 @@ Ext.onReady(function(){
         
         Ext.Msg.show({
             title: 'Freedom Web Installer',
-            msg: 'Installer will download and install following module(s) : <br/>' + htmlModuleList,
+            msg: 'Installer will install following module(s) : <br/>' + htmlModuleList,
             buttons: {
                 ok: true,
                 cancel: true
@@ -1658,7 +1657,33 @@ Ext.onReady(function(){
                 getLocalModuleDependencies: true
             },
             success: function(responseObject){
-                install_success(responseObject);
+            
+                mask.hide();
+                
+                Ext.MessageBox.show({
+                    title: 'Freedom Web Installer',
+                    msg: 'Execute which scenario for imported module ?',
+                    buttons: {
+                        ok: 'Install',
+                        no: 'Upgrade',
+                        cancel: 'Cancel'
+                    },
+                    fn: function(btn){                
+                    
+                        if (btn == 'ok') {
+                            install_success(responseObject);
+                        }
+                        if (btn == 'no') {
+                            upgrade_success(responseObject);
+                        }
+                        if (btn == 'cancel') {
+                            Ext.MessageBox.hide();
+                        }
+                    },
+                    icon: Ext.MessageBox.QUESTION
+                });
+                
+                
             },
             failure: function(responseObject){
                 install_failure(responseObject);
