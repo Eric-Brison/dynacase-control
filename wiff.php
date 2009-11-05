@@ -147,6 +147,16 @@ if (get_magic_quotes_gpc())
 
 
     $wiff = WIFF::getInstance();
+	
+	// Instanciate context
+	if ( isset ($_REQUEST['context']))
+	{
+		$context = $wiff->getContext($_REQUEST['context']);
+		if (!$context)
+        {
+            answer(null, $wiff->errorMessage);
+        }
+	}
 
     // Request installer version
     if ( isset ($_REQUEST['version']))
@@ -273,8 +283,6 @@ if (get_magic_quotes_gpc())
     if ( isset ($_REQUEST['importArchive']))
     {
     	//answer(null,basename( $_FILES['module']['tmp_name']));
-		
-        $context = $wiff->getContext($_REQUEST['context']);
         $moduleFile = $context->uploadModule();
         if (!$context->errorMessage)
         {
@@ -297,17 +305,30 @@ if (get_magic_quotes_gpc())
     }
 
     // Request to add a repo
-    if ( isset ($_REQUEST['createRepo']))
+    if ( isset ($_REQUEST['createRepo']) && $_REQUEST['createRepo'] == true)
     {
-        $wiff->createRepo($_REQUEST['name'], $_REQUEST['description'], $_REQUEST['baseurl'], $_REQUEST['protocol'], $_REQUEST['host'], $_REQUEST['path'], $_REQUEST['login'], $_REQUEST['password']);
+        $return = $wiff->createRepo($_REQUEST['name'], $_REQUEST['description'], $_REQUEST['protocol'], $_REQUEST['host'], $_REQUEST['path'], $_REQUEST['authentified'], $_REQUEST['login'], $_REQUEST['password']);
         if (!$wiff->errorMessage)
         {
-            answer(true);
+            answer($return);
         } else
         {
             answer(null, $wiff->errorMessage);
         }
     }
+	
+	// request to modify a repo
+	if (isset ($_REQUEST['modifyRepo']) && $_REQUEST['modifyRepo'] == true)
+	{
+		$return = $wiff->modifyRepo($_REQUEST['name'], $_REQUEST['description'], $_REQUEST['protocol'], $_REQUEST['host'], $_REQUEST['path'], $_REQUEST['authentified'], $_REQUEST['login'], $_REQUEST['password']);
+        if (!$wiff->errorMessage)
+        {
+            answer($return);
+        } else
+        {
+            answer(null, $wiff->errorMessage);
+        }
+	}
 
     // Request to delete a repo
     if ( isset ($_REQUEST['deleteRepo']))
@@ -370,12 +391,6 @@ if (get_magic_quotes_gpc())
     // Request to get dependency module list for a module
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['modulelist']) && isset ($_REQUEST['getModuleDependencies']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $dependencyList = $context->getModuleDependencies($_REQUEST['modulelist']);
 
         if ($dependencyList === false)
@@ -390,12 +405,6 @@ if (get_magic_quotes_gpc())
 	// Request to get dependency module list for an imported module
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['file']) && isset ($_REQUEST['getLocalModuleDependencies']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $dependencyList = $context->getLocalModuleDependencies($_REQUEST['file']);
 
         if ($dependencyList === false)
@@ -410,12 +419,6 @@ if (get_magic_quotes_gpc())
     // Request to download module to temporary dir
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['download']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $module = $context->getModuleAvail($_REQUEST['module']);
 
         if ($module->download())
@@ -431,12 +434,6 @@ if (get_magic_quotes_gpc())
     // Request to unpack module in context
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['unpack']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $module = $context->getModule($_REQUEST['module']);
 
         if ($module->unpack($context->root))
@@ -454,12 +451,6 @@ if (get_magic_quotes_gpc())
     // TODO Unused
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['activateRepo']) && isset ($_REQUEST['repo']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         if (!$wiff->errorMessage)
         {
             foreach ($_REQUEST['repo'] as $repo)
@@ -485,12 +476,6 @@ if (get_magic_quotes_gpc())
     // TODO Unused
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['deactivateRepo']) && isset ($_REQUEST['repo']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         if (!$wiff->errorMessage)
         {
             foreach ($_REQUEST['repo'] as $repo)
@@ -515,15 +500,8 @@ if (get_magic_quotes_gpc())
     // Request to get a context installed module list
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getInstalledModuleList']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         if (!$wiff->errorMessage)
         {
-
             $moduleList = $context->getInstalledModuleList(true);
             if ($context->errorMessage)
             {
@@ -543,12 +521,6 @@ if (get_magic_quotes_gpc())
     // Request to get a context available module list
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['getAvailableModuleList']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         if (!$wiff->errorMessage)
         {
 
@@ -571,12 +543,6 @@ if (get_magic_quotes_gpc())
     // Request to get phase list for a given operation
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getPhaseList']) && isset ($_REQUEST['operation']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $module = $context->getModule($_REQUEST['module']);
 
         if (!$module) // If no module was found in installed modules by previous method, then try to get module from available modules
@@ -586,20 +552,12 @@ if (get_magic_quotes_gpc())
 
         $phaseList = $module->getPhaseList($_REQUEST['operation']);
 
-        // answer(json_encode($phaseList));
         answer($phaseList);
     }
 
     // Request to get process list for a given phase
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['getProcessList']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-        if ($context === false)
-        {
-            error_log( __FUNCTION__ ." ".$wiff->errorMessage);
-            answer(null, $wiff->errorMessage);
-        }
-
         $module = $context->getModule($_REQUEST['module']);
         if ($module === false)
         {
@@ -610,7 +568,6 @@ if (get_magic_quotes_gpc())
         $phase = $module->getPhase($_REQUEST['phase']);
         $processList = $phase->getProcessList();
 
-        // answer(json_encode($processList));
         answer($processList);
     }
 
@@ -661,12 +618,6 @@ if (get_magic_quotes_gpc())
     // Request to get module parameters
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getParameterList']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $module = $context->getModule($_REQUEST['module']);
         if (!$module)
         {
@@ -683,12 +634,6 @@ if (get_magic_quotes_gpc())
     // Request to save module parameters
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $module = $context->getModule($_REQUEST['module']);
         if (!$module)
         {
@@ -780,12 +725,6 @@ if (get_magic_quotes_gpc())
 
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
     {
-        $context = $wiff->getContext($_REQUEST['context']);
-		if (!$context)
-        {
-            answer(null, $wiff->errorMessage);
-        }
-
         $module = $context->getModule($_REQUEST['module']);
         if (!$module)
         {
@@ -810,7 +749,6 @@ if (get_magic_quotes_gpc())
     // Call to get a param value
     if ( isset ($argv))
     {
-
         if (stripos($argv[1], '--getValue=') === 0)
         {
             $paramName = substr($argv[1], 11);

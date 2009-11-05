@@ -9,9 +9,9 @@ class WIFF
     const contexts_filepath = 'conf/contexts.xml';
     const params_filepath = 'conf/params.xml';
 
-    public $available_host ;
-    public $available_url ;
-	public $available_file ; 
+    public $available_host;
+    public $available_url;
+    public $available_file;
 
     public $contexts_filepath = '';
     public $params_filepath = '';
@@ -32,11 +32,11 @@ class WIFF
 
         $this->contexts_filepath = $wiff_root.WIFF::contexts_filepath;
         $this->params_filepath = $wiff_root.WIFF::params_filepath;
-		
-		$this->available_host = $this->getParam('wiff-update-host');
-		$this->available_url = $this->getParam('wiff-update-path');
-		$this->available_file = $this->getParam('wiff-update-file');
-		
+
+        $this->available_host = $this->getParam('wiff-update-host');
+        $this->available_url = $this->getParam('wiff-update-path');
+        $this->available_file = $this->getParam('wiff-update-file');
+
     }
 
     public static function getInstance()
@@ -45,11 +45,11 @@ class WIFF
         {
             self::$instance = new WIFF();
         }
-		if(!self::$instance->isWritable())
-		{
-			self::$instance->errorMessage = 'Cannot write configuration files';
-		}
-		
+        if (!self::$instance->isWritable())
+        {
+            self::$instance->errorMessage = 'Cannot write configuration files';
+        }
+
         return self::$instance;
     }
 
@@ -133,18 +133,20 @@ class WIFF
 
     }
 
-	public function getLogin()
-	{
-		if(!$this->hasPasswordFile()){
-			return false;
-		} else {
-			@$passwordFile = fopen('.htpasswd', 'r');
-			$explode = explode(':',fgets($passwordFile,100));
-			$login = $explode[0];
-			return $login;
-		}
-	}
-	
+    public function getLogin()
+    {
+        if (!$this->hasPasswordFile())
+        {
+            return false;
+        } else
+        {
+            @$passwordFile = fopen('.htpasswd', 'r');
+            $explode = explode(':', fgets($passwordFile, 100));
+            $login = $explode[0];
+            return $login;
+        }
+    }
+
     public function hasPasswordFile()
     {
 
@@ -179,7 +181,7 @@ require valid-user
         );
 
         fwrite($passwordFile,
-	       sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+        sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
         );
 
         fclose($accessFile);
@@ -274,29 +276,29 @@ require valid-user
      */
     public function update()
     {
-    	$this->updateParam();
+        $this->updateParam();
         $this->download();
         $this->unpack();
     }
-	
-	public function updateParam()
-	{
-		$available_host = $this->getParam('wiff-update-host');
-		if(!$available_host)
-		{
-			$this->setParam('wiff-update-host','ftp://ftp.freedom-ecm.org/');
-		}
-		$available_url = $this->getParam('wiff-update-path');
-		if(!$available_url)
-		{
-			$this->setParam('wiff-update-path','2.14/tarball/');
-		}
-		$available_file = $this->getParam('wiff-update-file');
-		if(!available_file)
-		{
-			$this->setParam('wiff-update-file','freedom-wiff-current.tar.gz');
-		}
-	}
+
+    public function updateParam()
+    {
+        $available_host = $this->getParam('wiff-update-host');
+        if (!$available_host)
+        {
+            $this->setParam('wiff-update-host', 'ftp://ftp.freedom-ecm.org/');
+        }
+        $available_url = $this->getParam('wiff-update-path');
+        if (!$available_url)
+        {
+            $this->setParam('wiff-update-path', '2.14/tarball/');
+        }
+        $available_file = $this->getParam('wiff-update-file');
+        if (!available_file)
+        {
+            $this->setParam('wiff-update-file', 'freedom-wiff-current.tar.gz');
+        }
+    }
 
     /**
      * Get global repository list
@@ -336,11 +338,11 @@ require valid-user
      * Add repository to global repo list
      * @return boolean
      */
-    public function createRepo($name, $description, $baseurl, $protocol, $host, $path, $login, $password)
+    public function createRepo($name, $description, $protocol, $host, $path, $authentified, $login, $password)
     {
         require_once ('class/Class.Repository.php');
 
-		if ($name == '')
+        if ($name == '')
         {
             $this->errorMessage = "A name must be provided.";
             return false;
@@ -371,28 +373,80 @@ require valid-user
 
         $repository->setAttribute('name', $name);
         $repository->setAttribute('description', $description);
-        $repository->setAttribute('baseurl', $baseurl);
         $repository->setAttribute('protocol', $protocol);
         $repository->setAttribute('host', $host);
         $repository->setAttribute('path', $path);
+        $repository->setAttribute('authentified', $authentified);
         $repository->setAttribute('login', $login);
         $repository->setAttribute('password', $password);
 
         $repositoryObject = new Repository($repository);
-        if ($repositoryObject->isValid())
+        $ret = $xml->save($this->params_filepath);
+        if ($ret === false)
         {
-            $ret = $xml->save($this->params_filepath);
-            if ($ret === false)
-            {
-                $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
-                return false;
-            }
-            return true;
-        } else
-        {
-            $this->errorMessage = "Repository is not a valid module repository.";
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
             return false;
         }
+        return $repositoryObject->isValid();
+
+    }
+
+    /**
+     * Add repository to global repo list
+     * @return boolean
+     */
+    public function modifyRepo($name, $description, $protocol, $host, $path, $authentified, $login, $password)
+    {
+        require_once ('class/Class.Repository.php');
+
+        if ($name == '')
+        {
+            $this->errorMessage = "A name must be provided.";
+            return false;
+        }
+
+        $xml = new DOMDocument();
+        $xml->load($this->params_filepath);
+        if ($xml === false)
+        {
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+            return false;
+        }
+
+        $xPath = new DOMXPath($xml);
+
+        // Get repository with this name from WIFF repositories
+        $wiffRepoList = $xPath->query("/wiff/repositories/access[@name='".$name."']");
+        if ($wiffRepoList->length == 0)
+        {
+            // If there is already a repository with same name
+            $this->errorMessage = "Repository does not exist.";
+            return false;
+        }
+
+        // Add repository to this context
+        //        $node = $xml->createElement('access');
+        //        $repository = $xml->getElementsByTagName('repositories')->item(0)->appendChild($node);
+
+        $repository = $wiffRepoList->item(0);
+
+        $repository->setAttribute('name', $name);
+        $repository->setAttribute('description', $description);
+        $repository->setAttribute('protocol', $protocol);
+        $repository->setAttribute('host', $host);
+        $repository->setAttribute('path', $path);
+        $repository->setAttribute('authentified', $authentified);
+        $repository->setAttribute('login', $login);
+        $repository->setAttribute('password', $password);
+
+        $repositoryObject = new Repository($repository);
+        $ret = $xml->save($this->params_filepath);
+        if ($ret === false)
+        {
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+            return false;
+        }
+        return $repositoryObject->isValid();
 
     }
 
@@ -474,16 +528,16 @@ require valid-user
                     $repoList[] = new Repository($repository);
                 }
 
-                
-				$context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
 
-				if(!$context->isWritable())
-				{
-					$this->errorMessage = sprintf("Apache user does not have write rights for context '%s'.", $context->name);
-					return false;
-				}
+                $context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
 
-				$contextList[] = $context;
+                if (!$context->isWritable())
+                {
+                    $this->errorMessage = sprintf("Apache user does not have write rights for context '%s'.", $context->name);
+                    return false;
+                }
+
+                $contextList[] = $context;
 
             }
 
@@ -530,30 +584,30 @@ require valid-user
 
             $this->errorMessage = null;
             $context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList);
-        
-			if(!$context->isWritable())
-			{
-				$this->errorMessage = sprintf("Context '%s' configuration is not writable.", $context->name);
-	            return false;
-			}
-			
-			return $context ;
-				
-		}
+
+            if (!$context->isWritable())
+            {
+                $this->errorMessage = sprintf("Context '%s' configuration is not writable.", $context->name);
+                return false;
+            }
+
+            return $context;
+
+        }
 
         $this->errorMessage = sprintf("Context '%s' not found.", $name);
         return false;
 
     }
-	
-	public function isWritable()
-	{
-		if(!is_writable($this->contexts_filepath) || !is_writable($this->params_filepath))
-		{
-			return false;
-		}
-		return true;
-	}
+
+    public function isWritable()
+    {
+        if (!is_writable($this->contexts_filepath) || !is_writable($this->params_filepath))
+        {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * Create Context
