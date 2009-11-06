@@ -2417,6 +2417,8 @@ Ext.onReady(function(){
                                 ok: 'Continue',
                                 cancel: 'Cancel'
                             },
+							
+							icon: Ext.MessageBox.WARNING,
                             
                             fn: function(buttonId){
                                 switch (buttonId) {
