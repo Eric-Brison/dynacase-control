@@ -1361,7 +1361,8 @@ Ext.onReady(function(){
                                         field: 'name',
                                         direction: "ASC"
                                     },
-                                    listeners: { //                                        beforeload: function(store, options){
+                                    listeners: { 
+										//                                        beforeload: function(store, options){
                                         //                                            //return false;
                                         //                                            Ext.Msg.alert('Freedom Web Installer', 'Here I could ask for repository login/password', function(){
                                         //                                                return false;
@@ -1377,7 +1378,7 @@ Ext.onReady(function(){
                                 });
                                 
                                 var selModel = new Ext.grid.CheckboxSelectionModel({
-                                    header: '',
+                                    //header: '',
                                     listeners: {
                                         // prevent selection of records
                                         beforerowselect: function(selModel, rowIndex, keepExisting, record){
