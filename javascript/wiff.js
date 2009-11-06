@@ -891,7 +891,7 @@ Ext.onReady(function(){
                         }, new Ext.ux.MediaPanel({
                             title: 'PHP Info',
                             style: 'padding:10px;padding-top:0px;font-size:small;overflow:auto;',
-                            height: 300,
+                            height: 400,
                             collapsible: true,
                             collapsed: true,
                             iconCls: 'x-icon-php',
