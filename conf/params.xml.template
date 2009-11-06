@@ -2,7 +2,7 @@
 <wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="GPL2" lang="fr|en">
 
   <repositories>
-	<access name="freedom" description="freedom 2.14" baseurl="http://ftp.freedom-ecm.org/2.14/webinst/" />
+	<access name="freedom" description="freedom 2.14" protocol="http" host="ftp.freedom-ecm.org" path="2.14/webinst/" authentified="no" login="" password=""/>
   </repositories>
 
   <parameters>
