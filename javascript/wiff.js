@@ -942,6 +942,11 @@ Ext.onReady(function(){
                             fieldLabel: 'Description',
                             name: 'desc',
                             anchor: '-15'
+                        }, {
+                            xtype: 'textfield',
+                            fieldLabel: 'Url',
+                            name: 'url',
+                            anchor: '-15'
                         }],
                         
                         buttons: [{
@@ -1082,7 +1087,7 @@ Ext.onReady(function(){
                 repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + (data[i].repo[j].authentified != 'yes' ? ' <i>(' + data[i].repo[j].url + ')</i>' : ' <i>(' + data[i].repo[j].protocol + '://*****:*****@' + data[i].repo[j].host + '/' + data[i].repo[j].path + ')</i>') + '</li>'
             }
             repositoryHtml += '</ul>'
-            var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
+            var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Url :</b>' + (data[i].url ? '<a href=' + data[i].url  + '> ' +  data[i].url + '</a>' : '<i> no url</i>' )  +'</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
             
             panel.add({
                 title: data[i].name,
@@ -1147,6 +1152,12 @@ Ext.onReady(function(){
                                             name: 'desc',
                                             anchor: '-15',
                                             value: button.context.description
+                                        }, {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Url',
+                                            name: 'url',
+                                            anchor: '-15',
+                                            value: button.context.url
                                         }],
                                         
                                         buttons: [{
@@ -1159,11 +1170,11 @@ Ext.onReady(function(){
                                                         form.reset();
                                                         var panel = Ext.getCmp('create-context-form');
                                                         panel.fireEvent('render', panel);
-														win.close();
-														win.destroy();
+                                                        win.close();
+                                                        win.destroy();
                                                     },
                                                     failure: function(form, action){
-														updateContextList('select-last');
+                                                        updateContextList('select-last');
                                                         if (action && action.result) {
                                                             Ext.Msg.alert('Failure', action.result.error);
                                                         }
@@ -1173,7 +1184,7 @@ Ext.onReady(function(){
                                                     },
                                                     params: {
                                                         saveContext: true,
-														root: button.context.root
+                                                        root: button.context.root
                                                     },
                                                     waitMsg: 'Saving Context...'
                                                 })
@@ -1361,8 +1372,7 @@ Ext.onReady(function(){
                                         field: 'name',
                                         direction: "ASC"
                                     },
-                                    listeners: { 
-										//                                        beforeload: function(store, options){
+                                    listeners: {                                        //                                        beforeload: function(store, options){
                                         //                                            //return false;
                                         //                                            Ext.Msg.alert('Freedom Web Installer', 'Here I could ask for repository login/password', function(){
                                         //                                                return false;
@@ -2418,8 +2428,8 @@ Ext.onReady(function(){
                                 ok: 'Continue',
                                 cancel: 'Cancel'
                             },
-							
-							icon: Ext.MessageBox.WARNING,
+                            
+                            icon: Ext.MessageBox.WARNING,
                             
                             fn: function(buttonId){
                                 switch (buttonId) {

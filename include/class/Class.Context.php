@@ -9,15 +9,17 @@ class Context
     public $name;
     public $description;
     public $root;
+	public $url;
     public $repo;
 
     private $errorMessage = null;
 
-    public function __construct($name, $desc, $root, $repo)
+    public function __construct($name, $desc, $root, $repo, $url)
     {
         $this->name = $name;
         $this->description = $desc;
         $this->root = $root;
+		$this->url = $url;
         $this->repo = $repo;
         foreach ($this->repo as $repository)
         {

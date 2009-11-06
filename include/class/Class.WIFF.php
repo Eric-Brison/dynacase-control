@@ -530,7 +530,7 @@ require valid-user
                 }
 
 
-                $context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList);
+                $context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'));
 
                 if (!$context->isWritable())
                 {
@@ -584,7 +584,7 @@ require valid-user
             }
 
             $this->errorMessage = null;
-            $context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList);
+            $context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList, $context->item(0)->getAttribute('url'));
 
             if (!$context->isWritable())
             {
@@ -611,10 +611,103 @@ require valid-user
     }
 
     /**
+     * Create Context
+     * @return object Context or boolean false
+     * @param string $name context name
+     * @param string $root context root folder
+     * @param string $desc context description
+     */
+    public function createContext($name, $root, $desc, $url)
+    {
+        // If Context already exists, method fails.
+        if ($this->getContext($name) !== false)
+        {
+            $this->errorMessage = sprintf("Context '%s' already exists.", $name);
+            return false;
+        } else
+        {
+            $this->errorMessage = null;
+        }
+
+        // Create or reuse directory
+        if (is_dir($root))
+        {
+            if (!is_writable($root))
+            {
+                $this->errorMessage = sprintf("Directory '%s' is not writable.", $root);
+                return false;
+            }
+            $dirListing = @scandir($root);
+            if ($dirListing === false)
+            {
+                $this->errorMessage = sprintf("Error scanning directory '%s'.", $root);
+                return false;
+            }
+            $dirListingCount = count($dirListing);
+            if ($dirListingCount > 2)
+            {
+                $this->errorMessage = sprintf("Directory '%s' is not empty.", $root);
+                return false;
+            }
+        } else
+        {
+            if (@mkdir($root) === false)
+            {
+                $this->errorMessage = sprintf("Error creating directory '%s'.", $root);
+                return false;
+            }
+        }
+
+        // Get absolute pathname if directory is not already in absolute form
+        if (!preg_match('|^/|', $root))
+        {
+            $abs_root = realpath($root);
+            if ($abs_root === false)
+            {
+                $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $root);
+                return false;
+            }
+            $root = $abs_root;
+        }
+
+        // Write contexts XML
+        $xml = new DOMDocument();
+        $xml->preserveWhiteSpace = false;
+        $xml->load($this->contexts_filepath);
+        $xml->formatOutput = true;
+
+        $node = $xml->createElement('context');
+        $context = $xml->getElementsByTagName('contexts')->item(0)->appendChild($node);
+
+        $context->setAttribute('name', $name);
+
+        $context->setAttribute('root', $root);
+		
+		$context->setAttribute('url', $url);
+
+        $descriptionNode = $xml->createElement('description', $desc);
+
+        $context->appendChild($descriptionNode);
+
+        $moduleNode = $xml->createElement('modules');
+        $context->appendChild($moduleNode);
+
+        // Save XML to file
+        $ret = $xml->save($this->contexts_filepath);
+        if ($ret === false)
+        {
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->contexts_filepath);
+            return false;
+        }
+
+        return $this->getContext($name);
+    }
+	
+	/**
      * Save Context
      * @return object Context or boolean false
      */
-    public function saveContext($name, $root, $desc)
+    public function saveContext($name, $root, $desc, $url)
     {
 
         // Write contexts XML
@@ -629,6 +722,7 @@ require valid-user
         $context = $xpath->query($query)->item(0);
 
         $context->setAttribute('name', $name);
+		$context->setAttribute('url',$url);
 
 		$query = "/contexts/context[@root = '".$root."']/description";
         $description = $xpath->query($query)->item(0);

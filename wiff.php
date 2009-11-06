@@ -357,7 +357,7 @@ if (get_magic_quotes_gpc())
     // Request to create new context
     if ( isset ($_REQUEST['createContext']))
     {
-        $context = $wiff->createContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc']);
+        $context = $wiff->createContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
 
         if (!$wiff->errorMessage)
         {
@@ -391,7 +391,7 @@ if (get_magic_quotes_gpc())
 	// Request to modify an existing context
     if ( isset ($_REQUEST['saveContext']))
     {
-        $context = $wiff->saveContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc']);
+        $context = $wiff->saveContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
 
         if (!$wiff->errorMessage)
         {        	
