@@ -387,6 +387,42 @@ if (get_magic_quotes_gpc())
             answer(null, $wiff->errorMessage);
         }
     }
+	
+	// Request to modify an existing context
+    if ( isset ($_REQUEST['saveContext']))
+    {
+        $context = $wiff->saveContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc']);
+
+        if (!$wiff->errorMessage)
+        {        	
+			$context->deactivateAllRepo();
+			
+            $repoList = $wiff->getRepoList();
+
+            foreach ($repoList as $repo)
+            {
+                $postcode = 'repo-'.$repo->name;
+
+                str_replace('.', '_', $postcode); // . characters in variables are replaced by _ characters during POST requesting
+
+                if ( isset ($_REQUEST[$postcode]))
+                {
+                    $context->activateRepo($repo->name);
+                    if ($context->errorMessage)
+                    {
+                        answer(null, $context->errorMessage);
+                    }
+                }
+            }
+
+            // answer(json_encode($context));
+            answer($context);
+
+        } else
+        {
+            answer(null, $wiff->errorMessage);
+        }
+    }
 
     // Request to get dependency module list for a module
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['modulelist']) && isset ($_REQUEST['getModuleDependencies']))

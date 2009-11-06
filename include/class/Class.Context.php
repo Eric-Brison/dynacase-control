@@ -41,7 +41,7 @@ class Context
         {
             return false;
         }
-		return true;
+        return true;
     }
 
     /**
@@ -249,7 +249,12 @@ class Context
         if ($contextRepoList->length == 1)
         {
             $contextRepo = $xpath->query("/contexts/context[@name='".$this->name."']/repositories")->item(0)->removeChild($contextRepoList->item(0));
-            $xml->save($wiff->contexts_filepath);
+            $ret = $xml->save($wiff->contexts_filepath);
+            if ($ret === false)
+            {
+                $this->errorMessage = sprintf("Error writing file '%s'.", $wiff->contexts_filepath);
+                return false;
+            }
 
             foreach ($this->repo as $repo)
             {
@@ -268,43 +273,12 @@ class Context
 
     }
 
-    /**
-     * Get Module list
-     * @return array of object Module or boolean false
-     */
-    public function getModuleList()
+
+
+    public function deactivateAllRepo()
     {
 
-        $moduleList = array ();
-
-        $availableModuleList = $this->getAvailableModuleList();
-        if ($availableModuleList === false)
-        {
-            $this->errorMessage = sprintf("Could not get available module list.");
-            return false;
-        }
-
-        $installedModuleList = $this->getInstalledModuleList();
-        if ($installedModuleList === false)
-        {
-            $this->errorMessage = sprintf("Could not get installed module list.");
-            return false;
-        }
-
-        $moduleList = array_merge($availableModuleList, $installedModuleList); // TODO appropriate merge
-
-        return $moduleList;
-    }
-
-    /**
-     * Get installed Module list
-     * @param boolean withAvailableVersion returned objects will have last available version from Repository attribute populated
-     * @return array of object Module
-     */
-    public function getInstalledModuleList($withAvailableVersion = false)
-    {
         require_once ('class/Class.WIFF.php');
-        require_once ('class/Class.Module.php');
 
         $wiff = WIFF::getInstance();
 
@@ -313,613 +287,678 @@ class Context
 
         $xpath = new DOMXPath($xml);
 
-        $moduleList = array ();
-
-        $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module");
-
-        foreach ($moduleDom as $module)
+        $contextRepo = $xpath->query("/contexts/context[@name='".$this->name."']/repositories")->item(0);
+		
+        while ($contextRepo->childNodes->length)
         {
-            $mod = new Module($this, null, $module, true);
-            if ($mod->status == 'installed')
-            {
-                $moduleList[] = $mod;
-            }
+            $contextRepo->removeChild($contextRepo->firstChild);
         }
-
-        //Process for with available version option
-        if ($withAvailableVersion)
-        {
-            $availableModuleList = $this->getAvailableModuleList();
-
-            foreach ($availableModuleList as $availableKey=>$availableModule)
-            {
-                foreach ($moduleList as $moduleKey=>$module)
-                {
-                    if ($availableModule->name == $module->name)
-                    {
-                        $module->availableversion = $availableModule->version;
-                        $module->availableversionrelease = $availableModule->version.'-'.$availableModule->release;
-                        $cmp = $this->cmpModuleByVersionReleaseAsc($module, $availableModule);
-                        if ($cmp < 0)
-                        {
-                            $module->canUpdate = true;
-                        }
-                    }
-                }
-            }
-
-        }
-
-
-
-        return $moduleList;
-
-    }
-
-    /**
-     * Get the list of available module Objects in the repositories of the context
-     * @param boolean onlyNotInstalled only return available and not installed modules
-     * @return array of module Objects
-     */
-    public function getAvailableModuleList($onlyNotInstalled = false)
-    {
-        $moduleList = array ();
-        foreach ($this->repo as $repository)
-        {
-            $repoModuleList = $repository->getModuleList();
-            if ($repoModuleList === false)
-            {
-                $this->errorMessage = sprintf("Error fetching index for repository '%s'.", $repository->name);
-                continue ;
-            }
-            $moduleList = $this->mergeModuleList($moduleList, $repoModuleList);
-            if ($moduleList === false)
-            {
-                $this->errorMessage = sprintf("Error merging module list.");
-                return false;
-            }
-        }
-
-        // Process for only not installed option
-        if ($onlyNotInstalled)
-        {
-            $installedModuleList = $this->getInstalledModuleList();
-
-            foreach ($installedModuleList as $installedKey=>$installedModule)
-            {
-                foreach ($moduleList as $moduleKey=>$module)
-                {
-                    if ($installedModule->name == $module->name)
-                    {
-                        unset ($moduleList[$moduleKey]);
-                        $moduleList = array_values($moduleList);
-                    }
-                }
-            }
-
-        }
-
-        return $moduleList;
-    }
-
-    /**
-     * Merge two module lists, sort and keep modules with highest version-release
-     *   (kinda sort|uniq).
-     * @return an array containing unique module Objects
-     * @param first array of module Objects
-     * @param second array of module Objects
-     */
-    public function mergeModuleList( & $list1, & $list2)
-    {
-        $tmp = array_merge($list1, $list2);
-        $ret = usort($tmp, array ($this, 'cmpModuleByVersionReleaseDesc'));
+		
+        $ret = $xml->save($wiff->contexts_filepath);
         if ($ret === false)
         {
-            $this->errorMessage = sprintf("Error sorting module list.");
+            $this->errorMessage = sprintf("Error writing file '%s'.", $wiff->contexts_filepath);
             return false;
         }
 
-        $seen = array ();
-        $list = array ();
-        foreach ($tmp as $module)
-        {
-            if (array_key_exists($module->name, $seen))
-            {
-                continue ;
-            }
-            array_push($list, $module);
-            $seen[$module->name]++;
-        }
+        $this->repo = array();
 
-        return $list;
-    }
+        return true;
 
-    /**
-     * Compare (str_v1, str_r1, str_v2, str_r2) versions/releases
-     * @return < 0 if v1-r1 is less than v2-r2, > 0 if v1-r1 is greater than v2-r2
-     *         and 0 if they are equal
-     * @param string version #1
-     * @param string release #1
-     * @param string version #2
-     * @param string release #2
-     */
-    public function cmpVersionReleaseAsc($v1, $r1, $v2, $r2)
+}
+
+/**
+ * Get Module list
+ * @return array of object Module or boolean false
+ */
+public function getModuleList()
+{
+
+    $moduleList = array ();
+
+    $availableModuleList = $this->getAvailableModuleList();
+    if ($availableModuleList === false)
     {
-        $ver1 = preg_split('/\./', $v1, 3);
-        $rel1 = $r1;
-        $ver2 = preg_split('/\./', $v2, 3);
-        $rel2 = $r2;
-
-        $str1 = sprintf("%03d%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2], $rel1);
-        $str2 = sprintf("%03d%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2], $rel2);
-
-        return strcmp($str1, $str2);
-    }
-
-    /**
-     * Compare two module Objects by ascending version-release
-     * @return < 0 if mod1 is less than mod2, > 0 if mod1 is greater than mod2,
-     *         and 0 if they are equal
-     * @param module Object 1
-     * @param module Object 2
-     */
-    public function cmpModuleByVersionReleaseAsc( & $module1, & $module2)
-    {
-        return $this->cmpVersionReleaseAsc($module1->version,
-        $module1->release,
-        $module2->version,
-        $module2->release);
-    }
-
-    /**
-     * Compare two module Objects by descending version-release
-     * @return > 0 if mod1 is less than mod2, < 0 if mod1 is greater than mod2,
-     *         and 0 if they are equal
-     * @param module Object 1
-     * @param module Object 2
-     */
-    public function cmpModuleByVersionReleaseDesc( & $module1, & $module2)
-    {
-        $ret = $this->cmpModuleByVersionReleaseAsc($module1, $module2);
-        if ($ret > 0)
-        {
-            return -1;
-        } else if ($ret < 0)
-        {
-            return 1;
-        }
-        return 0;
-    }
-
-    /**
-     * Get Module by name
-     * @return object Module or boolean false
-     * @param object $name Module name
-     */
-    public function getModule($name)
-    {
-        require_once ('class/Class.WIFF.php');
-        require_once ('class/Class.Module.php');
-
-        $wiff = WIFF::getInstance();
-
-        $xml = new DOMDocument();
-        $xml->load($wiff->contexts_filepath);
-
-        $xpath = new DOMXPath($xml);
-
-        $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$name."']");
-
-        if ($moduleDom->length <= 0)
-        {
-            $this->errorMessage = sprintf("Could not find a module named '%s' in context '%s'.", $name, $this->name);
-            return false;
-        }
-
-        return new Module($this, null, $moduleDom->item(0), true);
-    }
-
-    public function getModuleAvail($name)
-    {
-        $modAvails = $this->getAvailableModuleList();
-        if ($modAvails === false)
-        {
-            return false;
-        }
-
-        foreach ($modAvails as $mod)
-        {
-            if ($mod->name == "$name")
-            {
-                $mod->context = $this;
-
-                return $mod;
-            }
-        }
-
-        $this->errorMessage = sprintf("Could not find module '%s' in context '%s'.", $name, $this->name);
+        $this->errorMessage = sprintf("Could not get available module list.");
         return false;
     }
 
-    /**
-     * Get module dependencies from repositories indexes
-     * @return array containing a list of Module objects ordered by their
-     *         install order, or false in case of error
-     * @param the module name list
-     */
-    public function getModuleDependencies($namelist, $local = false)
+    $installedModuleList = $this->getInstalledModuleList();
+    if ($installedModuleList === false)
     {
-        /*
-         $modsAvail = $this->getAvailableModuleList();
-         if ($modsAvail === false)
-         {
-         return false;
-         }
-         */
+        $this->errorMessage = sprintf("Could not get installed module list.");
+        return false;
+    }
 
-        $depsList = array ();
+    $moduleList = array_merge($availableModuleList, $installedModuleList); // TODO appropriate merge
 
-        foreach ($namelist as $name)
+    return $moduleList;
+}
+
+/**
+ * Get installed Module list
+ * @param boolean withAvailableVersion returned objects will have last available version from Repository attribute populated
+ * @return array of object Module
+ */
+public function getInstalledModuleList($withAvailableVersion = false)
+{
+    require_once ('class/Class.WIFF.php');
+    require_once ('class/Class.Module.php');
+
+    $wiff = WIFF::getInstance();
+
+    $xml = new DOMDocument();
+    $xml->load($wiff->contexts_filepath);
+
+    $xpath = new DOMXPath($xml);
+
+    $moduleList = array ();
+
+    $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module");
+
+    foreach ($moduleDom as $module)
+    {
+        $mod = new Module($this, null, $module, true);
+        if ($mod->status == 'installed')
         {
-            if ($local == false)
-            {
-                $module = $this->getModuleAvail($name);
-                if ($module === false)
-                {
-                    $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
-                    return false;
-                }
-
-                array_push($depsList, $module);
-            } else
-            {
-                $module = $this->getModule($name);
-                if ($module === false)
-                {
-                    $this->errorMessage = sprintf("Local module '%s' not found in contexts.xml.", $name);
-                    return false;
-                }
-                array_push($depsList, $module);
-            }
+            $moduleList[] = $mod;
         }
+    }
 
+    //Process for with available version option
+    if ($withAvailableVersion)
+    {
+        $availableModuleList = $this->getAvailableModuleList();
 
-        $modMovedBy = array ();
-
-        $i = 0;
-        while ($i < count($depsList))
+        foreach ($availableModuleList as $availableKey=>$availableModule)
         {
-            $mod = $depsList[$i];
-            $reqList = $mod->getRequiredModules();
-
-            foreach ($reqList as $req)
+            foreach ($moduleList as $moduleKey=>$module)
             {
-                $reqModName = $req['name'];
-                $reqModVersion = $req['version'];
-                $reqModComp = $req['comp'];
-
-                $reqMod = $this->getModuleAvail($reqModName);
-                if ($reqMod === false)
+                if ($availableModule->name == $module->name)
                 {
-                    $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
-                    return false;
-                }
-
-                switch($reqModComp)
-                {
-                    case '':
-                        break;
-                    case 'ge':
-                        if ($this->cmpVersionReleaseAsc($reqMod->version, 0, $reqModVersion, 0) < 0)
-                        {
-                            $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.", $mod->name, $mod->version, $reqModName, $reqModVersion, $reqMod->name, $reqMod->version);
-                            return false;
-                        }
-                    break;
-                    default:
-                        $this->errorMessage = sprintf("Operator of module comparison '%s' is not yet implemented.", $reqModComp);
-                        return false;
-                }
-
-
-                // Check if a version of this module is already installed
-                if ($this->moduleIsInstalledAndUpToDateWith($reqMod, $reqModComp, $reqModVersion))
-                {
-                    continue ;
-                }
-
-                $pos = $this->depsListContains($depsList, $reqMod->name);
-                if ($pos < 0)
-                {
-                    // Add the module to the dependencies list
-                    array_push($depsList, $reqMod);
-                }
-            }
-            $i++;
-        }
-
-        function listContains($list, $name)
-        {
-            foreach ($list as $module)
-            {
-                if ($module->name == $name)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function recursiveOrdering( & $list, & $orderList)
-        {
-            foreach ($list as $key=>$mod)
-            {
-                $reqList = $mod->getRequiredModules();
-
-                $pushable = true;
-
-                foreach ($reqList as $req)
-                {
-                    // If ordered list does not contain one dependency and dependency list does contain it, module must not be added to ordered list at that time
-                    if (!listContains($orderList, $req['name']) && listContains($list, $req['name']))
+                    $module->availableversion = $availableModule->version;
+                    $module->availableversionrelease = $availableModule->version.'-'.$availableModule->release;
+                    $cmp = $this->cmpModuleByVersionReleaseAsc($module, $availableModule);
+                    if ($cmp < 0)
                     {
-                        $pushable = false;
+                        $module->canUpdate = true;
                     }
                 }
-
-                if ($pushable)
-                {
-                    array_push($orderList, $mod);
-                    unset ($list[$key]);
-                }
-
             }
-
-            if (count($list) != 0)
-            {
-                recursiveOrdering($list, $orderList);
-            }
-
         }
 
-        $orderList = array ();
-
-        recursiveOrdering($depsList, $orderList);
-
-        return $orderList;
     }
 
-    /**
-     * Check if a Module object with this name already exists a a list of
-     * Module objects
-     * @return true if the module with the given name is found, false if not found
-     * @param array( Module object 1, [...], Module object N )
-     */
-    private function depsListContains( & $depsList, $name)
+
+
+    return $moduleList;
+
+}
+
+/**
+ * Get the list of available module Objects in the repositories of the context
+ * @param boolean onlyNotInstalled only return available and not installed modules
+ * @return array of module Objects
+ */
+public function getAvailableModuleList($onlyNotInstalled = false)
+{
+    $moduleList = array ();
+    foreach ($this->repo as $repository)
     {
-        $i = 0;
-        while ($i < count($depsList))
+        $repoModuleList = $repository->getModuleList();
+        if ($repoModuleList === false)
         {
-            if ($depsList[$i]->name == $name)
-            {
-                return $i;
-            }
-            $i++;
+            $this->errorMessage = sprintf("Error fetching index for repository '%s'.", $repository->name);
+            continue ;
         }
-        return -1;
-    }
-
-    /**
-     * Move a module at position $pos after position $pivot
-     * @return (nothing)
-     * @param array of Module
-     * @param position of actual module to move
-     * @param position after which the module should be moved
-     */
-    private function moveDepToRight( & $depsList, $pos, $pivot)
-    {
-        $extractedModule = array_splice($depsList, $pos, 1);
-        array_splice($depsList, $pivot, 0, $extractedModule);
-    }
-
-    /**
-     * Check if a module is installed
-     */
-    private function moduleIsInstalled( & $module)
-    {
-        $installedModule = $this->getModule($module->name);
-        if ($installedModule === false)
+        $moduleList = $this->mergeModuleList($moduleList, $repoModuleList);
+        if ($moduleList === false)
         {
+            $this->errorMessage = sprintf("Error merging module list.");
             return false;
         }
-        return $installedModule;
     }
 
-    /**
-     * Check if the given module Object is already installed and up-to-date
-     */
-    private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = '', $version = '')
+    // Process for only not installed option
+    if ($onlyNotInstalled)
     {
+        $installedModuleList = $this->getInstalledModuleList();
 
-        $installedModule = $this->moduleIsInstalled($targetModule);
-
-        if ($operator != '')
+        foreach ($installedModuleList as $installedKey=>$installedModule)
         {
-            switch($operator)
+            foreach ($moduleList as $moduleKey=>$module)
             {
+                if ($installedModule->name == $module->name)
+                {
+                    unset ($moduleList[$moduleKey]);
+                    $moduleList = array_values($moduleList);
+                }
+            }
+        }
+
+    }
+
+    return $moduleList;
+}
+
+/**
+ * Merge two module lists, sort and keep modules with highest version-release
+ *   (kinda sort|uniq).
+ * @return an array containing unique module Objects
+ * @param first array of module Objects
+ * @param second array of module Objects
+ */
+public function mergeModuleList( & $list1, & $list2)
+{
+    $tmp = array_merge($list1, $list2);
+    $ret = usort($tmp, array ($this, 'cmpModuleByVersionReleaseDesc'));
+    if ($ret === false)
+    {
+        $this->errorMessage = sprintf("Error sorting module list.");
+        return false;
+    }
+
+    $seen = array ();
+    $list = array ();
+    foreach ($tmp as $module)
+    {
+        if (array_key_exists($module->name, $seen))
+        {
+            continue ;
+        }
+        array_push($list, $module);
+        $seen[$module->name]++;
+    }
+
+    return $list;
+}
+
+/**
+ * Compare (str_v1, str_r1, str_v2, str_r2) versions/releases
+ * @return < 0 if v1-r1 is less than v2-r2, > 0 if v1-r1 is greater than v2-r2
+ *         and 0 if they are equal
+ * @param string version #1
+ * @param string release #1
+ * @param string version #2
+ * @param string release #2
+ */
+public function cmpVersionReleaseAsc($v1, $r1, $v2, $r2)
+{
+    $ver1 = preg_split('/\./', $v1, 3);
+    $rel1 = $r1;
+    $ver2 = preg_split('/\./', $v2, 3);
+    $rel2 = $r2;
+
+    $str1 = sprintf("%03d%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2], $rel1);
+    $str2 = sprintf("%03d%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2], $rel2);
+
+    return strcmp($str1, $str2);
+}
+
+/**
+ * Compare two module Objects by ascending version-release
+ * @return < 0 if mod1 is less than mod2, > 0 if mod1 is greater than mod2,
+ *         and 0 if they are equal
+ * @param module Object 1
+ * @param module Object 2
+ */
+public function cmpModuleByVersionReleaseAsc( & $module1, & $module2)
+{
+    return $this->cmpVersionReleaseAsc($module1->version,
+    $module1->release,
+    $module2->version,
+    $module2->release);
+}
+
+/**
+ * Compare two module Objects by descending version-release
+ * @return > 0 if mod1 is less than mod2, < 0 if mod1 is greater than mod2,
+ *         and 0 if they are equal
+ * @param module Object 1
+ * @param module Object 2
+ */
+public function cmpModuleByVersionReleaseDesc( & $module1, & $module2)
+{
+    $ret = $this->cmpModuleByVersionReleaseAsc($module1, $module2);
+    if ($ret > 0)
+    {
+        return -1;
+    } else if ($ret < 0)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * Get Module by name
+ * @return object Module or boolean false
+ * @param object $name Module name
+ */
+public function getModule($name)
+{
+    require_once ('class/Class.WIFF.php');
+    require_once ('class/Class.Module.php');
+
+    $wiff = WIFF::getInstance();
+
+    $xml = new DOMDocument();
+    $xml->load($wiff->contexts_filepath);
+
+    $xpath = new DOMXPath($xml);
+
+    $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$name."']");
+
+    if ($moduleDom->length <= 0)
+    {
+        $this->errorMessage = sprintf("Could not find a module named '%s' in context '%s'.", $name, $this->name);
+        return false;
+    }
+
+    return new Module($this, null, $moduleDom->item(0), true);
+}
+
+public function getModuleAvail($name)
+{
+    $modAvails = $this->getAvailableModuleList();
+    if ($modAvails === false)
+    {
+        return false;
+    }
+
+    foreach ($modAvails as $mod)
+    {
+        if ($mod->name == "$name")
+        {
+            $mod->context = $this;
+
+            return $mod;
+        }
+    }
+
+    $this->errorMessage = sprintf("Could not find module '%s' in context '%s'.", $name, $this->name);
+    return false;
+}
+
+/**
+ * Get module dependencies from repositories indexes
+ * @return array containing a list of Module objects ordered by their
+ *         install order, or false in case of error
+ * @param the module name list
+ */
+public function getModuleDependencies($namelist, $local = false)
+{
+    /*
+     $modsAvail = $this->getAvailableModuleList();
+     if ($modsAvail === false)
+     {
+     return false;
+     }
+     */
+
+    $depsList = array ();
+
+    foreach ($namelist as $name)
+    {
+        if ($local == false)
+        {
+            $module = $this->getModuleAvail($name);
+            if ($module === false)
+            {
+                $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+                return false;
+            }
+
+            array_push($depsList, $module);
+        } else
+        {
+            $module = $this->getModule($name);
+            if ($module === false)
+            {
+                $this->errorMessage = sprintf("Local module '%s' not found in contexts.xml.", $name);
+                return false;
+            }
+            array_push($depsList, $module);
+        }
+    }
+
+
+    $modMovedBy = array ();
+
+    $i = 0;
+    while ($i < count($depsList))
+    {
+        $mod = $depsList[$i];
+        $reqList = $mod->getRequiredModules();
+
+        foreach ($reqList as $req)
+        {
+            $reqModName = $req['name'];
+            $reqModVersion = $req['version'];
+            $reqModComp = $req['comp'];
+
+            $reqMod = $this->getModuleAvail($reqModName);
+            if ($reqMod === false)
+            {
+                $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+                return false;
+            }
+
+            switch($reqModComp)
+            {
+                case '':
+                    break;
                 case 'ge':
-
-                    $v = $installedModule->version;
-                    $r = $installedModule->release;
-
-                    $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
-                    if ($cmp != -1)
+                    if ($this->cmpVersionReleaseAsc($reqMod->version, 0, $reqModVersion, 0) < 0)
                     {
-                        return true;
-                    } else
-                    {
+                        $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.", $mod->name, $mod->version, $reqModName, $reqModVersion, $reqMod->name, $reqMod->version);
                         return false;
                     }
                 break;
-                case '':
-
+                default:
+                    $this->errorMessage = sprintf("Operator of module comparison '%s' is not yet implemented.", $reqModComp);
+                    return false;
             }
-        } else
-        {
-            return (bool)$installedModule;
-        }
 
-        if ($installedModule->status != 'installed')
-        {
-            return false;
-        }
 
-        $cmp = $this->cmpModuleByVersionReleaseAsc($installedModule, $targetModule);
+            // Check if a version of this module is already installed
+            if ($this->moduleIsInstalledAndUpToDateWith($reqMod, $reqModComp, $reqModVersion))
+            {
+                continue ;
+            }
 
-        if ($cmp < 0)
-        {
-            return false;
+            $pos = $this->depsListContains($depsList, $reqMod->name);
+            if ($pos < 0)
+            {
+                // Add the module to the dependencies list
+                array_push($depsList, $reqMod);
+            }
         }
-        return true;
+        $i++;
     }
 
-    public function getParamByName($paramName)
+    function listContains($list, $name)
     {
-        require_once ('class/Class.WIFF.php');
-
-        $wiff = WIFF::getInstance();
-
-        $xml = new DOMDocument();
-        $ret = $xml->load($wiff->contexts_filepath);
-        if ($ret === false)
+        foreach ($list as $module)
         {
-            $this->errorMessage = sprintf("Error opening XML file '%s'.", $wiff->contexts_filepath);
-            return false;
+            if ($module->name == $name)
+            {
+                return true;
+            }
         }
-
-        $xpath = new DOMXPath($xml);
-
-        $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", $this->name, $paramName))->item(0);
-        if ($parameterNode)
-        {
-            $value = $parameterNode->getAttribute('value');
-            $this->errorMessage = '';
-            return $value;
-        }
-        $this->errorMessage = sprintf("Parameter with name '%s' not found in context '%s'.", $paramName, $this->name);
-        return '';
+        return false;
     }
 
-    public function wstop()
+    function recursiveOrdering( & $list, & $orderList)
     {
-        $wstop = sprintf("%s/wstop", $this->root);
-        error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstop));
-        system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstop), $ret));
-        return $ret;
+        foreach ($list as $key=>$mod)
+        {
+            $reqList = $mod->getRequiredModules();
+
+            $pushable = true;
+
+            foreach ($reqList as $req)
+            {
+                // If ordered list does not contain one dependency and dependency list does contain it, module must not be added to ordered list at that time
+                if (!listContains($orderList, $req['name']) && listContains($list, $req['name']))
+                {
+                    $pushable = false;
+                }
+            }
+
+            if ($pushable)
+            {
+                array_push($orderList, $mod);
+                unset ($list[$key]);
+            }
+
+        }
+
+        if (count($list) != 0)
+        {
+            recursiveOrdering($list, $orderList);
+        }
+
     }
 
-    public function wstart()
+    $orderList = array ();
+
+    recursiveOrdering($depsList, $orderList);
+
+    return $orderList;
+}
+
+/**
+ * Check if a Module object with this name already exists a a list of
+ * Module objects
+ * @return true if the module with the given name is found, false if not found
+ * @param array( Module object 1, [...], Module object N )
+ */
+private function depsListContains( & $depsList, $name)
+{
+    $i = 0;
+    while ($i < count($depsList))
     {
-        $wstart = sprintf("%s/wstart", $this->root);
-        error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstart));
-        system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstart), $ret));
-        return $ret;
+        if ($depsList[$i]->name == $name)
+        {
+            return $i;
+        }
+        $i++;
     }
+    return -1;
+}
 
-    public function uploadModule()
+/**
+ * Move a module at position $pos after position $pivot
+ * @return (nothing)
+ * @param array of Module
+ * @param position of actual module to move
+ * @param position after which the module should be moved
+ */
+private function moveDepToRight( & $depsList, $pos, $pivot)
+{
+    $extractedModule = array_splice($depsList, $pos, 1);
+    array_splice($depsList, $pivot, 0, $extractedModule);
+}
+
+/**
+ * Check if a module is installed
+ */
+private function moduleIsInstalled( & $module)
+{
+    $installedModule = $this->getModule($module->name);
+    if ($installedModule === false)
     {
-        require_once ('lib/Lib.System.php');
-
-        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
-        if ($tmpfile === false)
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
-            return false;
-        }
-
-        if (!array_key_exists('module', $_FILES))
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Missing 'module' in uploaded files."));
-            unlink($tmpfile);
-            return false;
-        }
-
-        $ret = move_uploaded_file($_FILES['module']['tmp_name'], $tmpfile);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Could not move uploaded file to temporary file '%s'.", $tmpfile));
-            unlink($tmpfile);
-            return false;
-        }
-
-        $ret = $this->importArchive($tmpfile);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Failed to import archive: '%s'.", $this->errorMessage));
-            return false;
-        }
-
-        return $tmpfile;
+        return false;
     }
+    return $installedModule;
+}
 
-    public function getModuleNameFromTmpFile($moduleFilePath)
+/**
+ * Check if the given module Object is already installed and up-to-date
+ */
+private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = '', $version = '')
+{
+
+    $installedModule = $this->moduleIsInstalled($targetModule);
+
+    if ($operator != '')
     {
-        $wiff = WIFF::getInstance();
-        if ($wiff === false)
+        switch($operator)
         {
-            $this->errorMessage = sprintf("Could not get context.");
-            return false;
+            case 'ge':
+
+                $v = $installedModule->version;
+                $r = $installedModule->release;
+
+                $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+                if ($cmp != -1)
+                {
+                    return true;
+                } else
+                {
+                    return false;
+                }
+            break;
+            case '':
+
         }
-
-        $xml = new DOMDocument();
-        $ret = $xml->load($wiff->contexts_filepath);
-        if ($ret === false)
-        {
-            $this->errorMessage = sprintf("Could not load contexts.xml from '%s'", $wiff->contexts_filepath);
-            return false;
-        }
-
-        $xpath = new DOMXPath($xml);
-
-        $res = $xpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@tmpfile='%s']", $this->name, $moduleFilePath));
-        if ($res->length <= 0)
-        {
-            $this->errorMessage = sprintf("Could not find module with tmpfile '%s'", $moduleFilePath);
-            return false;
-        }
-        if ($res->length > 1)
-        {
-            $this->errorMessage = sprintf("Found more than one module with tmpfile '%s'", $moduleFilePath);
-            return false;
-        }
-
-        $module = $res->item(0);
-
-        return $module->getAttribute('name');
-    }
-
-    public function getLocalModuleDependencies($moduleFilePath)
+    } else
     {
-        $moduleName = $this->getModuleNameFromTmpFile($moduleFilePath);
-        if ($moduleName === false)
-        {
-            $this->errorMessage = sprintf("Could not get module name from filepath '%s' in contexts.xml: %s", $moduleFilePath, $this->errorMessage);
-            return false;
-        }
-
-        $module = $this->getModule($moduleName);
-        if ($module === false)
-        {
-            $this->errorMessage = sprintf("Could not get module with name '%s' in contexts.xml: %s", $moduleName, $this->errorMessage);
-            return false;
-        }
-
-        error_log(sprintf(">>> moduleName = %s", $moduleName));
-
-        $deps = $this->getModuleDependencies( array ($moduleName), true);
-
-        return $deps;
+        return (bool)$installedModule;
     }
+
+    if ($installedModule->status != 'installed')
+    {
+        return false;
+    }
+
+    $cmp = $this->cmpModuleByVersionReleaseAsc($installedModule, $targetModule);
+
+    if ($cmp < 0)
+    {
+        return false;
+    }
+    return true;
+}
+
+public function getParamByName($paramName)
+{
+    require_once ('class/Class.WIFF.php');
+
+    $wiff = WIFF::getInstance();
+
+    $xml = new DOMDocument();
+    $ret = $xml->load($wiff->contexts_filepath);
+    if ($ret === false)
+    {
+        $this->errorMessage = sprintf("Error opening XML file '%s'.", $wiff->contexts_filepath);
+        return false;
+    }
+
+    $xpath = new DOMXPath($xml);
+
+    $parameterNode = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param[@name='%s']", $this->name, $paramName))->item(0);
+    if ($parameterNode)
+    {
+        $value = $parameterNode->getAttribute('value');
+        $this->errorMessage = '';
+        return $value;
+    }
+    $this->errorMessage = sprintf("Parameter with name '%s' not found in context '%s'.", $paramName, $this->name);
+    return '';
+}
+
+public function wstop()
+{
+    $wstop = sprintf("%s/wstop", $this->root);
+    error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstop));
+    system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstop), $ret));
+    return $ret;
+}
+
+public function wstart()
+{
+    $wstart = sprintf("%s/wstart", $this->root);
+    error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstart));
+    system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstart), $ret));
+    return $ret;
+}
+
+public function uploadModule()
+{
+    require_once ('lib/Lib.System.php');
+
+    $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
+    if ($tmpfile === false)
+    {
+        $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
+        return false;
+    }
+
+    if (!array_key_exists('module', $_FILES))
+    {
+        $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Missing 'module' in uploaded files."));
+        unlink($tmpfile);
+        return false;
+    }
+
+    $ret = move_uploaded_file($_FILES['module']['tmp_name'], $tmpfile);
+    if ($ret === false)
+    {
+        $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Could not move uploaded file to temporary file '%s'.", $tmpfile));
+        unlink($tmpfile);
+        return false;
+    }
+
+    $ret = $this->importArchive($tmpfile);
+    if ($ret === false)
+    {
+        $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("Failed to import archive: '%s'.", $this->errorMessage));
+        return false;
+    }
+
+    return $tmpfile;
+}
+
+public function getModuleNameFromTmpFile($moduleFilePath)
+{
+    $wiff = WIFF::getInstance();
+    if ($wiff === false)
+    {
+        $this->errorMessage = sprintf("Could not get context.");
+        return false;
+    }
+
+    $xml = new DOMDocument();
+    $ret = $xml->load($wiff->contexts_filepath);
+    if ($ret === false)
+    {
+        $this->errorMessage = sprintf("Could not load contexts.xml from '%s'", $wiff->contexts_filepath);
+        return false;
+    }
+
+    $xpath = new DOMXPath($xml);
+
+    $res = $xpath->query(sprintf("/contexts/context[@name='%s']/modules/module[@tmpfile='%s']", $this->name, $moduleFilePath));
+    if ($res->length <= 0)
+    {
+        $this->errorMessage = sprintf("Could not find module with tmpfile '%s'", $moduleFilePath);
+        return false;
+    }
+    if ($res->length > 1)
+    {
+        $this->errorMessage = sprintf("Found more than one module with tmpfile '%s'", $moduleFilePath);
+        return false;
+    }
+
+    $module = $res->item(0);
+
+    return $module->getAttribute('name');
+}
+
+public function getLocalModuleDependencies($moduleFilePath)
+{
+    $moduleName = $this->getModuleNameFromTmpFile($moduleFilePath);
+    if ($moduleName === false)
+    {
+        $this->errorMessage = sprintf("Could not get module name from filepath '%s' in contexts.xml: %s", $moduleFilePath, $this->errorMessage);
+        return false;
+    }
+
+    $module = $this->getModule($moduleName);
+    if ($module === false)
+    {
+        $this->errorMessage = sprintf("Could not get module with name '%s' in contexts.xml: %s", $moduleName, $this->errorMessage);
+        return false;
+    }
+
+    error_log(sprintf(">>> moduleName = %s", $moduleName));
+
+    $deps = $this->getModuleDependencies( array ($moduleName), true);
+
+    return $deps;
+}
 
 }
 

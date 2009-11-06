@@ -32,6 +32,8 @@ class WIFF
 
         $this->contexts_filepath = $wiff_root.WIFF::contexts_filepath;
         $this->params_filepath = $wiff_root.WIFF::params_filepath;
+		
+		$this->updateParam();
 
         $this->available_host = $this->getParam('wiff-update-host');
         $this->available_url = $this->getParam('wiff-update-path');
@@ -276,7 +278,6 @@ require valid-user
      */
     public function update()
     {
-        $this->updateParam();
         $this->download();
         $this->unpack();
     }
@@ -610,64 +611,11 @@ require valid-user
     }
 
     /**
-     * Create Context
+     * Save Context
      * @return object Context or boolean false
-     * @param string $name context name
-     * @param string $root context root folder
-     * @param string $desc context description
      */
-    public function createContext($name, $root, $desc)
+    public function saveContext($name, $root, $desc)
     {
-        // If Context already exists, method fails.
-        if ($this->getContext($name) !== false)
-        {
-            $this->errorMessage = sprintf("Context '%s' already exists.", $name);
-            return false;
-        } else
-        {
-            $this->errorMessage = null;
-        }
-
-        // Create or reuse directory
-        if (is_dir($root))
-        {
-            if (!is_writable($root))
-            {
-                $this->errorMessage = sprintf("Directory '%s' is not writable.", $root);
-                return false;
-            }
-            $dirListing = @scandir($root);
-            if ($dirListing === false)
-            {
-                $this->errorMessage = sprintf("Error scanning directory '%s'.", $root);
-                return false;
-            }
-            $dirListingCount = count($dirListing);
-            if ($dirListingCount > 2)
-            {
-                $this->errorMessage = sprintf("Directory '%s' is not empty.", $root);
-                return false;
-            }
-        } else
-        {
-            if (@mkdir($root) === false)
-            {
-                $this->errorMessage = sprintf("Error creating directory '%s'.", $root);
-                return false;
-            }
-        }
-
-        // Get absolute pathname if directory is not already in absolute form
-        if (!preg_match('|^/|', $root))
-        {
-            $abs_root = realpath($root);
-            if ($abs_root === false)
-            {
-                $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $root);
-                return false;
-            }
-            $root = $abs_root;
-        }
 
         // Write contexts XML
         $xml = new DOMDocument();
@@ -675,19 +623,17 @@ require valid-user
         $xml->load($this->contexts_filepath);
         $xml->formatOutput = true;
 
-        $node = $xml->createElement('context');
-        $context = $xml->getElementsByTagName('contexts')->item(0)->appendChild($node);
+		$xpath = new DOMXPath($xml);
+
+        $query = "/contexts/context[@root = '".$root."']";
+        $context = $xpath->query($query)->item(0);
 
         $context->setAttribute('name', $name);
 
-        $context->setAttribute('root', $root);
+		$query = "/contexts/context[@root = '".$root."']/description";
+        $description = $xpath->query($query)->item(0);
 
-        $descriptionNode = $xml->createElement('description', $desc);
-
-        $context->appendChild($descriptionNode);
-
-        $moduleNode = $xml->createElement('modules');
-        $context->appendChild($moduleNode);
+        $description->nodeValue = $desc ;
 
         // Save XML to file
         $ret = $xml->save($this->contexts_filepath);

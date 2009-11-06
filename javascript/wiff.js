@@ -30,6 +30,26 @@ Ext.override(Ext.form.Field, {
     }
 });
 
+/*
+ * Fonction de clonage
+ * @author Keith Devens
+ * @see http://keithdevens.com/weblog/archive/2007/Jun/07/javascript.clone
+ */
+function clone(srcInstance){
+    /*Si l'instance source n'est pas un objet ou qu'elle ne vaut rien c'est une feuille donc on la retourne*/
+    if (typeof(srcInstance) != 'object' || srcInstance == null) {
+        return srcInstance;
+    }
+    /*On appel le constructeur de l'instance source pour crée une nouvelle instance de la même classe*/
+    var newInstance = srcInstance.constructor();
+    /*On parcourt les propriétés de l'objet et on les recopies dans la nouvelle instance*/
+    for (var i in srcInstance) {
+        newInstance[i] = clone(srcInstance[i]);
+    }
+    /*On retourne la nouvelle instance*/
+    return newInstance;
+}
+
 Ext.onReady(function(){
     Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
     Ext.QuickTips.init();
@@ -1059,7 +1079,7 @@ Ext.onReady(function(){
         
             var repositoryHtml = '<ul>';
             for (var j = 0; j < data[i].repo.length; j++) {
-                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + (!data[i].repo[j].authentified ? ' <i>(' + data[i].repo[j].url + ')</i>' : ' <i>(' + data[i].repo[j].protocol + '://*****:*****@' + data[i].repo[j].host + '/' + data[i].repo[j].path + ')</i>') + '</li>'
+                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + (data[i].repo[j].authentified != 'yes' ? ' <i>(' + data[i].repo[j].url + ')</i>' : ' <i>(' + data[i].repo[j].protocol + '://*****:*****@' + data[i].repo[j].host + '/' + data[i].repo[j].path + ')</i>') + '</li>'
             }
             repositoryHtml += '</ul>'
             var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
@@ -1087,9 +1107,139 @@ Ext.onReady(function(){
                         title: 'Context Information',
                         style: 'padding:10px;font-size:small;',
                         bodyStyle: 'padding:5px;',
-                        
                         xtype: 'panel',
-                        html: contextInfoHtml
+                        html: contextInfoHtml,
+                        tbar: [{
+                            text: 'Modify Context',
+                            tooltip: 'Modify Context',
+                            iconCls: 'x-icon-setup',
+                            context: data[i],
+                            handler: function(button){
+                                var win = new Ext.Window({
+                                    title: 'Modify Context',
+                                    iconCls: 'x-icon-setup',
+                                    layout: 'fit',
+                                    border: false,
+                                    modal: true,
+                                    items: [{
+                                        xtype: 'form',
+                                        id: 'save-context-form',
+                                        columnWidth: 1,
+                                        bodyStyle: 'padding:10px',
+                                        frame: true,
+                                        autoHeight: true,
+                                        width: 600,
+                                        items: [{
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Name',
+                                            name: 'name',
+                                            anchor: '-15',
+                                            value: button.context.name
+                                        }, {
+                                            xtype: 'displayfield',
+                                            fieldLabel: 'Root',
+                                            name: 'root',
+                                            anchor: '-15',
+                                            value: button.context.root
+                                        }, {
+                                            xtype: 'textarea',
+                                            fieldLabel: 'Description',
+                                            name: 'desc',
+                                            anchor: '-15',
+                                            value: button.context.description
+                                        }],
+                                        
+                                        buttons: [{
+                                            text: 'Save',
+                                            handler: function(){
+                                                Ext.getCmp('save-context-form').getForm().submit({
+                                                    url: 'wiff.php',
+                                                    success: function(form, action){
+                                                        updateContextList('select-last');
+                                                        form.reset();
+                                                        var panel = Ext.getCmp('create-context-form');
+                                                        panel.fireEvent('render', panel);
+														win.close();
+														win.destroy();
+                                                    },
+                                                    failure: function(form, action){
+														updateContextList('select-last');
+                                                        if (action && action.result) {
+                                                            Ext.Msg.alert('Failure', action.result.error);
+                                                        }
+                                                        else {
+                                                            Ext.Msg.alert('Failure', 'Select at least one repository.');
+                                                        }
+                                                    },
+                                                    params: {
+                                                        saveContext: true,
+														root: button.context.root
+                                                    },
+                                                    waitMsg: 'Saving Context...'
+                                                })
+                                            }
+                                        }],
+                                        listeners: {
+                                            render: function(panel){
+                                            
+                                                repoStore = new Ext.data.JsonStore({
+                                                    url: 'wiff.php',
+                                                    baseParams: {
+                                                        getRepoList: true
+                                                    },
+                                                    root: 'data',
+                                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url'],
+                                                    autoLoad: true
+                                                });
+                                                
+                                                repoBoxList = new Array();
+                                                
+                                                repoStore.on('load', function(){
+                                                
+                                                    repoStore.each(function(record){
+                                                    
+                                                        var checked = false;
+                                                        
+                                                        for (var j = 0; j < button.context.repo.length; j++) {
+                                                            if (button.context.repo[j].name == record.get('name')) {
+                                                                checked = true;
+                                                            }
+                                                        }
+                                                        
+                                                        repoBoxList.push({
+                                                            boxLabel: record.get('description') + (record.get('url') ? ' <i>(' + record.get('url') + ')</i>' : ' <i>(' + record.get('protocol') + '://*****:*****@' + record.get('host') + '/' + record.get('path') + ')</i>'),
+                                                            name: 'repo-' + record.get('name'),
+                                                            checked: checked
+                                                        });
+                                                        
+                                                    });
+                                                    
+                                                    panel.remove(panel.checkBoxGroup);
+                                                    
+                                                    panel.checkBoxGroup = new Ext.form.CheckboxGroup({
+                                                        fieldLabel: 'Repositories',
+                                                        allowBlank: false,
+                                                        blankText: "You must select at least one repository.",
+                                                        columns: 1,
+                                                        items: repoBoxList
+                                                    });
+                                                    
+                                                    panel.checkBoxGroup = panel.add(panel.checkBoxGroup);
+                                                    panel.doLayout();
+                                                    
+                                                });
+                                                
+                                                
+                                            }
+                                        }
+                                    }]
+                                });
+                                
+                                win.show();
+                                
+                                
+                            }
+                        }]
                     
                     }, {
                         id: data[i].name + '-installed',
@@ -1212,7 +1362,7 @@ Ext.onReady(function(){
                                         direction: "ASC"
                                     },
                                     listeners: { //                                        beforeload: function(store, options){
-                                        //											return false;
+                                        //                                            //return false;
                                         //                                            Ext.Msg.alert('Freedom Web Installer', 'Here I could ask for repository login/password', function(){
                                         //                                                return false;
                                         //                                            });
@@ -1668,7 +1818,7 @@ Ext.onReady(function(){
                         no: 'Upgrade',
                         cancel: 'Cancel'
                     },
-                    fn: function(btn){                
+                    fn: function(btn){
                     
                         if (btn == 'ok') {
                             install_success(responseObject);
