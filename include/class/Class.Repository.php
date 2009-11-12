@@ -17,13 +17,14 @@ class Repository
 
     public $authentified;
     public $login;
-    private $password;
+    public $password;
 
     private $context;
 
     private $contenturl;
 
     public $url;
+	public $displayUrl;
 
     public $errorMessage = '';
 
@@ -144,6 +145,7 @@ class Repository
         if ($this->baseurl)
         {
             $this->url = $this->baseurl;
+			$this->displayUrl = $this->url;
         } elseif ($this->authentified && $this->login && $this->password)
         {
             $this->url = $this->protocol.'://'.$this->login.':'.$this->password.'@'.$this->host.'/'.$this->path;
@@ -151,6 +153,10 @@ class Repository
         {
             $this->url = $this->protocol.'://'.$this->host.'/'.$this->path;
         }
+		if($this->authentified)
+		{
+			$this->displayUrl = $this->protocol.'://*******:*******@'.$this->host.'/'.$this->path;
+		}
         return $this->url;
     }
 
@@ -194,7 +200,7 @@ class Repository
      */
     public function needAuth()
     {
-        if ($this->authentified == 'yes')
+        if ($this->authentified == 'yes' && !$this->password)
         {
             $this->needAuth = true;
             return true;
