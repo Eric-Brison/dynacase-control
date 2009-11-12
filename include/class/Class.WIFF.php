@@ -19,6 +19,8 @@ class WIFF
     public $errorMessage = null;
 
     public $archiveFile;
+	
+	public $authInfo = array();
 
     private static $instance;
 
@@ -295,7 +297,7 @@ require valid-user
             $this->setParam('wiff-update-path', '2.14/tarball/');
         }
         $available_file = $this->getParam('wiff-update-file');
-        if (!available_file)
+        if (!$available_file)
         {
             $this->setParam('wiff-update-file', 'freedom-wiff-current.tar.gz');
         }
@@ -334,6 +336,46 @@ require valid-user
         return $repoList;
 
     }
+	
+	/**
+	 * Get repository from global repo list
+	 */
+	public function getRepo($name)
+	{
+		require_once ('class/Class.Repository.php');
+		
+		if ($name == '')
+        {
+            $this->errorMessage = "A name must be provided.";
+            return false;
+        }
+
+        $xml = new DOMDocument();
+        $xml->load($this->params_filepath);
+        if ($xml === false)
+        {
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+            return false;
+        }
+
+        $xPath = new DOMXPath($xml);
+
+        // Get repository with this name from WIFF repositories
+        $wiffRepoList = $xPath->query("/wiff/repositories/access[@name='".$name."']");
+        if ($wiffRepoList->length == 0)
+        {
+            // If there is already a repository with same name
+            $this->errorMessage = "Repository does not exist.";
+            return false;
+        }
+		
+        $repository = $wiffRepoList->item(0);
+
+        $repositoryObject = new Repository($repository);
+		
+		return $repositoryObject;
+		
+	}
 
     /**
      * Add repository to global repo list
@@ -491,6 +533,27 @@ require valid-user
         return true;
 
     }
+	
+	public function setAuthInfo($request)
+	{
+		//echo 'REQUEST'.print_r($request[0]->name,true);
+		//echo 'SET AuthInfo Size'.count($request);
+		$this->authInfo = $request;
+	}
+
+	public function getAuthInfo($repoName)
+	{
+		//echo ('GET AuthInfo'.$repoName.count($this->authInfo));
+		for ($i = 0 ; $i < count($this->authInfo) ; $i++)
+		{
+			//echo ('Looking through authinfo');
+			if ($this->authInfo[$i]->name == $repoName)
+			{
+				return $this->authInfo[$i];
+			}
+		}
+		return false;
+	}
 
     /**
      * Get Context list

@@ -30,26 +30,6 @@ Ext.override(Ext.form.Field, {
     }
 });
 
-/*
- * Fonction de clonage
- * @author Keith Devens
- * @see http://keithdevens.com/weblog/archive/2007/Jun/07/javascript.clone
- */
-function clone(srcInstance){
-    /*Si l'instance source n'est pas un objet ou qu'elle ne vaut rien c'est une feuille donc on la retourne*/
-    if (typeof(srcInstance) != 'object' || srcInstance == null) {
-        return srcInstance;
-    }
-    /*On appel le constructeur de l'instance source pour crée une nouvelle instance de la même classe*/
-    var newInstance = srcInstance.constructor();
-    /*On parcourt les propriétés de l'objet et on les recopies dans la nouvelle instance*/
-    for (var i in srcInstance) {
-        newInstance[i] = clone(srcInstance[i]);
-    }
-    /*On retourne la nouvelle instance*/
-    return newInstance;
-}
-
 Ext.onReady(function(){
     Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
     Ext.QuickTips.init();
@@ -58,6 +38,9 @@ Ext.onReady(function(){
     
     installedStore = {};
     availableStore = {};
+    
+    // Memorize repository logins and passwords
+    authInfo = [];
     
     // Password File Test
     function checkPasswordFile(){
@@ -236,9 +219,7 @@ Ext.onReady(function(){
                         var confirmNewPassword = confirmPasswordField.getValue();
                         
                         if (newPassword != confirmNewPassword) {
-                        
                             Ext.Msg.alert('Freedom Web Installer', 'Provided passwords are not the same.');
-                            
                         }
                         else {
                         
@@ -1052,7 +1033,8 @@ Ext.onReady(function(){
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
-                getContextList: true
+                getContextList: true,
+                authInfo: Ext.encode(authInfo)
             },
             success: function(responseObject){
                 updateContextList_success(responseObject, select);
@@ -1065,12 +1047,209 @@ Ext.onReady(function(){
         
     }
     
+    ////////////	
+    
+    getCurrentContext = function(){
+    
+        for (var i = 0; i < contextList.length; i++) {
+            if (contextList[i].name == currentContext) {
+                return contextList[i];
+            }
+        }
+        return false;
+        
+    }
+    
+    getCurrentRepo = function(repoName){
+    
+        var context = getCurrentContext();
+        if (context) {
+            for (var i = 0; i < context.repo.length; i++) {
+                if (context.repo[i].name == repoName) {
+                    return context.repo[i];
+                }
+            }
+        }
+        return false;
+        
+    }
+    
+    setRepoAuth = function(name, login, password){
+    
+        var repo = getRepoAuth(name);
+        if (!repo) {
+            authInfo.push({
+                name: name,
+                login: login,
+                password: password
+            });
+        }
+        else {
+            repo.login = login;
+            repo.password = password;
+        }
+        
+    }
+    
+    getRepoAuth = function(name){
+    
+        for (var i = 0; i < authInfo.length; i++) {
+            if (authInfo[i]['name'] == name) {
+                return authInfo[i];
+            }
+        }
+        return false;
+        
+    }
+    
+    askRepoAuth = function(repoName){
+    
+        var repo = getCurrentRepo(repoName);
+        
+        var nameField = new Ext.form.DisplayField({
+            fieldLabel: 'Name',
+            anchor: '-15'
+        });
+        
+        var descriptionField = new Ext.form.DisplayField({
+            fieldLabel: 'Description',
+            anchor: '-15'
+        });
+        
+        if (repo.login) {
+            var loginField = new Ext.form.DisplayField({
+                fieldLabel: 'Login',
+                anchor: '-15'
+            });
+        }
+        else {
+            var loginField = new Ext.form.TextField({
+                fieldLabel: 'Login',
+                anchor: '-15'
+            });
+        }
+        
+        var passwordField = new Ext.form.TextField({
+            fieldLabel: 'Password',
+            inputType: 'password',
+            anchor: '-15'
+        });
+        
+        var confirmPasswordField = new Ext.form.TextField({
+            fieldLabel: 'Confirm Password',
+            inputType: 'password',
+            anchor: '-15'
+        });
+        
+        
+        nameField.setValue(repo.name);
+        descriptionField.setValue(repo.description);
+        loginField.setValue(repo.login);
+        
+        var win = new Ext.Window({
+            title: 'Freedom Web Installer - Authentify Repository',
+            layout: 'fit',
+            modal: true,
+            items: [{
+                xtype: 'form',
+                height: 300,
+                width: 300,
+                labelWidth: 120,
+                border: false,
+                bodyStyle: 'padding:5px;',
+                items: [nameField, descriptionField, loginField, passwordField, confirmPasswordField],
+                bbar: [{
+                    text: 'Authentify',
+                    iconCls: 'x-icon-ok',
+                    handler: function(b, e){
+                        var name = nameField.getValue();
+                        var login = loginField.getValue();
+                        var password = passwordField.getValue();
+                        var confirmPassword = confirmPasswordField.getValue();
+                        
+                        if (name == '') {
+                            Ext.Msg.alert('Freedom Web Installer', 'A repository name must be provided.');
+                        }
+                        
+                        if (password != confirmPassword) {
+                            Ext.Msg.alert('Freedom Web Installer', 'Provided passwords are not the same.');
+                        }
+                        
+                        mask = new Ext.LoadMask(Ext.getBody(), {
+                            msg: 'Authentifying...'
+                        });
+                        mask.show();
+                        
+                        Ext.Ajax.request({
+                            url: 'wiff.php',
+                            params: {
+                                authRepo: true,
+                                name: name,
+                                login: login,
+                                password: password,
+                                authInfo: Ext.encode(authInfo)
+                            },
+                            success: function(responseObject){
+                            
+                                mask.hide();
+                                
+                                var response = eval('(' + responseObject.responseText + ')');
+                                if (response.error) {
+                                    Ext.Msg.alert('Server Error', response.error);
+                                }
+                                else {
+                                    if (response.data) {
+                                        Ext.Msg.alert('Freedom Web Installer', 'Authentify successful.', function(btn){
+                                            win.close();
+                                            setRepoAuth(name, login, password);
+                                            updateContextList();
+                                        });
+                                    }
+                                    else {
+                                        Ext.Msg.alert('Freedom Web Installer', 'Authentify failed.', function(btn){
+                                        
+                                        });
+                                    }
+                                    
+                                }
+                                
+                            },
+                            failure: function(responseObject){
+                            
+                            }
+                            
+                        });
+                        
+                    }
+                }, {
+                    text: 'Cancel',
+                    iconCls: 'x-icon-undo',
+                    handler: function(b, e){
+                        win.close();
+                    }
+                }]
+            }],
+            listeners: {
+                close: function(){
+                    checkPasswordFile();
+                }
+            }
+        });
+        
+        win.show();
+        
+    }
+    
+    ////////////
+    
     function updateContextList_success(responseObject, select){
         var response = eval('(' + responseObject.responseText + ')');
         if (response.error) {
             Ext.Msg.alert('Server Error', response.error);
         }
         var data = response.data;
+        
+        contextList = data;
         
         var panel = Ext.getCmp('context-list');
         
@@ -1082,13 +1261,6 @@ Ext.onReady(function(){
         
         for (var i = 0; i < data.length; i++) {
         
-            var repositoryHtml = '<ul>';
-            for (var j = 0; j < data[i].repo.length; j++) {
-                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + data[i].repo[j].description + (data[i].repo[j].authentified != 'yes' ? ' <i>(' + data[i].repo[j].url + ')</i>' : ' <i>(' + data[i].repo[j].protocol + '://*****:*****@' + data[i].repo[j].host + '/' + data[i].repo[j].path + ')</i>') + '</li>'
-            }
-            repositoryHtml += '</ul>'
-            var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + data[i].root + '</li><li class="x-form-item"><b>Description :</b> ' + data[i].description + '</li><li class="x-form-item"><b>Url :</b>' + (data[i].url ? '<a href=' + data[i].url  + '> ' +  data[i].url + '</a>' : '<i> no url</i>' )  +'</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
-            
             panel.add({
                 title: data[i].name,
                 iconCls: 'x-icon-context',
@@ -1113,7 +1285,8 @@ Ext.onReady(function(){
                         style: 'padding:10px;font-size:small;',
                         bodyStyle: 'padding:5px;',
                         xtype: 'panel',
-                        html: contextInfoHtml,
+                        context: data[i],
+                        //html: contextInfoHtml,
                         tbar: [{
                             text: 'Modify Context',
                             tooltip: 'Modify Context',
@@ -1250,7 +1423,23 @@ Ext.onReady(function(){
                                 
                                 
                             }
-                        }]
+                        }],
+                        refresh: function(){
+                            var repositoryHtml = '<ul>';
+                            for (var j = 0; j < this.context.repo.length; j++) {
+                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />')) + '<b>' + this.context.repo[j].description + '</b>' + (this.context.repo[j].authentified != 'yes' ? ' <i>(' + this.context.repo[j].url + ')</i>' : ' <i>(' + this.context.repo[j].protocol + '://*****:*****@' + this.context.repo[j].host + '/' + this.context.repo[j].path + ')</i>') + '</li>'
+                            }
+                            repositoryHtml += '</ul>'
+                            var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + this.context.root + '</li><li class="x-form-item"><b>Description :</b> ' + this.context.description + '</li><li class="x-form-item"><b>Url :</b>' + (this.context.url ? '<a href=' + this.context.url + '> ' + this.context.url + '</a>' : '<i> no url</i>') + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
+                            
+                            this.body.update(contextInfoHtml);
+                            
+                        },
+                        listeners: {
+                            render: function(panel){
+                                panel.refresh();
+                            }
+                        }
                     
                     }, {
                         id: data[i].name + '-installed',
@@ -1258,9 +1447,23 @@ Ext.onReady(function(){
                         columnWidth: .45,
                         layout: 'fit',
                         style: 'padding:10px;padding-top:0px;',
+                        context: data[i],
                         listeners: {
                             afterrender: function(panel){
                             
+                                // Unused for now
+                                function hasRepoToAuth(context){
+                                
+                                    var ret = false;
+                                    
+                                    for (var i = 0; i < context.repo.length; i++) {
+                                        if (context.repo[i]['authentified'] == 'yes' && !context.repo[i]['password']) {
+                                            ret = true;
+                                        }
+                                    }
+                                    return ret;
+                                }
+                                
                                 currentContext = panel.ownerCt.title;
                                 
                                 var status = new Ext.ux.grid.RowActions({
@@ -1357,7 +1560,8 @@ Ext.onReady(function(){
                                     url: 'wiff.php',
                                     baseParams: {
                                         context: this.ownerCt.id,
-                                        getInstalledModuleList: true
+                                        getInstalledModuleList: true,
+                                        authInfo: Ext.encode(authInfo)
                                     },
                                     root: 'data',
                                     fields: ['name', 'versionrelease', 'availableversionrelease', 'description', 'infopath', 'errorstatus', {
@@ -1372,7 +1576,7 @@ Ext.onReady(function(){
                                         field: 'name',
                                         direction: "ASC"
                                     },
-                                    listeners: {                                        //                                        beforeload: function(store, options){
+                                    listeners: { //                                        beforeload: function(store, options){
                                         //                                            //return false;
                                         //                                            Ext.Msg.alert('Freedom Web Installer', 'Here I could ask for repository login/password', function(){
                                         //                                                return false;
@@ -1411,7 +1615,6 @@ Ext.onReady(function(){
                                         fileselected: function(button, file){
                                         
                                             if (!button.importForm) {
-                                                //console.log('BUTTON',button);
                                                 var importFormEl = button.container.createChild({
                                                     tag: 'form',
                                                     style: 'display:none;'
@@ -1568,7 +1771,8 @@ Ext.onReady(function(){
                                     url: 'wiff.php',
                                     baseParams: {
                                         context: this.ownerCt.id,
-                                        getAvailableModuleList: true
+                                        getAvailableModuleList: true,
+                                        authInfo: Ext.encode(authInfo)
                                     },
                                     root: 'data',
                                     fields: ['name', 'versionrelease', 'description', 'infopath', 'basecomponent', {
@@ -1581,6 +1785,28 @@ Ext.onReady(function(){
                                     sortInfo: {
                                         field: 'name',
                                         direction: "ASC"
+                                    },
+                                    listeners: {
+                                        //										beforeload: function(){
+                                        //											console.log('BEFORELOAD');
+                                        //										},
+                                        //										load: function(store,records,options){
+                                        //											console.log('LOAD');
+                                        //											var data = store.reader.jsonData;
+                                        //											if(!data.success){
+                                        //												Ext.Msg.alert('Freedom Web Installer','Error : ' + data.error);
+                                        //											}
+                                        //										},
+                                        exception: function(){
+                                            // Not sent ; Should be corrected in following ext releases
+                                            //											console.log('EXCEPTION');
+                                        },
+                                        loadexception: function(proxy, type, action, options, response, arg){
+                                        
+                                            //											console.log('LOADEXCEPTION',proxy, type, action, options, response);
+                                            //											Ext.Msg.alert('Freedom Web Installer','Error when connecting to repositories.');
+                                        
+                                        }
                                     }
                                 });
                                 
@@ -1669,13 +1895,24 @@ Ext.onReady(function(){
             })
         }
         
-        // Selection of repository to display
+        // Selection of context to display
         if (data.length != 0) {
             if (select == 'select-last') {
                 Ext.getCmp('context-list').setActiveTab(Ext.getCmp('context-list').items.last());
             }
             else {
-                //Ext.getCmp('context-list').setActiveTab(Ext.getCmp('context-list').items.itemAt(1));
+                if (window.currentContext) {
+                
+                    var contextArray = Ext.getCmp('context-list').items.items;
+                    
+                    for (var i = 0; i < contextArray.length; i++) {
+                        if (contextArray[i].title == currentContext) {
+                            Ext.getCmp('context-list').setActiveTab(contextArray[i]);
+                        }
+                    }
+                    
+                }
+                
             }
         }
         
@@ -1700,7 +1937,8 @@ Ext.onReady(function(){
             params: {
                 context: currentContext,
                 'modulelist[]': modulelist,
-                getModuleDependencies: true
+                getModuleDependencies: true,
+                authInfo: Ext.encode(authInfo)
             },
             success: function(responseObject){
                 upgrade_success(responseObject);
@@ -1770,7 +2008,8 @@ Ext.onReady(function(){
                 context: currentContext,
                 module: module.name,
                 operation: operation,
-                getPhaseList: true
+                getPhaseList: true,
+                authInfo: Ext.encode(authInfo)
             },
             success: function(responseObject){
                 remove_success(module, operation, responseObject);
@@ -1815,7 +2054,8 @@ Ext.onReady(function(){
             params: {
                 context: currentContext,
                 file: file,
-                getLocalModuleDependencies: true
+                getLocalModuleDependencies: true,
+                authInfo: Ext.encode(authInfo)
             },
             success: function(responseObject){
             
@@ -1866,7 +2106,8 @@ Ext.onReady(function(){
             params: {
                 context: currentContext,
                 'modulelist[]': modulelist,
-                getModuleDependencies: true
+                getModuleDependencies: true,
+                authInfo: Ext.encode(authInfo)
             },
             success: function(responseObject){
                 install_success(responseObject);
@@ -1935,7 +2176,8 @@ Ext.onReady(function(){
             url: 'wiff.php',
             params: {
                 context: currentContext,
-                wstop: 'yes'
+                wstop: 'yes',
+                authInfo: Ext.encode(authInfo)
             },
             callback: function(option, success, responseObject){
             
@@ -1998,7 +2240,8 @@ Ext.onReady(function(){
             url: 'wiff.php',
             params: {
                 context: currentContext,
-                wstart: 'yes'
+                wstart: 'yes',
+                authInfo: Ext.encode(authInfo)
             },
             callback: function(option, success, responseObject){
             
@@ -2038,7 +2281,8 @@ Ext.onReady(function(){
                 params: {
                     context: currentContext,
                     module: module.name,
-                    download: true
+                    download: true,
+                    authInfo: Ext.encode(authInfo)
                 },
                 success: function(responseObject){
                     download_success(module, operation, responseObject);
@@ -2084,7 +2328,8 @@ Ext.onReady(function(){
             params: {
                 context: currentContext,
                 module: module.name,
-                getParameterList: true
+                getParameterList: true,
+                authInfo: Ext.encode(authInfo)
             },
             success: function(responseObject){
                 askParameter_success(module, operation, responseObject);
@@ -2245,7 +2490,8 @@ Ext.onReady(function(){
                 context: currentContext,
                 module: module.name,
                 operation: operation,
-                getPhaseList: true
+                getPhaseList: true,
+                authInfo: Ext.encode(authInfo)
             },
             success: function(responseObject){
                 getPhaseList_success(module, operation, responseObject);
@@ -2306,7 +2552,8 @@ Ext.onReady(function(){
                     params: {
                         context: currentContext,
                         module: module.name,
-                        unpack: true
+                        unpack: true,
+                        authInfo: Ext.encode(authInfo)
                     },
                     success: function(responseObject){
                     
@@ -2335,7 +2582,8 @@ Ext.onReady(function(){
                         context: currentContext,
                         module: module.name,
                         phase: phase,
-                        getProcessList: true
+                        getProcessList: true,
+                        authInfo: Ext.encode(authInfo)
                     },
                     success: function(responseObject){
                     
@@ -2505,7 +2753,8 @@ Ext.onReady(function(){
                     module: module.name,
                     phase: phase,
                     process: process + '',
-                    execute: true
+                    execute: true,
+                    authInfo: Ext.encode(authInfo)
                 },
                 callback: function(options, serverSuccess, responseObject){
                 
@@ -2704,7 +2953,8 @@ Ext.onReady(function(){
                 context: currentContext,
                 module: module.name,
                 status: 'installed',
-                errorstatus: ''
+                errorstatus: '',
+                authInfo: Ext.encode(authInfo)
             },
             callback: function(option, success, responseObject){
             

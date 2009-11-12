@@ -148,6 +148,12 @@ if (get_magic_quotes_gpc())
 
     $wiff = WIFF::getInstance();
 	
+	// If authentification informations are provided, set them in WIFF
+	if (isset ($_REQUEST['authInfo']))
+	{
+		$wiff->setAuthInfo(json_decode($_REQUEST['authInfo']));
+	}
+	
 	// Instanciate context
 	if ( isset ($_REQUEST['context']))
 	{
@@ -342,6 +348,20 @@ if (get_magic_quotes_gpc())
             answer(null, $wiff->errorMessage);
         }
     }
+	
+	// Request to authentify a repo
+	if (isset ($_REQUEST['authRepo']))
+	{
+		$repo = $wiff->getRepo($_REQUEST['name']);
+		if (!$wiff->errorMessage)
+        {
+			$auth = $repo->authentify($_REQUEST['login'],$_REQUEST['password']);
+			answer($auth);
+        } else
+        {
+            answer(null, $wiff->errorMessage);
+        }
+	}
 
     // Request to get context list
     if ( isset ($_REQUEST['getContextList']))
@@ -541,7 +561,7 @@ if (get_magic_quotes_gpc())
             $moduleList = $context->getInstalledModuleList(true);
             if ($context->errorMessage)
             {
-                answer(null, $context->errorMessage);
+                answer($moduleList, $context->errorMessage);
             }
 
             // answer(json_encode($moduleList));
@@ -563,7 +583,7 @@ if (get_magic_quotes_gpc())
             $moduleList = $context->getAvailableModuleList(true);
             if ($context->errorMessage)
             {
-                answer(null, $context->errorMessage);
+                answer($moduleList, $context->errorMessage);
             }
 
             // answer(json_encode($moduleList));
