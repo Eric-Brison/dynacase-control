@@ -398,6 +398,7 @@ public function getInstalledModuleList($withAvailableVersion = false)
                     if ($cmp < 0)
                     {
                         $module->canUpdate = true;
+						$module->parseXmlChangelogNode($availableModule->xmlNode);
                     }
                 }
             }

@@ -31,7 +31,7 @@ Ext.override(Ext.form.Field, {
 });
 
 Ext.onReady(function(){
-	
+
     Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
     Ext.QuickTips.init();
     
@@ -307,6 +307,36 @@ Ext.onReady(function(){
         });
         win.show();
     }
+	
+	function displayChangelog(record){
+		
+		var changelog = record.get('changelog');
+		
+		var html = '<p>' ;
+		for (var i = 0 ; i < changelog.length ; i++)
+		{
+			html += '<li style="font-size:medium;margin-top:5px;margin-bottom:5px;border-bottom:1px solid #99BBE8;"><img src=images/icons/tick.png style="position:relative;top:3px;" /><b>  version ' + changelog[i]['version'] + ' </b><i>(' + changelog[i]['date'] + ')</i></li>';
+			for (var j = 0 ; j < changelog[i]['action'].length ; j++)
+			{
+				html += '<li style="padding-left:20px;"><b>' + changelog[i]['action'][j]['title'] + '</b><br/><i>' + changelog[i]['action'][j]['description'] + '</i></li>' ;
+			}
+		}
+		html += '</p>';
+		
+		var win = new Ext.Window({
+			title: record.get('name') + ' changelog',
+			modal: true,
+			layout: 'fit',
+			height: 300,
+			width: 600,
+			bodyStyle: 'padding:15px;text-align:justify;overflow:auto;list-style-type:none;',
+			html: html,
+			iconCls: 'x-icon-log'
+		});
+		
+		win.show();
+		
+	}
     
     function displayRepositoryWindow(grid, record){
     
@@ -1496,7 +1526,7 @@ Ext.onReady(function(){
                                 var actions = new Ext.ux.grid.RowActions({
                                     header: '',
                                     autoWidth: false,
-                                    width: 70,
+                                    width: 90,
                                     actions: [{
                                         iconCls: 'x-icon-update',
                                         tooltip: 'Update',
@@ -1505,7 +1535,11 @@ Ext.onReady(function(){
                                         iconCls: 'x-icon-param',
                                         tooltip: 'Parameters',
                                         hideIndex: '!hasParameter'
-                                    }, {
+                                    },{
+                                        iconCls: 'x-icon-log',
+                                        tooltip: 'Changelog',
+                                        hideIndex: '!changelog.length'
+                                    },{
                                         iconCls: 'x-icon-help',
                                         tooltip: 'Help',
                                         hideIndex: '!infopath'
@@ -1536,7 +1570,9 @@ Ext.onReady(function(){
                                             //                                            case 'x-icon-remove':
                                             //                                                var operation = 'uninstall';
                                             //                                                break;
-                                        
+                                        	case 'x-icon-log':
+												displayChangelog(record);
+												break;
                                         }
                                         
                                         if (operation == 'parameter') {
@@ -1571,7 +1607,7 @@ Ext.onReady(function(){
                                     }, {
                                         name: 'hasParameter',
                                         type: 'boolean'
-                                    }],
+                                    },'changelog'],
                                     //autoLoad: true,
                                     sortInfo: {
                                         field: 'name',
@@ -1732,11 +1768,12 @@ Ext.onReady(function(){
                                 var actions = new Ext.ux.grid.RowActions({
                                     header: '',
                                     autoWidth: false,
-                                    width: 20,
+                                    width: 44,
                                     actions: [{
-                                        //                                        iconCls: 'x-icon-install',
-                                        //                                        tooltip: 'Install'
-                                        //                                    }, {
+                                        iconCls: 'x-icon-log',
+                                        tooltip: 'Changelog',
+                                        hideIndex: '!changelog.length'
+                                    }, {
                                         iconCls: 'x-icon-help',
                                         tooltip: 'Help',
                                         hideIndex: '!infopath'
@@ -1755,6 +1792,9 @@ Ext.onReady(function(){
                                             case 'x-icon-help':
                                                 var operation = 'help';
                                                 break;
+											case 'x-icon-log':
+												displayChangelog(record);
+												break;
                                         }
                                         
                                         //                                        if (operation == 'install') {
@@ -1781,7 +1821,7 @@ Ext.onReady(function(){
                                         convert: function(v){
                                             return v.description;
                                         }
-                                    }],
+                                    }, 'changelog'],
                                     //autoLoad: true,
                                     sortInfo: {
                                         field: 'name',

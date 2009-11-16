@@ -16,8 +16,8 @@ class Module
     public $license;
     public $basecomponent;
     public $src;
-	
-	public $changelog;
+
+    public $changelog = array ();
 
     public $availableversion;
     public $availableversionrelease;
@@ -60,6 +60,7 @@ class Module
 
     public function __construct($context, $repository = null, $xmlNode = null, $isInstalled = false)
     {
+		
         $this->context = $context;
         $this->repository = $repository;
 
@@ -116,6 +117,9 @@ class Module
             $this->description = $descriptionNodeList->item(0)->nodeValue;
         }
 
+        // Load xmlNode <changelogs> elements
+        $this->parseXmlChangelogNode($xmlNode);
+
         // Load xmlNode <requires> elements
         $this->requires = array ();
         $requiresNodeList = $xmlNode->getElementsByTagName('requires');
@@ -143,6 +147,35 @@ class Module
         }
 
         return $xmlNode;
+    }
+
+    public function parseXmlChangelogNode($xmlNode)
+    {
+
+        $changelogNodeList = $xmlNode->getElementsByTagName('version');
+        if ($changelogNodeList->length > 0)
+        {
+            foreach ($changelogNodeList as $changelogNode)
+            {
+
+                $action = array ();
+
+                $changelogSubNodeList = $changelogNode->getElementsByTagName('change');
+                foreach ($changelogSubNodeList as $actionNode)
+                {
+                    $action[] = array (
+                    'title'=>$actionNode->getAttribute('title'),
+                    'description'=>$actionNode->nodeValue
+                    );
+                }
+
+                $this->changelog[] = array (
+                'version'=>$changelogNode->getAttribute('number'),
+                'date'=>$changelogNode->getAttribute('date'),
+                'action'=>$action
+                );
+            }
+        }
     }
 
     /**
