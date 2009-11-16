@@ -16,6 +16,8 @@ class Module
     public $license;
     public $basecomponent;
     public $src;
+	
+	public $changelog;
 
     public $availableversion;
     public $availableversionrelease;

@@ -592,8 +592,8 @@ require valid-user
                     $repoList[] = new Repository($repository);
                 }
 
-
                 $context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'));
+				$context->isValid();
 
                 if (!$context->isWritable())
                 {

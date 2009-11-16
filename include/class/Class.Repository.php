@@ -119,8 +119,8 @@ class Repository
         $this->context = $context;
 
         // Evaluate if repo is valid and need authentification
-        $this->isValid();
-        $this->needAuth();
+//        $this->isValid();
+//        $this->needAuth();
 
     }
 

@@ -26,6 +26,20 @@ class Context
             $repository->context = $this;
         }
     }
+	
+	/**
+	 * Check if context repositories are valid.
+	 * Populate repositories object with appropriate attributes.
+	 * @return 
+	 */
+	public function isValid()
+	{
+		foreach ($this->repo as $repository)
+		{
+			$repository->isValid();
+			$repository->needAuth();
+		}
+	}
 
     public function __set($property, $value)
     {
