@@ -80,7 +80,7 @@ function wcontrol_process($process)
      $ret = proc_close($proc);
      */
 
-    $tmpfile = LibSystem::tempnam(null, 'wcontrol_process');
+    $tmpfile = WiffLibSystem::tempnam(null, 'wcontrol_process');
     if ($tmpfile === false)
     {
         return array (
@@ -227,7 +227,7 @@ function wcontrol_msg_check_file($process)
 
 function wcontrol_check_syscommand($process)
 {
-    $ret = LibSystem::getCommandPath($process->getAttribute('command'));
+    $ret = WiffLibSystem::getCommandPath($process->getAttribute('command'));
     if ($ret === false)
     {
         return false;

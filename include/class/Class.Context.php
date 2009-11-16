@@ -885,7 +885,7 @@ public function uploadModule()
 {
     require_once ('lib/Lib.System.php');
 
-    $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
+    $tmpfile = WiffLibSystem::tempnam(null, 'WIFF_downloadLocalFile');
     if ($tmpfile === false)
     {
         $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");

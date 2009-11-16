@@ -138,7 +138,7 @@ function getCheckApp($pubdir,&$tapp) {
   $pgservice_core = getServiceCore();
   $pgservice_freedom = getServiceFreedom();
 
-  $IP=LibSystem::getHostIPAddress();
+  $IP=WiffLibSystem::getHostIPAddress();
   $dbid=@pg_connect($dbaccess_core);
   
   if (!$dbid) {

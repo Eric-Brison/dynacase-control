@@ -1,7 +1,7 @@
 <?php
 
 /**
- * LibSystem class
+ * WiffLibSystem class
  *
  * This class provides methods for querying system informations
  *
@@ -14,7 +14,7 @@
  /**
  */
 
-class LibSystem {
+class WiffLibSystem {
 
   function getCommandPath($cmdname) {
     $path_env = getenv("PATH");

@@ -945,7 +945,7 @@ require valid-user
     {
         require_once ('lib/Lib.System.php');
 
-        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadLocalFile');
+        $tmpfile = WiffLibSystem::tempnam(null, 'WIFF_downloadLocalFile');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
@@ -968,7 +968,7 @@ require valid-user
     {
         include_once ('lib/Lib.System.php');
 
-        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHttpUrlWget');
+        $tmpfile = WiffLibSystem::tempnam(null, 'WIFF_downloadHttpUrlWget');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
@@ -993,7 +993,7 @@ require valid-user
             $envs['ftp_proxy'] = $http_proxy;
         }
 
-        $wget_path = LibSystem::getCommandPath('wget');
+        $wget_path = WiffLibSystem::getCommandPath('wget');
         if ($wget_path === false)
         {
             unlink($tmpfile);
@@ -1040,7 +1040,7 @@ require valid-user
     {
         require_once ('lib/Lib.System.php');
 
-        $tmpfile = LibSystem::tempnam(null, 'WIFF_downloadHttpUrlFopen');
+        $tmpfile = WiffLibSystem::tempnam(null, 'WIFF_downloadHttpUrlFopen');
         if ($tmpfile === false)
         {
             $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
