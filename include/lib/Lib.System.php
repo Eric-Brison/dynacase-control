@@ -35,7 +35,7 @@ class WiffLibSystem {
   
   function getHostIPAddress($hostname="") {
     if( $hostname == false ) {
-      $hostname = LibSystem::getHostName();
+      $hostname = WiffLibSystem::getHostName();
     }
     $ip = gethostbyname($hostname);
     if( $ip == $hostname ) {
@@ -53,7 +53,7 @@ class WiffLibSystem {
   }
 
   function runningInHttpd() {
-    return LibSystem::getServerAddr();
+    return WiffLibSystem::getServerAddr();
   }
 
   function ssystem($args, $opt=null) {
