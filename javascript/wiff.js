@@ -31,6 +31,7 @@ Ext.override(Ext.form.Field, {
 });
 
 Ext.onReady(function(){
+	
     Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
     Ext.QuickTips.init();
     
@@ -1430,7 +1431,7 @@ Ext.onReady(function(){
                                 repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />'))) + '<b>' + this.context.repo[j].description + '</b>' + '<i>(' + this.context.repo[j].displayUrl + ')</i>' + '</li>'
                             }
                             repositoryHtml += '</ul>'
-                            var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + this.context.root + '</li><li class="x-form-item"><b>Description :</b> ' + this.context.description + '</li><li class="x-form-item"><b>Url :</b>' + (this.context.url ? '<a href=' + this.context.url + '> ' + this.context.url + '</a>' : '<i> no url</i>') + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
+                            var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + this.context.root + '</li><li class="x-form-item"><b>Description :</b> ' + this.context.description + '</li><li class="x-form-item"><b>Url :</b>' + (this.context.url ? '<a href=' + this.context.url + ' target="_blank" > ' + this.context.url + '</a>' : '<i> no url</i>') + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
                             
                             this.body.update(contextInfoHtml);
                             
