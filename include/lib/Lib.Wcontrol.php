@@ -260,7 +260,7 @@ function wcontrol_check_phpclass($process)
             return false;
         }
     }
-    if (!class_exists($process->getAttribute('class')))
+    if (!class_exists($process->getAttribute('class'),false))
     {
         return false;
     }
