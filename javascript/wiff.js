@@ -318,7 +318,15 @@ Ext.onReady(function(){
 			html += '<li style="font-size:medium;margin-top:5px;margin-bottom:5px;border-bottom:1px solid #99BBE8;"><img src=images/icons/tick.png style="position:relative;top:3px;" /><b>  version ' + changelog[i]['version'] + ' </b><i>(' + changelog[i]['date'] + ')</i></li>';
 			for (var j = 0 ; j < changelog[i]['action'].length ; j++)
 			{
-				html += '<li style="padding-left:20px;"><b>' + changelog[i]['action'][j]['title'] + '</b><br/><i>' + changelog[i]['action'][j]['description'] + '</i></li>' ;
+				var url = changelog[i]['action'][j]['url'];
+				var urlLabel = '' ;
+				var index = url.indexOf('issues/');
+				if(index != -1){
+					urlLabel = url.substr(index, 6) + ' ' + url.substr(index + 7);
+				} else {
+					urlLabel = 'more';
+				}
+				html += '<li style="padding-left:20px;"><b>' + changelog[i]['action'][j]['title'] + '</b><i>' + ( url ? ' <a href=' + url + ' target="_blank">' + urlLabel + '</a>' : '' ) + '</i><br/><i>' + changelog[i]['action'][j]['description'] + '</i></li>' ;
 			}
 		}
 		html += '</p>';

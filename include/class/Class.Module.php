@@ -60,7 +60,7 @@ class Module
 
     public function __construct($context, $repository = null, $xmlNode = null, $isInstalled = false)
     {
-		
+
         $this->context = $context;
         $this->repository = $repository;
 
@@ -149,6 +149,18 @@ class Module
         return $xmlNode;
     }
 
+    private function xt_innerXML( & $node)
+    {
+        if (!$node)
+        {
+            return false;
+        }
+        $document = $node->ownerDocument;
+        $nodeAsString = $document->saveXML($node);
+        preg_match('!\<.*?\>(.*)\</.*?\>!s', $nodeAsString, $match);
+        return $match[1];
+    }
+
     public function parseXmlChangelogNode($xmlNode)
     {
 
@@ -165,7 +177,8 @@ class Module
                 {
                     $action[] = array (
                     'title'=>$actionNode->getAttribute('title'),
-                    'description'=>$actionNode->nodeValue
+                    'url'=>$actionNode->getAttribute('url'),
+                    'description'=>$this->xt_innerXML($actionNode)
                     );
                 }
 
