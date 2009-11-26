@@ -232,7 +232,7 @@ require valid-user
         $v2 = $savr[0];
         $r2 = $savr[1];
 
-        return $this->compareVersion($v2, $r2, $v1, $r1) == 1?true:false;
+        return $this->compareVersion($v2, $r2, $v1, $r1) > 0 ? true : false;
 
     }
 
