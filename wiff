@@ -24,7 +24,7 @@ case 'show':
   $ret = wiff_show($argv);
   break;
 case 'context':
-  $line = array_shift($argv);
+  $cmd = array_shift($argv);
   $ret = wiff_context($argv);
   break;
 case 'help':
@@ -38,6 +38,10 @@ case 'wstart':
   break;
 case 'wstop':
   $ret = wiff_wstop($argv);
+  break;
+case 'mkrepoidx':
+  $cmd = array_shift($argv);
+  $ret = wiff_mkrepoidx($argv);
   break;
 default:
   $ret = wiff_default($argv);

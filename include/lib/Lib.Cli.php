@@ -184,6 +184,138 @@ function wiff_context_shell(&$context, &$argv) {
   }
 }
 
+function wiff_mkrepoidx(&$argv) {
+  $repoPath = array_shift($argv);
+  if( $repoPath === null ) {
+    error_log(sprintf("Error: missing repository path!"));
+    return 1;
+  }
+
+  if( !is_dir($repoPath) ) {
+    error_log(sprintf("Error: supplied repository path '%s' is not a directory!", $repoPath));
+    return 1;
+  }
+
+  $dir = opendir($repoPath);
+  if( $dir === FALSE ) {
+    error_log(sprintf("Error: could not open directory '%s'", $repoPath));
+    return 1;
+  }
+
+  $contentxml = new DOMDocument();
+  $contentxml->formatOutput = true;
+
+  $repoNode = new DOMElement('repo');
+  $contentxml->appendChild($repoNode);
+
+  $modulesNode = new DOMElement('modules');
+  $repoNode->appendChild($modulesNode);
+
+  while( ($file = readdir($dir)) !== FALSE ) {
+    if( ! is_file($repoPath.'/'.$file) ) {
+      continue;
+    }
+    if( ! preg_match('/\.webinst$/', $file) ) {
+      continue;
+    }
+    $cmd = "tar -zxOf ".escapeshellcmd($repoPath.'/'.$file)." info.xml 2> /dev/null";
+    $tar = popen($cmd, "r");
+    if( $tar === FALSE ) {
+      error_log(sprintf("Error: running '%s'!", $cmd));
+      return 2;
+    }
+    $info = '';
+    while( ($data = fgets($tar)) !== FALSE ) {
+      $info .= $data;
+    }
+    fclose($tar);
+    if( $info == '' ) {
+      error_log(sprintf("Warning: empty, or non-existing, 'info.xml' file in package '%s'", $file));
+      continue;
+    }
+
+    $ret = wiff_mkrepoidx_process_info($contentxml, $modulesNode, $info, $file);
+    if( $ret === FALSE ) {
+      error_log(sprintf("Error: processing file '%s/%s'!", $repoPath, $file));
+      return 3;
+    }
+  }
+
+  closedir($dir);
+
+  $temp = tempnam($repoPath, "tmp.content.xml");
+  if( $temp === FALSE ) {
+    error_log(sprintf("Error: could not create temporary content.xml file!"));
+    return 4;
+  }
+
+  $fh = fopen($temp, "w");
+  if( $fh === FALSE ) {
+    error_log(sprintf("Error: could not open temp file '%s' for writing!", $temp));
+    return 4;
+  }
+
+  $ret = fwrite($fh, $contentxml->saveXML());
+  if( $ret === FALSE ) {
+    error_log(sprintf("Error: write to '%s' failed!", $temp));
+    return 4;
+  }
+
+  fclose($fh);
+
+  $ret = chmod($temp, 0644);
+  if( $ret === FALSE ) {
+    error_log(sprintf("Error: chmod on temp file '%s' failed!", $temp));
+    return 4;
+  }
+
+  $ret = rename($temp, $repoPath.'/content.xml');
+  if( $ret === FALSE ) {
+    error_log(sprintf("Error: rename of temp file '%s' to '%s/content.xml' failed!", $temp, $repoPath));
+    return 4;
+  }
+
+  return 0;
+}
+
+function wiff_mkrepoidx_process_info(&$parentDocument, &$parentNode, $info, $file) {
+  $infoxml = new DOMDocument();
+  $ret = $infoxml->loadXML($info);
+  if( $ret === FALSE ) {
+    error_log(sprintf("Error: loading XML content'"));
+    return FALSE;
+  }
+  $nodeList = $infoxml->childNodes;
+  if( $nodeList->length <= 0 ) {
+    error_log(sprintf("Error: XML root node contains no childs!"));
+    return FALSE;
+  }
+  if( $nodeList->length > 1 ) {
+    error_log(sprintf("Error: more than one child in XML root node!"));
+    return FALSE;
+  }
+
+  $node = $nodeList->item(0);
+  $node->setAttribute('src', $file);
+
+  $xpath = new DOMXpath($infoxml);
+  $childs = $xpath->query('/module/*');
+
+  $i = 0;
+  while( $i < $childs->length ) {
+    $child = $childs->item($i);
+    if( $child->nodeName != "description" && $child->nodeName != "requires" ) {
+      $node->removeChild($child);
+    }
+    $i++;
+  }
+
+  $newNode = $parentDocument->importNode($node, TRUE);
+  $parentNode->appendChild($newNode);
+
+  return TRUE;
+}
+
 function wiff_whattext(&$argv) {
   $ctx_name = array_shift($argv);
 
