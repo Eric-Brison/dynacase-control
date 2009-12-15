@@ -30,6 +30,10 @@ case 'context':
 case 'help':
   $ret = wiff_help($argv);
   break;
+case 'list':
+  $cmd = array_shift($argv);
+  $ret = wiff_list($argv);
+  break;
 case 'whattext':
   $ret = wiff_whattext($argv);
   break;

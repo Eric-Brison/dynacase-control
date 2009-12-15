@@ -799,6 +799,11 @@ private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = 
 
     $installedModule = $this->moduleIsInstalled($targetModule);
 
+    if ($installedModule->status != 'installed')
+    {
+        return false;
+    }
+
     if ($operator != '')
     {
         switch($operator)
@@ -823,11 +828,6 @@ private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = 
     } else
     {
         return (bool)$installedModule;
-    }
-
-    if ($installedModule->status != 'installed')
-    {
-        return false;
     }
 
     $cmp = $this->cmpModuleByVersionReleaseAsc($installedModule, $targetModule);

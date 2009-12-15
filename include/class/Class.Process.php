@@ -48,8 +48,40 @@ class Process
         $this->label = $node->getElementsByTagName('label')->item(0)->nodeValue;
         $this->help = $node->getElementsByTagName('help')->item(0)->nodeValue;
 
+	if( $this->label == "" ) {
+	  $this->label = $this->computeLabel();
+	}
+
         return;
 
+    }
+
+    private function computeLabel() {
+      $label = "";
+      if( $this->name == 'check' ) {
+	if( $this->type == 'syscommand' ) {
+	  $label = 'Check system command';
+	} elseif( $this->type == 'phpfunction' ) {
+	  $label = 'Check php function';
+	} elseif( $this->type == 'pearmodule' ) {
+	  $label = 'Check pear module';
+	} elseif( $this->type == 'apachemodule' ) {
+	  $label = 'Check apache module';
+	} else {
+	  $label = sprintf('Check %s', $this->type);
+	}
+
+	foreach( array('function', 'command', 'class', 'module') as $add ) {
+	  if( array_key_exists($add, $this->attributes) ) {
+	    $label .= sprintf(' %s', $this->attributes[$add]);
+	  }
+	}
+      } elseif( array_key_exists('command', $this->attributes) ) {
+	$label = sprintf('Command %s', $this->attributes['command']);
+      } else {
+	$label = sprintf('Process');
+      }
+      return $label;
     }
 
     /**
