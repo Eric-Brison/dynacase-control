@@ -11,7 +11,7 @@ function wcontrol_eval_process($process)
     {
         if (function_exists("wcontrol_check_".$process->getAttribute('type')))
         {
-            error_log(sprintf("%s Running wcontrol_check_%s()", __FUNCTION__ , $process->getAttribute('type')));
+            # error_log(sprintf("%s Running wcontrol_check_%s()", __FUNCTION__ , $process->getAttribute('type')));
             eval ("\$ret = wcontrol_check_".$process->getAttribute('type')."(\$process);");
 
             if (function_exists("wcontrol_msg_".$process->getAttribute('type')))
@@ -90,7 +90,7 @@ function wcontrol_process($process)
     }
 
     $cmd = sprintf('( %s ) 1> "%s" 2>&1', $cmd, escapeshellcmd($tmpfile));
-    error_log(sprintf("%s %s", __FUNCTION__ , $cmd));
+    # error_log(sprintf("%s %s", __FUNCTION__ , $cmd));
 
     /*
      $curdir = getcwd();

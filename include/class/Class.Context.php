@@ -132,12 +132,12 @@ class Context
         if ($existingModuleNodeList->length <= 0)
         {
             // No corresponding module was found, so just append the current module
-            error_log("Creating a new <module> node.");
+            # error_log("Creating a new <module> node.");
             $modulesNode->appendChild($moduleXML);
         } else
         {
             // A corresponding module was found, so replace it
-            error_log("Replacing existing <module> node.");
+            # error_log("Replacing existing <module> node.");
             if ($existingModuleNodeList->length > 1)
             {
                 $this->errorMessage = sprintf("Found more than one <module> with name='%s' in '%s'.", $module->name, $wiff->contexts_filepath);
@@ -679,10 +679,14 @@ public function getModuleDependencies($namelist, $local = false)
 
 
             // Check if a version of this module is already installed
-            if ($this->moduleIsInstalledAndUpToDateWith($reqMod, $reqModComp, $reqModVersion))
-            {
+	    if( $this->moduleIsInstalled($reqMod) ) {
+	      if ($this->moduleIsInstalledAndUpToDateWith($reqMod, $reqModComp, $reqModVersion)) {
                 continue ;
-            }
+	      }
+	      $reqMod->needphase = 'upgrade';
+	    } else {
+	      $reqMod->needphase = 'install';
+	    }
 
             $pos = $this->depsListContains($depsList, $reqMod->name);
             if ($pos < 0)
@@ -869,7 +873,7 @@ public function getParamByName($paramName)
 public function wstop()
 {
     $wstop = sprintf("%s/wstop", $this->root);
-    error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstop));
+    # error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstop));
     system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstop), $ret));
     return $ret;
 }
@@ -877,7 +881,7 @@ public function wstop()
 public function wstart()
 {
     $wstart = sprintf("%s/wstart", $this->root);
-    error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstart));
+    # error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstart));
     system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstart), $ret));
     return $ret;
 }
@@ -970,11 +974,26 @@ public function getLocalModuleDependencies($moduleFilePath)
         return false;
     }
 
-    error_log(sprintf(">>> moduleName = %s", $moduleName));
+    # error_log(sprintf(">>> moduleName = %s", $moduleName));
 
     $deps = $this->getModuleDependencies( array ($moduleName), true);
 
     return $deps;
+}
+
+public function loadModuleFromPackage($filename) {
+  require_once('class/Class.Module.php');
+
+  $module = new Module($this);
+  $module->tmpfile = $filename;
+
+  $xml = $module->loadInfoXml();
+  if( $xml === false ) {
+    $this->errorMessage = sprintf("Could not load info xml: '%s'.", $module->errorMessage);
+    return false;
+  }
+
+  return $module;
 }
 
 }

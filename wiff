@@ -17,9 +17,6 @@ require('lib/Lib.Cli.php');
 
 $ret = 0;
 switch( $argv[0] ) {
-case 'param':
-  $ret = wiff_param($argv);
-  break;
 case 'show':
   $ret = wiff_show($argv);
   break;

@@ -38,6 +38,8 @@ class Module
 
     public $xmlNode;
 
+    public $needphase = '';
+
     /**
      * @var boolean true if module is installed, false if module is available
      */
@@ -277,12 +279,12 @@ class Module
         if ($existingModuleNodeList->length <= 0)
         {
             // No corresponding module was found, so just append the current module
-            error_log("Creating a new <module> node.");
+            # error_log("Creating a new <module> node.");
             $modulesNode->appendChild($module);
         } else
         {
             // A corresponding module was found, so replace it
-            error_log("Replacing existing <module> node.");
+            # error_log("Replacing existing <module> node.");
             if ($existingModuleNodeList->length > 1)
             {
                 $this->errorMessage = sprintf("Found more than one <module> with name='%s' in '%s'.", $this->name, $wiff->contexts_filepath);

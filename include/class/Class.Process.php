@@ -59,28 +59,25 @@ class Process
     private function computeLabel() {
       $label = "";
       if( $this->name == 'check' ) {
-	if( $this->type == 'syscommand' ) {
-	  $label = 'Check system command';
-	} elseif( $this->type == 'phpfunction' ) {
-	  $label = 'Check php function';
-	} elseif( $this->type == 'pearmodule' ) {
-	  $label = 'Check pear module';
-	} elseif( $this->type == 'apachemodule' ) {
-	  $label = 'Check apache module';
+	if( $this->attributes['type'] == 'syscommand' ) {
+	  $label = sprintf('Check system command %s', $this->attributes['command']);
+	} elseif( $this->attributes['type'] == 'phpfunction' ) {
+	  $label = sprintf('Check php function %s', $this->attributes['function']);
+	} elseif( $this->attributes['type'] == 'phpclass' ) {
+	  $label = sprintf('Check php class %s', $this->attributes['class']);
+	} elseif( $this->attributes['type'] == 'pearmodule' ) {
+	  $label = sprintf('Check pear module %s', $this->attributes['module']);
+	} elseif( $this->attributes['type'] == 'apachemodule' ) {
+	  $label = sprintf('Check apache module %s', $this->atributes['module']);
 	} else {
-	  $label = sprintf('Check %s', $this->type);
+	  $label = sprintf("Check %s", $this->attributes['type']);
 	}
-
-	foreach( array('function', 'command', 'class', 'module') as $add ) {
-	  if( array_key_exists($add, $this->attributes) ) {
-	    $label .= sprintf(' %s', $this->attributes[$add]);
-	  }
-	}
-      } elseif( array_key_exists('command', $this->attributes) ) {
-	$label = sprintf('Command %s', $this->attributes['command']);
+      } elseif( $this->name == 'process' ) {
+	$label = sprintf('Process %s', $this->attributes['command']);
       } else {
-	$label = sprintf('Process');
+	$label = sprintf("<unknwon>");
       }
+
       return $label;
     }
 
@@ -93,6 +90,7 @@ class Process
     {
         require_once ('class/Class.WIFF.php');
         require_once ('lib/Lib.Wcontrol.php');
+	require_once('class/Class.Debug.php');
 
         $wiff = WIFF::getInstance();
 
