@@ -2,6 +2,8 @@
 
 require_once('class/Class.WIFF.php');
 
+global $wiff_lock;
+
 /**
  * wiff help
  */
@@ -26,6 +28,29 @@ function wiff_help(&$argv) {
 }
 
 /**
+ * wiff (un)lock
+ */
+function wiff_lock() {
+  global $wiff_lock;
+  $wiff = WIFF::getInstance();
+  $wiff_lock = $wiff->lock();
+  if( $wiff_lock === false ) {
+    error_log(sprintf("Warning: could not lock wiff!"));
+  }
+  return $wiff_lock;
+}
+
+function wiff_unlock() {
+  global $wiff_lock;
+  $wiff = WIFF::getInstance();
+  $ret = $wiff->unlock($wiff_lock);
+  if( $ret === false ) {
+    error_log(sprintf("Warning: could not unlock wiff!"));
+  }
+  return $ret;
+}
+
+/**
  * wiff list
  */
 function wiff_list(&$argv) {
@@ -33,7 +58,10 @@ function wiff_list(&$argv) {
 
   switch( $op ) {
   case 'context':
-    return wiff_list_context($argv);
+    wiff_lock();
+    $ret = wiff_list_context($argv);
+    wiff_unlock();
+    return $ret;
     break;
   default:
     error_log(sprintf("Unknown operation '%s'!\n", $op));
@@ -95,6 +123,7 @@ function wiff_context(&$argv) {
     wiff_help($argv);
     return 0;
   }
+
   $wiff = WIFF::getInstance();
   $context = $wiff->getContext($ctx_name);
   if( $context === false ) {
@@ -114,13 +143,16 @@ function wiff_context(&$argv) {
     return wiff_context_shell($context, $argv);
     break;
   case 'exportenv':
-    return wiff_context_exportenv($context, $argv);
+    $ret = wiff_context_exportenv($context, $argv);
+    return $ret;
     break;
   case 'module':
-    return wiff_context_module($context, $argv);
+    $ret = wiff_context_module($context, $argv);
+    return $ret;
     break;
   case 'param':
-    return wiff_context_param($context, $argv);
+    $ret = wiff_context_param($context, $argv);
+    return $ret;
     break;
   case 'help':
     return wiff_context_help($context, $argv);
@@ -260,13 +292,20 @@ function wiff_context_module(&$context, &$argv) {
 
   switch($op) {
   case 'install':
-    return wiff_context_module_install($context, $argv);
+    wiff_lock();
+    $ret = wiff_context_module_install($context, $argv);
+    wiff_unlock();
+    return $ret;
     break;
   case 'upgrade':
-    return wiff_context_module_upgrade($context, $argv);
+    wiff_lock();
+    $ret = wiff_context_module_upgrade($context, $argv);
+    wiff_unlock();
+    return $ret;
     break;
   case 'extract':
-    return wiff_context_module_extract($context, $argv);
+    $ret = wiff_context_module_extract($context, $argv);
+    return $ret;
     break;
   case 'list':
     return wiff_context_module_list($context, $argv);
@@ -457,7 +496,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
       }
       
       foreach( $paramList as $param ) {
-	$pvalue = $param->value==""?$param->default:$param->default;
+	$pvalue = $param->value==""?$param->default:$param->value;
 	
 	if( boolopt('yes', $options) ) {
 	  $value = $pvalue;
@@ -520,7 +559,11 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 	    echo color_reset();
 	    if( $exec['ret'] === false ) {
 	      echo sprintf("\nError: process '%s' returned with error: %s%s%s\n", $process->label, fg_red(), $exec['output'], color_reset());
-	      $ret = param_ask("(R)etry of (c)continue", "R/c");
+	      $ret = param_ask("(R)etry, (c)continue or (a)bort", "R/c/a");
+	      if( preg_match('/^a.*$/i', $ret) ) {
+		echo sprintf("[%sABORTED%s] (%s)\n", fg_red(), color_reset(), $exec['output']);
+		return 1;
+	      }
 	      if( preg_match('/^(c.*)$/i', $ret) ) {
 		echo sprintf("[%sSKIPPED%s] (%s)\n", fg_blue(), color_reset(), $exec['output']);
 		break;

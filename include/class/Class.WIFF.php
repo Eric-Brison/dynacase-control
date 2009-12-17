@@ -1156,6 +1156,34 @@ require valid-user
         return $ret;
     }
 
+    public function lock() {
+      $fh = fopen(sprintf("%s.lock", $this->contexts_filepath), "a");
+      if( $fh === false ) {
+	$this->errorMessage = sprintf("Could not open '%s' for lock.", sprintf("%s.lock", $this->contexts_filepath));
+	return false;
+      }
+
+      $ret = flock($fh, LOCK_EX);
+      if( $ret === false ) {
+	$this->errorMessage = sprintf("Could not get lock on '%s'.", sprintf("%s.lock", $this->contexts_filepath));
+	return false;
+      }
+
+      return $fh;
+    }
+
+    public function unlock($fh) {
+      $ret = flock($fh, LOCK_UN);
+      if( $ret == false ) {
+	$this->errorMessage = sprintf("Could not release lock on '%s'.", sprintf("%s.lock", $this->contexts_filepath));
+	return false;
+      }
+
+      fclose($fh);
+
+      return true;
+    }
+
 }
 
 ?>
