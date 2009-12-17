@@ -338,11 +338,6 @@ function wiff_context_module_install(&$context, &$argv) {
 
   $modName = array_shift($argv);
 
-  $ret = setuid_wiff($_SERVER['SCRIPT_FILENAME']);
-  if( $ret === false ) {
-    return 1;
-  }
-
   if( is_file($modName) ) {
     return wiff_context_module_install_local($context, $options, $modName, $argv);
   } else {
@@ -606,11 +601,6 @@ function wiff_context_module_upgrade(&$context, &$argv) {
   $options = parse_argv_options($argv);
 
   $modName = array_shift($argv);
-
-  $ret = setuid_wiff($_SERVER['SCRIPT_FILENAME']);
-  if( $ret === false ) {
-    return 1;
-  }
 
   if( is_file($modName) ) {
     return wiff_context_module_upgrade_local($context, $options, $modName, $argv);
@@ -1356,12 +1346,12 @@ function setuid_wiff($path) {
   if( $uid != $wiff_uid ) {
     $ret = posix_setgid($wiff_gid);
     if( $ret === false ) {
-      error_log(sprintf("Error: could not setgid to gid '%s'\n", $http_gid));
+      error_log(sprintf("Error: could not setgid to gid '%s'.\n", $http_gid));
       return false;
     }
     $ret = posix_setuid($wiff_uid);
     if( $ret === false ) {
-      error_log(sprintf("Error: could not setuid to uid '%s'\n", $http_uid));
+      error_log(sprintf("Error: could not setuid to uid '%s'.\n", $http_uid));
       return false;
     }
   }

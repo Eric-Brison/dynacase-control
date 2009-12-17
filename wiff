@@ -15,6 +15,11 @@ putenv('WIFF_ROOT='.$wiff_root);
 
 require('lib/Lib.Cli.php');
 
+$ret = setuid_wiff($_SERVER['SCRIPT_FILENAME']);
+if( $ret === false ) {
+  exit( 1 );
+}
+
 $ret = 0;
 switch( $argv[0] ) {
 case 'show':
