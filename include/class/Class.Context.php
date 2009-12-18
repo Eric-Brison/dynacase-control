@@ -65,7 +65,7 @@ class Context
      * @return
      * @param object $name
      */
-    public function importArchive($archive)
+    public function importArchive($archive, $status = '')
     {
         require_once ('class/Class.WIFF.php');
         require_once ('class/Class.Module.php');
@@ -113,8 +113,12 @@ class Context
         }
         $moduleXML = $importedXML;
 
-        $moduleXML->setAttribute('status', 'downloaded');
         $moduleXML->setAttribute('tmpfile', $archive);
+	if( $status == '' ) {
+	  $moduleXML->setAttribute('status', 'downloaded');
+	} else {
+	  $moduleXML->setAttribute('status', $status);
+	}
 
         // Get <modules> node
         $contextsXPath = new DOMXPath($contextsXML);
@@ -128,7 +132,17 @@ class Context
 
 
         // Look for an existing <module> node
-        $existingModuleNodeList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$module->name."']");
+	$query = '';
+	if( $status == 'downloaded' ) {
+	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->name, $module->name);
+	} else if( $status == 'installed' ) {
+	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='installed']", $this->name, $module->name);
+	} else {
+	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->name, $module->name);
+	}
+	  
+        # $existingModuleNodeList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$module->name."']");
+        $existingModuleNodeList = $contextsXPath->query($query);
         if ($existingModuleNodeList->length <= 0)
         {
             // No corresponding module was found, so just append the current module
@@ -552,7 +566,7 @@ public function cmpModuleByVersionReleaseDesc( & $module1, & $module2)
  * @return object Module or boolean false
  * @param object $name Module name
  */
-public function getModule($name)
+public function getModule($name, $status = false)
 {
     require_once ('class/Class.WIFF.php');
     require_once ('class/Class.Module.php');
@@ -564,7 +578,17 @@ public function getModule($name)
 
     $xpath = new DOMXPath($xml);
 
-    $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$name."']");
+    # $moduleDom = $xpath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$name."']");
+
+    $query = null;
+    if( $status == 'installed' ) {
+      $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='installed']", $this->name, $name);
+    } else if( $status == 'downloaded' ) {
+      $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->name, $name);
+    } else {
+      $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->name, $name);
+    }
+    $moduleDom = $xpath->query($query);
 
     if ($moduleDom->length <= 0)
     {
@@ -573,6 +597,14 @@ public function getModule($name)
     }
 
     return new Module($this, null, $moduleDom->item(0), true);
+}
+
+public function getModuleDownloaded($name) {
+  return $this->getModule($name, 'downloaded');
+}
+
+public function getModuleInstalled($name) {
+  return $this->getModule($name, 'installed');
 }
 
 public function getModuleAvail($name)
@@ -629,7 +661,7 @@ public function getModuleDependencies($namelist, $local = false)
             array_push($depsList, $module);
         } else
         {
-            $module = $this->getModule($name);
+	  $module = $this->getModuleDownloaded($name);
             if ($module === false)
             {
                 $this->errorMessage = sprintf("Local module '%s' not found in contexts.xml.", $name);
@@ -967,7 +999,7 @@ public function getLocalModuleDependencies($moduleFilePath)
         return false;
     }
 
-    $module = $this->getModule($moduleName);
+    $module = $this->getModuleDownloaded($moduleName);
     if ($module === false)
     {
         $this->errorMessage = sprintf("Could not get module with name '%s' in contexts.xml: %s", $moduleName, $this->errorMessage);
@@ -994,6 +1026,63 @@ public function loadModuleFromPackage($filename) {
   }
 
   return $module;
+}
+
+public function removeModule($moduleName, $status = '') {
+  require_once('class/Class.WIFF.php');
+  require_once('class/Class.Module.php');
+
+  $wiff = WIFF::getInstance();
+  if( $wiff === false ) {
+    $this->errorMessage = sprintf("Could not get context.");
+    return false;
+  }
+
+  $xml = new DOMDocument();
+  $xml->preserveWhiteSpace = false;
+  $xml->formatOutput = true;
+  $ret = $xml->load($wiff->contexts_filepath);
+  if( $ret === false ) {
+    $this->errorMessage = sprintf("Could not load contexts.xml");
+    return false;
+  }
+
+  $xpath = new DOMXpath($xml);
+
+  $query = null;
+  if( $status == 'installed' ) {
+    $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='installed']", $this->name, $moduleName);
+  } else if( $status == 'downloaded' ) {
+    $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->name, $moduleName);
+  } else {
+    $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->name, $moduleName);
+  }
+  $moduleDom = $xpath->query($query);
+
+  if( $moduleDom->length <= 0 ) {
+    return true;
+  }
+
+  for( $i = 0; $i < $moduleDom->length; $i++ ) {
+    $module = $moduleDom->item(0);
+    $ret = $module->parentNode->removeChild($module);
+  }
+  
+  $ret = $xml->save($wiff->contexts_filepath);
+  if( $ret === false ) {
+    $this->errorMessage = sprintf("Error saving contexts.xml '%s'.", $wiff->contexts_filepath);
+    return false;
+  }
+
+  return true;  
+}
+
+public function removeModuleInstalled($moduleName) {
+  return $this->removeModule($moduleName, 'installed');
+}
+
+public function removeModuleDownloaded($moduleName) {
+  return $this->removeModule($moduleName, 'downloaded');
 }
 
 }

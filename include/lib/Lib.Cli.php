@@ -12,17 +12,15 @@ function wiff_help(&$argv) {
   echo "Usage\n";
   echo "-----\n";
   echo "\n";
-  echo "  wiff help [get|set|param|context]\n";
+  echo "  wiff help\n";
   echo "\n";
-  echo "  wiff context <context-name>\n";
+  echo "  wiff list context\n";
   echo "\n";
-  echo "  wiff param show\n";
-  echo "  wiff param get <param_name>\n";
-  echo "  wiff param set <param_name> <param_value>\n";
+  echo "  wiff context <context-name> help\n";
   echo "\n";
-  echo "  wiff whattext <context_name>\n";
-  echo "  wiff wstop <context_name>\n";
-  echo "  wiff wstart <context_name>\n";
+  echo "  wiff whattext <context-name>\n";
+  echo "  wiff wstop <context-name>\n";
+  echo "  wiff wstart <context-name>\n";
   echo "\n";
   return 0;
 }
@@ -106,14 +104,6 @@ function wiff_list_help(&$argv) {
 }
 
 /**
- * wiff show
- */
-function wiff_show(&$argv) {
-  echo "'show' not yet implemented.\n";
-  return 0;
-}
-
-/**
  * wiff context
  */
 function wiff_context(&$argv) {
@@ -177,14 +167,17 @@ function wiff_context_help(&$context, &$argv) {
   echo "\n";
   echo "  wiff context <context-name> exportenv\n";
   echo "  wiff context <context-name> shell\n";
-  echo "  wiff context <context-name> exec /bin/bash\n";
+  echo "  wiff context <context-name> exec /bin/bash --login\n";
   echo "\n";
-  echo "  wiff context <context-name> param show [<module-name>]\n";
-  echo "  wiff context <context-name> param get <module-name>:<param-name>\n";
-  echo "  wiff context <context-name> param set <module-name>:<param-name> <param-value>\n";
+  echo "  wiff context <context-name> param help\n";
+  # echo "  wiff context <context-name> param show [<module-name>]\n";
+  # echo "  wiff context <context-name> param get <module-name>:<param-name>\n";
+  # echo "  wiff context <context-name> param set <module-name>:<param-name> <param-value>\n";
   echo "\n";
-  echo "  wiff context <context-name> install [--force] [--nopre] [--nopost] [--nothing] <localPkgName|remotePkgName>\n";
-  echo "  wiff context <context-name> upgrade [--force] [--nopre] [--nopost] [--nothing] <localPkgName|remotePkgName>\n";
+  echo "  wiff context <context-name> module help\n";
+  # echo "  wiff context <context-name> module install [--force] [--nopre] [--nopost] [--nothing] <localPkgName|remotePkgName>\n";
+  # echo "  wiff context <context-name> module upgrade [--force] [--nopre] [--nopost] [--nothing] <localPkgName|remotePkgName>\n";
+  # echo "  wiff context <context-name> module list\n";
   echo "\n";
   return 0;
 }
@@ -325,10 +318,24 @@ function wiff_context_module_help(&$context, &$argv) {
   echo "-----\n";
   echo "\n";
   echo "  wiff context <context-name> module install [install-options] <localModulePkgPath|modName>\n";
-  echo "\n";
   echo "  wiff context <context-name> module upgrade [upgrade-options] <localModulePkgPath|modName>\n";
-  echo "  wiff context <context-name> module extract [extract-options] <localModulePkgPath|modName>\n";
-  echo "  wiff context <context-name> module list <installed|available|updates>\n";
+  echo "  wiff context <context-name> module list installed|available|updates\n";
+  echo "\n";
+  echo "install-options\n";
+  echo "---------------\n";
+  echo "\n";
+  echo "  --nopre    Do not execute pre-install processes.\n";
+  echo "  --nopost   Do not execute post-install processes.\n";
+  echo "  --nothing  Do not execute pre-install and post-install processes.\n";
+  echo "  --force    Force installation.\n";
+  echo "\n";
+  echo "upgrade-options\n";
+  echo "---------------\n";
+  echo "\n";
+  echo "  --nopre    Do not execute pre-upgrade processes.\n";
+  echo "  --nopost   Do not execute post-upgrade processes.\n";
+  echo "  --nothing  Do not execute pre-upgrade and post-upgrade processes.\n";
+  echo "  --force    Force upgrade.\n";
   echo "\n";
   return 0;
 }
@@ -369,7 +376,7 @@ function wiff_context_module_install_local(&$context, &$options, &$pkgName, &$ar
     return 1;
   }
 
-  $existingModule = $context->getModule($tmpMod->name);
+  $existingModule = $context->getModuleInstalled($tmpMod->name);
   if( $existingModule !== false ) {
     echo sprintf("A module '%s' with version '%s-%s' already exists.\n", $existingModule->name, $existingModule->version, $existingModule->release);
     if( !boolopt('force', $options) ) {
@@ -378,7 +385,7 @@ function wiff_context_module_install_local(&$context, &$options, &$pkgName, &$ar
   }
   unset($existingModule);
 
-  $tmpMod = $context->importArchive($tmpfile);
+  $tmpMod = $context->importArchive($tmpfile, 'downloaded');
   if( $tmpMod === false ) {
     error_log(sprintf("Error: could not import module '%s': %s\n", $tmpfile, $context->errorMessage));
     return 1;
@@ -391,11 +398,14 @@ function wiff_context_module_install_local(&$context, &$options, &$pkgName, &$ar
   }
 
   if( count($depList) > 1 ) {
-    echo sprintf("Will install (or upgrade) the following packages:\n");
+    echo sprintf("Will (i)nstall, or (u)pgrade, the following packages:\n");
     foreach( $depList as $module ) {
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'upgrade':''));
+      if( $module->needphase == '' ) {
+	$module->needphase = 'install';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
     }
-    $ret = param_ask("Proceed to installation", "Y/n");
+    $ret = param_ask("Proceed with installation", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
       return 0;
     }
@@ -425,11 +435,14 @@ function wiff_context_module_install_remote(&$context, &$options, &$modName, &$a
   }
 
   if( count($depList) > 1 ) {
-    echo sprintf("Will install (or upgrade) the following packages:\n");
+    echo sprintf("Will (i)nstall, or (u)pgrade, the following packages:\n");
     foreach( $depList as $module ) {
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'upgrade':''));
+      if( $module->needphase == '' ) {
+	$module->needphase = 'install';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
     }
-    $ret = param_ask("Proceed to installation", "Y/n");
+    $ret = param_ask("Proceed with installation", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
       return 0;
     }
@@ -468,7 +481,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
      * switch to the module object from the context XML database
      */
     $modName = $module->name;
-    $module = $context->getModule($modName);
+    $module = $context->getModuleDownloaded($modName);
     if( $module === false ) {
       error_log(sprintf("Error: could not get module '%s' from context: %s\n", $modName, $context->errorMessage));
       return 1;
@@ -496,7 +509,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 	if( boolopt('yes', $options) ) {
 	  $value = $pvalue;
 	} else {
-	  $value = param_ask($param->name, $pvalue);
+	  $value = param_ask($param->name, $pvalue, $pvalue);
 	}
 	if( $value === false ) {
 	  error_log(sprintf("Error: could not read answer!"));
@@ -554,7 +567,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 	    echo color_reset();
 	    if( $exec['ret'] === false ) {
 	      echo sprintf("\nError: process '%s' returned with error: %s%s%s\n", $process->label, fg_red(), $exec['output'], color_reset());
-	      $ret = param_ask("(R)etry, (c)continue or (a)bort", "R/c/a");
+	      $ret = param_ask("(R)etry, (c)continue or (a)bort", "R/c/a", "R");
 	      if( preg_match('/^a.*$/i', $ret) ) {
 		echo sprintf("[%sABORTED%s] (%s)\n", fg_red(), color_reset(), $exec['output']);
 		return 1;
@@ -575,9 +588,16 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
     /**
      * set status to 'installed'
      */
+    if( $type == 'upgrade' ) {
+      $ret = $context->removeModuleInstalled($module->name);
+      if( $ret === false ) {
+	error_log(sprintf("Error: Could not remove old installed module '%s': %s", $module->name, $context->errorMessage));
+	return 1;
+      }
+    }
     $ret = $module->setStatus('installed');
     if( $ret === false ) {
-      error_log(sprintf("Error: could not set status of module '%s': %s", $module->name, $module->errorMessage));
+      error_log(sprintf("Error: Could not set installed status on module '%s': %s", $module->name, $module->errorMessage));
       return 1;
     }
 
@@ -632,7 +652,7 @@ function wiff_context_module_upgrade_local(&$context, &$options, &$pkgName, &$ar
     return 1;
   }
 
-  $existingModule = $context->getModule($tmpMod->name);
+  $existingModule = $context->getModuleInstalled($tmpMod->name);
   if( $existingModule !== false ) {
     $cmp = $context->cmpVersionReleaseAsc($tmpMod->version, $tmpMod->release, $existingModule->version, $existingModule->release);
     if( $cmp <= 0 ) {
@@ -644,7 +664,7 @@ function wiff_context_module_upgrade_local(&$context, &$options, &$pkgName, &$ar
   }
   unset($existingModule);
 
-  $tmpMod = $context->importArchive($tmpfile);
+  $tmpMod = $context->importArchive($tmpfile, 'downloaded');
   if( $tmpMod === false ) {
     error_log(sprintf("Error: could not import module '%s': %s\n", $tmpfile, $context->errorMessage));
     return 1;
@@ -657,11 +677,14 @@ function wiff_context_module_upgrade_local(&$context, &$options, &$pkgName, &$ar
   }
 
   if( count($depList) > 1 ) {
-    echo sprintf("Will upgrade (or install) the following packages:\n");
+    echo sprintf("Will (u)pgrade, or (i)nstall, the following packages:\n");
     foreach( $depList as $module ) {
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'':'install'));
+      if( $module->needphase == '' ) {
+	$module->needphase = 'upgrade';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
     }
-    $ret = param_ask("Proceed to installation", "Y/n");
+    $ret = param_ask("Proceed with upgrade", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
       return 0;
     }
@@ -693,9 +716,12 @@ function wiff_context_module_upgrade_remote(&$context, &$options, &$modName, &$a
   if( count($depList) > 1 ) {
     echo sprintf("Will upgrade (or install) the following packages:\n");
     foreach( $depList as $module ) {
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'upgrade':''));
+      if( $module->needphase == '' ) {
+	$module->needphase = 'upgrade';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
     }
-    $ret = param_ask("Proceed to installation", "Y/n");
+    $ret = param_ask("Proceed with upgrade", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
       return 0;
     }
@@ -1256,8 +1282,8 @@ function boolopt($opt, &$options) {
   return false;
 }
 
-function param_ask($prompt, $default) {
-  echo sprintf("%s ? [%s] ", $prompt, $default);
+function param_ask($prompt, $choice, $default) {
+  echo sprintf("%s ? [%s] ", $prompt, $choice);
   $fh = fopen('php://stdin', 'r');
   if( $fh === false ) {
     return false;

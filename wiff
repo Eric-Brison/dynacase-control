@@ -22,9 +22,6 @@ if( $ret === false ) {
 
 $ret = 0;
 switch( $argv[0] ) {
-case 'show':
-  $ret = wiff_show($argv);
-  break;
 case 'context':
   $cmd = array_shift($argv);
   $ret = wiff_context($argv);
@@ -37,12 +34,15 @@ case 'list':
   $ret = wiff_list($argv);
   break;
 case 'whattext':
+  $cmd = array_shift($argv);
   $ret = wiff_whattext($argv);
   break;
 case 'wstart':
+  $cmd = array_shift($argv);
   $ret = wiff_wstart($argv);
   break;
 case 'wstop':
+  $cmd = array_shift($argv);
   $ret = wiff_wstop($argv);
   break;
 case 'mkrepoidx':
