@@ -417,13 +417,11 @@ function wiff_context_module_install_local(&$context, &$options, &$pkgName, &$ar
 function wiff_context_module_install_remote(&$context, &$options, &$modName, &$argv) {
   require_once('lib/Lib.System.php');
 
-  $existingModule = $context->getModule($modName);
+  $existingModule = $context->getModuleInstalled($modName);
   if( $existingModule !== false ) {
-    if( $existingModule->status == 'installed' ) {
-      echo sprintf("A module '%s' with version '%s-%s' already exists.\n", $existingModule->name, $existingModule->version, $existingModule->release);
-      if( !boolopt('force', $options) ) {
-	return 0;
-      }
+    echo sprintf("A module '%s' with version '%s-%s' already exists.\n", $existingModule->name, $existingModule->version, $existingModule->release);
+    if( !boolopt('force', $options) ) {
+      return 0;
     }
   }
   unset($existingModule);
@@ -468,7 +466,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
       /**
        * download module
        */
-      $ret = $module->download();
+      $ret = $module->download('downloaded');
       if( $ret === false ) {
 	error_log(sprintf("Error: could not download module '%s': %s\n", $module->name, $module->errorMessage));
 	return 1;
@@ -600,6 +598,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
       error_log(sprintf("Error: Could not set installed status on module '%s': %s", $module->name, $module->errorMessage));
       return 1;
     }
+    $module->cleanupDownload();
 
     /**
      * wstart
@@ -696,9 +695,16 @@ function wiff_context_module_upgrade_local(&$context, &$options, &$pkgName, &$ar
 function wiff_context_module_upgrade_remote(&$context, &$options, &$modName, &$argv) {
   require_once('lib/Lib.System.php');
 
-  $existingModule = $context->getModule($modName);
+  $tmpMod = $context->getModuleAvail($modName);
+  if( $tmpMod === false ) {
+    error_log(sprintf("Error: could not find a module named '%s'!", $modName));
+    return 1;
+  }
+
+  $existingModule = $context->getModuleInstalled($modName);
   if( $existingModule !== false ) {
-    if( $existingModule->status == 'installed' ) {
+    $cmp = $context->cmpVersionReleaseAsc($tmpMod->version, $tmpMod->release, $existingModule->version, $existingModule->release);
+    if( $cmp <= 0 ) {
       echo sprintf("A module '%s' with version '%s-%s' already exists.\n", $existingModule->name, $existingModule->version, $existingModule->release);
       if( !boolopt('force', $options) ) {
 	return 0;
@@ -706,6 +712,7 @@ function wiff_context_module_upgrade_remote(&$context, &$options, &$modName, &$a
     }
   }
   unset($existingModule);
+  unset($tmpMod);
 
   $depList = $context->getModuleDependencies(array($modName));
   if( $depList === false ) {
@@ -908,7 +915,7 @@ function wiff_context_param_show(&$context, &$argv) {
   $showList = array();
 
   while( $modName = array_shift($argv) ) {
-    $module = $context->getModule($modName);
+    $module = $context->getModuleInstalled($modName);
     if( $module === false ) {
       continue;
     }
@@ -948,7 +955,7 @@ function wiff_context_param_get(&$context, &$argv) {
   $modName = $m[1];
   $paramName = $m[2];
 
-  $module = $context->getModule($modName);
+  $module = $context->getModuleInstalled($modName);
   if( $module === false ) {
     error_log(sprintf("Error: could not get module '%s': %s", $modName, $context->errorMessage));
     return 1;
@@ -987,7 +994,7 @@ function wiff_context_param_set(&$context, &$argv) {
   $modName = $m[1];
   $paramName = $m[2];
 
-  $module = $context->getModule($modName);
+  $module = $context->getModuleInstalled($modName);
   if( $module === false ) {
     error_log(sprintf("Error: could not get module '%s'.", $modName));
     return 1;

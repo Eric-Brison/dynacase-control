@@ -229,7 +229,7 @@ class Module
      * Download archive in temporary folder
      * @return temp filename of downloaded file, or false in case of error
      */
-    public function download()
+    public function download($status = '')
     {
         require_once ('class/Class.WIFF.php');
 
@@ -275,7 +275,13 @@ class Module
         $modulesNode = $modulesNodeList->item(0);
 
         // Look for an existing <module> node
-        $existingModuleNodeList = $contextsXPath->query("/contexts/context[@name='".$this->context->name."']/modules/module[@name='".$this->name."']");
+	$query = '';
+	if( $status == 'downloaded' ) {
+	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->context->name, $this->name);
+	} else {
+	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->context->name, $this->name);
+	}
+	$existingModuleNodeList = $contextsXPath->query($query);
         if ($existingModuleNodeList->length <= 0)
         {
             // No corresponding module was found, so just append the current module
