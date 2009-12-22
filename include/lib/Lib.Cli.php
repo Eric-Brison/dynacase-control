@@ -1268,7 +1268,7 @@ function wiff_getParamValue($paramName) {
 function parse_argv_options(&$argv) {
   $options = array();
   $m = array();
-  while( preg_match('/^--/', $argv[0]) ) {
+  while( count($argv) > 0 && preg_match('/^--/', $argv[0]) ) {
     if( preg_match('/^--([a-zA-Z0-9_-]+)=(.*)$/', $argv[0], $m) ) {
       $options[$m[1]] = $m[2];
     } elseif( preg_match('/--([a-zA-Z0-9_-]+)$/', $argv[0], $m) ) {
