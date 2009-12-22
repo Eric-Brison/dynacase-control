@@ -689,7 +689,7 @@ function wiff_context_module_upgrade_local(&$context, &$options, &$pkgName, &$ar
     }
   }
 
-  return wiff_context_module_install_deplist(&$context, &$options, &$argv, &$depList, 'upgrade');
+  return wiff_context_module_install_deplist($context, $options, $argv, $depList, 'upgrade');
 }
 
 function wiff_context_module_upgrade_remote(&$context, &$options, &$modName, &$argv) {
