@@ -6,8 +6,8 @@ use warnings;
 select STDERR; $|=1;
 select STDOUT; $|=1;
 
-if( not open(ICONV, '-|', 'iconv -c -f WINDOWS-1252 -t UTF-8') ) {
-  print STDERR "Error running iconv: $!\n";
+if( not open(ICONV, '-|', 'recode WINDOWS-1252..UTF-8') ) {
+  print STDERR "Error running recode: $!\n";
   exit( 1 );
 }
 
