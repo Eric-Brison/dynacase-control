@@ -788,8 +788,6 @@ Ext.onReady(function(){
                                         fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl', 'label'],
                                         autoLoad: true
                                     });
-									
-									console.log('REPOSTORE',repoStore);
                                     
                                     var actions = new Ext.ux.grid.RowActions({
                                         header: '',
@@ -1472,9 +1470,7 @@ Ext.onReady(function(){
                         }],
                         refresh: function(){
                             var repositoryHtml = '<ul>';
-							
-							console.log('REPO',this.context.repo);
-							
+														
                             for (var j = 0; j < this.context.repo.length; j++) {
                                 repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />'))) + '<b>' + this.context.repo[j].label + '</b>'
 								//this.context.repo[j].displayUrl + ')</i>' + '</li>'
