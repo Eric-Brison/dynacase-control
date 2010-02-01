@@ -409,7 +409,7 @@ require valid-user
             $this->errorMessage = "Repository with same name already exists.";
             return false;
         }
-
+		
         // Add repository to this context
         $node = $xml->createElement('access');
         $repository = $xml->getElementsByTagName('repositories')->item(0)->appendChild($node);
@@ -424,13 +424,18 @@ require valid-user
         $repository->setAttribute('password', $password);
 
         $repositoryObject = new Repository($repository);
+		
+		$isValid = $repositoryObject->isValid();
+		
+		$repository->setAttribute('label', $repositoryObject->label);
+		
         $ret = $xml->save($this->params_filepath);
         if ($ret === false)
         {
             $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
             return false;
         }
-        return $repositoryObject->isValid();
+        return $isValid;
 
     }
 

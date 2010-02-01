@@ -785,9 +785,11 @@ Ext.onReady(function(){
                                             getRepoList: true
                                         },
                                         root: 'data',
-                                        fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl'],
+                                        fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl', 'label'],
                                         autoLoad: true
                                     });
+									
+									console.log('REPOSTORE',repoStore);
                                     
                                     var actions = new Ext.ux.grid.RowActions({
                                         header: '',
@@ -886,6 +888,11 @@ Ext.onReady(function(){
                                             id: 'name',
                                             header: 'Repository',
                                             dataIndex: 'name',
+                                            width: 140
+                                        }, {
+                                            id: 'label',
+                                            header: 'Label',
+                                            dataIndex: 'label',
                                             width: 140
                                         }, {
                                             id: 'description',
@@ -1004,7 +1011,7 @@ Ext.onReady(function(){
                                         getRepoList: true
                                     },
                                     root: 'data',
-                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl'],
+                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl','label'],
                                     autoLoad: true
                                 });
                                 
@@ -1016,9 +1023,9 @@ Ext.onReady(function(){
                                     var first = true;
                                     
                                     repoStore.each(function(record){
-                                    
+										                                    
                                         repoBoxList.push({
-                                            boxLabel: record.get('description') + ' <i>(' + record.get('displayUrl') + ')</i>' + ')</i>',
+                                            boxLabel: '<b>' + record.get('label') + '</b>' + (record.get('description') ? ' <i>(' + record.get('description') + ')</i>' : ''),
                                             name: 'repo-' + record.get('name'),
                                             checked: first
                                         });
@@ -1465,8 +1472,13 @@ Ext.onReady(function(){
                         }],
                         refresh: function(){
                             var repositoryHtml = '<ul>';
+							
+							console.log('REPO',this.context.repo);
+							
                             for (var j = 0; j < this.context.repo.length; j++) {
-                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />'))) + '<b>' + this.context.repo[j].description + '</b>' + '<i>(' + this.context.repo[j].displayUrl + ')</i>' + '</li>'
+                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />'))) + '<b>' + this.context.repo[j].label + '</b>'
+								//this.context.repo[j].displayUrl + ')</i>' + '</li>'
+								+ (this.context.repo[j].description ? ('<i> (' + this.context.repo[j].description + ')</i>') : '') + '</li>'
                             }
                             repositoryHtml += '</ul>'
                             var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + this.context.root + '</li><li class="x-form-item"><b>Description :</b> ' + this.context.description + '</li><li class="x-form-item"><b>Url :</b>' + (this.context.url ? '<a href=' + this.context.url + ' target="_blank" > ' + this.context.url + '</a>' : '<i> no url</i>') + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';

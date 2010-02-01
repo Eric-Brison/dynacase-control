@@ -10,6 +10,8 @@ class Repository
     public $name;
     public $baseurl;
     public $description;
+	
+	public $label;
 
     public $protocol;
     public $host;
@@ -119,7 +121,7 @@ class Repository
         $this->context = $context;
 
         // Evaluate if repo is valid and need authentification
-//        $this->isValid();
+        $this->isValid();
 //        $this->needAuth();
 
     }
@@ -153,9 +155,11 @@ class Repository
         {
             $this->url = $this->protocol.'://'.$this->host.'/'.$this->path;
         }
-		if($this->authentified)
+		if($this->authentified == 'yes')
 		{
 			$this->displayUrl = $this->protocol.'://*******:*******@'.$this->host.'/'.$this->path;
+		} else {
+			$this->displayUrl = $this->protocol.'://'.$this->host.'/'.$this->path;
 		}
         return $this->url;
     }
@@ -190,6 +194,7 @@ class Repository
             return false;
         }
 
+		$this->label = $xml->documentElement->getAttribute('label');
         $this->isValid = true;
         return true;
     }
