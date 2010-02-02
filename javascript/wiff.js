@@ -307,44 +307,43 @@ Ext.onReady(function(){
         });
         win.show();
     }
-	
-	function displayChangelog(record){
-		
-		var changelog = record.get('changelog');
-		
-		var html = '<p>' ;
-		for (var i = 0 ; i < changelog.length ; i++)
-		{
-			html += '<li style="font-size:medium;margin-top:5px;margin-bottom:5px;border-bottom:1px solid #99BBE8;"><img src=images/icons/tick.png style="position:relative;top:3px;" /><b>  version ' + changelog[i]['version'] + ' </b><i>(' + changelog[i]['date'] + ')</i></li>';
-			for (var j = 0 ; j < changelog[i]['action'].length ; j++)
-			{
-				var url = changelog[i]['action'][j]['url'];
-				var urlLabel = '' ;
-				var index = url.indexOf('issues/');
-				if(index != -1){
-					urlLabel = url.substr(index, 6) + ' ' + url.substr(index + 7);
-				} else {
-					urlLabel = 'more';
-				}
-				html += '<li style="padding-left:20px;"><b>' + changelog[i]['action'][j]['title'] + '</b><i>' + ( url ? ' <a href=' + url + ' target="_blank">' + urlLabel + '</a>' : '' ) + '</i><br/><i>' + changelog[i]['action'][j]['description'] + '</i></li>' ;
-			}
-		}
-		html += '</p>';
-		
-		var win = new Ext.Window({
-			title: record.get('name') + ' changelog',
-			modal: true,
-			layout: 'fit',
-			height: 300,
-			width: 600,
-			bodyStyle: 'padding:15px;text-align:justify;overflow:auto;list-style-type:none;',
-			html: html,
-			iconCls: 'x-icon-log'
-		});
-		
-		win.show();
-		
-	}
+    
+    function displayChangelog(record){
+    
+        var changelog = record.get('changelog');
+        
+        var html = '<p>';
+        for (var i = 0; i < changelog.length; i++) {
+            html += '<li style="font-size:medium;margin-top:5px;margin-bottom:5px;border-bottom:1px solid #99BBE8;"><img src=images/icons/tick.png style="position:relative;top:3px;" /><b>  version ' + changelog[i]['version'] + ' </b><i>(' + changelog[i]['date'] + ')</i></li>';
+            for (var j = 0; j < changelog[i]['action'].length; j++) {
+                var url = changelog[i]['action'][j]['url'];
+                var urlLabel = '';
+                var index = url.indexOf('issues/');
+                if (index != -1) {
+                    urlLabel = url.substr(index, 6) + ' ' + url.substr(index + 7);
+                }
+                else {
+                    urlLabel = 'more';
+                }
+                html += '<li style="padding-left:20px;"><b>' + changelog[i]['action'][j]['title'] + '</b><i>' + (url ? ' <a href=' + url + ' target="_blank">' + urlLabel + '</a>' : '') + '</i><br/><i>' + changelog[i]['action'][j]['description'] + '</i></li>';
+            }
+        }
+        html += '</p>';
+        
+        var win = new Ext.Window({
+            title: record.get('name') + ' changelog',
+            modal: true,
+            layout: 'fit',
+            height: 300,
+            width: 600,
+            bodyStyle: 'padding:15px;text-align:justify;overflow:auto;list-style-type:none;',
+            html: html,
+            iconCls: 'x-icon-log'
+        });
+        
+        win.show();
+        
+    }
     
     function displayRepositoryWindow(grid, record){
     
@@ -352,7 +351,8 @@ Ext.onReady(function(){
             var nameField = new Ext.form.TextField({
                 fieldLabel: 'Name',
                 anchor: '-15',
-                allowBlank: false
+                allowBlank: false,
+                vtype: 'alphanum'
             });
         }
         else {
@@ -477,59 +477,63 @@ Ext.onReady(function(){
                         
                         if (newPassword != confirmNewPassword) {
                             Ext.Msg.alert('Freedom Web Installer', 'Provided passwords are not the same.');
-                        }
+                        }                  
                         
-                        mask = new Ext.LoadMask(Ext.getBody(), {
-                            msg: 'Saving...'
-                        });
-                        mask.show();
+                        if (nameField.isValid()) {
                         
-                        Ext.Ajax.request({
-                            url: 'wiff.php',
-                            params: {
-                                createRepo: record ? false : true,
-                                modifyRepo: record ? true : false,
-                                name: newName,
-                                description: newDescription,
-                                protocol: newProtocol,
-                                host: newHost,
-                                path: newPath,
-                                login: newLogin,
-                                password: newPassword,
-                                authentified: newAuthentified
-                            },
-                            success: function(responseObject){
+                            mask = new Ext.LoadMask(Ext.getBody(), {
+                                msg: 'Saving...'
+                            });
+                            mask.show();
                             
-                                mask.hide();
+                            Ext.Ajax.request({
+                                url: 'wiff.php',
+                                params: {
+                                    createRepo: record ? false : true,
+                                    modifyRepo: record ? true : false,
+                                    name: newName,
+                                    description: newDescription,
+                                    protocol: newProtocol,
+                                    host: newHost,
+                                    path: newPath,
+                                    login: newLogin,
+                                    password: newPassword,
+                                    authentified: newAuthentified
+                                },
+                                success: function(responseObject){
                                 
-                                var response = eval('(' + responseObject.responseText + ')');
-                                if (response.error) {
-                                    Ext.Msg.alert('Server Error', response.error);
-                                }
-                                else {
-                                    if (response.data) {
-                                        Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
-                                            win.close();
-                                            grid.getStore().reload();
-                                            Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
-                                        });
+                                    mask.hide();
+                                    
+                                    var response = eval('(' + responseObject.responseText + ')');
+                                    if (response.error) {
+                                        Ext.Msg.alert('Server Error', response.error);
                                     }
                                     else {
-                                        Ext.Msg.alert('Freedom Web Installer', 'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.', function(btn){
-                                            win.close();
-                                            grid.getStore().reload();
-                                            Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
-                                        });
+                                        if (response.data) {
+                                            Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
+                                                win.close();
+                                                grid.getStore().reload();
+                                                Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
+                                            });
+                                        }
+                                        else {
+                                            Ext.Msg.alert('Freedom Web Installer', 'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.', function(btn){
+                                                win.close();
+                                                grid.getStore().reload();
+                                                Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
+                                            });
+                                        }
+                                        
                                     }
                                     
+                                },
+                                failure: function(responseObject){
+                                
                                 }
                                 
-                            },
-                            failure: function(responseObject){
+                            });
                             
-                            }
-                            
-                        });
+                        }
                         
                     }
                 }, {
@@ -1009,7 +1013,7 @@ Ext.onReady(function(){
                                         getRepoList: true
                                     },
                                     root: 'data',
-                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl','label'],
+                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl', 'label'],
                                     autoLoad: true
                                 });
                                 
@@ -1021,7 +1025,7 @@ Ext.onReady(function(){
                                     var first = true;
                                     
                                     repoStore.each(function(record){
-										                                    
+                                    
                                         repoBoxList.push({
                                             boxLabel: '<b>' + record.get('label') + '</b>' + (record.get('description') ? ' <i>(' + record.get('description') + ')</i>' : ''),
                                             name: 'repo-' + record.get('name'),
@@ -1470,11 +1474,12 @@ Ext.onReady(function(){
                         }],
                         refresh: function(){
                             var repositoryHtml = '<ul>';
-														
+                            
                             for (var j = 0; j < this.context.repo.length; j++) {
-                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />'))) + '<b>' + this.context.repo[j].label + '</b>'
-								//this.context.repo[j].displayUrl + ')</i>' + '</li>'
-								+ (this.context.repo[j].description ? ('<i> (' + this.context.repo[j].description + ')</i>') : '') + '</li>'
+                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />'))) + '<b>' + this.context.repo[j].label + '</b>'                                //this.context.repo[j].displayUrl + ')</i>' + '</li>'
+                                +
+                                (this.context.repo[j].description ? ('<i> (' + this.context.repo[j].description + ')</i>') : '') +
+                                '</li>'
                             }
                             repositoryHtml += '</ul>'
                             var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + this.context.root + '</li><li class="x-form-item"><b>Description :</b> ' + this.context.description + '</li><li class="x-form-item"><b>Url :</b>' + (this.context.url ? '<a href=' + this.context.url + ' target="_blank" > ' + this.context.url + '</a>' : '<i> no url</i>') + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
@@ -1551,11 +1556,11 @@ Ext.onReady(function(){
                                         iconCls: 'x-icon-param',
                                         tooltip: 'Parameters',
                                         hideIndex: '!hasParameter'
-                                    },{
+                                    }, {
                                         iconCls: 'x-icon-log',
                                         tooltip: 'Changelog',
                                         hideIndex: '!changelog.length'
-                                    },{
+                                    }, {
                                         iconCls: 'x-icon-help',
                                         tooltip: 'Help',
                                         hideIndex: '!infopath'
@@ -1586,9 +1591,9 @@ Ext.onReady(function(){
                                             //                                            case 'x-icon-remove':
                                             //                                                var operation = 'uninstall';
                                             //                                                break;
-                                        	case 'x-icon-log':
-												displayChangelog(record);
-												break;
+                                            case 'x-icon-log':
+                                                displayChangelog(record);
+                                                break;
                                         }
                                         
                                         if (operation == 'parameter') {
@@ -1623,7 +1628,7 @@ Ext.onReady(function(){
                                     }, {
                                         name: 'hasParameter',
                                         type: 'boolean'
-                                    },'changelog'],
+                                    }, 'changelog'],
                                     //autoLoad: true,
                                     sortInfo: {
                                         field: 'name',
@@ -1808,9 +1813,9 @@ Ext.onReady(function(){
                                             case 'x-icon-help':
                                                 var operation = 'help';
                                                 break;
-											case 'x-icon-log':
-												displayChangelog(record);
-												break;
+                                            case 'x-icon-log':
+                                                displayChangelog(record);
+                                                break;
                                         }
                                         
                                         //                                        if (operation == 'install') {
