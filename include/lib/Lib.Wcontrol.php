@@ -511,4 +511,32 @@ function wcontrol_msg_ncurses($process)
 	return "";
 }
 
+/**
+ * PHP bug #45996
+ */
+function wcontrol_check_phpbug45996(&$process) {
+  $expected = "a'b";
+  $vals = array();
+  $index = array();
+
+  $xmldata = <<<EOXML
+<?xml version="1.0"?>
+<p>a&apos;b</p>
+EOXML;
+
+  $xml_parser = xml_parser_create();
+  xml_parser_set_option($xml_parser, XML_OPTION_CASE_FOLDING, true);
+  xml_parser_set_option($xml_parser, XML_OPTION_SKIP_WHITE, 0);
+  xml_parse_into_struct($xml_parser, $xmldata, $vals, $index);
+
+  if( $vals[0]['value'] != $expected ) {
+    return false;
+  }
+  return true;
+}
+
+function wcontrol_msg_phpbug45996(&$process) {
+    return sprintf("Checking for PHP bug #45996");
+}
+
 ?>
