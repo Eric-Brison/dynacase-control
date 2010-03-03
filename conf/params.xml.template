@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
-<wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="GPL2" lang="fr|en">
+<wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="AGPL3" lang="fr|en">
 
   <repositories>
-	<access name="freedom" description="freedom 2.14" protocol="http" host="ftp.freedom-ecm.org" path="2.14/webinst/" authentified="no" login="" password=""/>
+	<access name="freedom" description="freedom 3.0" protocol="http" host="ftp.freedom-ecm.org" path="3.0/webinst/" authentified="no" login="" password=""/>
   </repositories>
 
   <parameters>
 	<param name="wiff-update-host" value="ftp://ftp.freedom-ecm.org/" /> 
-	<param name="wiff-update-path" value="2.14/tarball/" />
+	<param name="wiff-update-path" value="3.0/tarball/" />
 	<param name="wiff-update-file" value="freedom-wiff-current.tar.gz" />
     <param name="use-proxy" value="no" />
     <param name="proxy-host" value="" />
