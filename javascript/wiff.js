@@ -1,6 +1,8 @@
 /**
- * @author Clément Laballe
+ * @author Anakeen
+ * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  */
+
 Ext.override(Ext.layout.FormLayout, {
     renderItem: function(c, position, target){
         if (c && !c.rendered && (c.isFormField || c.fieldLabel) && c.inputType != 'hidden') {

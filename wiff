@@ -1,6 +1,13 @@
 #!/usr/bin/env php
 <?php
 
+/**
+ * Web Installer for Freedom
+ * Command Line Interface
+ * @author Anakeen
+ * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
+ */
+
 $mypath = array_shift($argv);
 $wiff_root = getenv('WIFF_ROOT');
 if( $wiff_root === false ) {

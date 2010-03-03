@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * CLI Library
+ * @author Anakeen
+ * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
+ */
+
 require_once('class/Class.WIFF.php');
 
 global $wiff_lock;
