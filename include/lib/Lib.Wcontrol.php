@@ -36,6 +36,9 @@ function wcontrol_eval_process($process)
     } else if ($process->getName() == "process")
     {
         return wcontrol_process($process);
+    } else if ($process->getName() == "download")
+    {
+        return wcontrol_download($process);
     }
 
     return array (
@@ -133,6 +136,44 @@ function wcontrol_process($process)
     'ret'=>($ret === 0)?true:false,
     'output'=>$output
     );
+}
+
+function wcontrol_download(&$process) {
+  require_once ('class/Class.WIFF.php');
+  require_once ('class/Class.Process.php');
+
+  $wiff = WIFF::getInstance();
+
+  $href = $process->getAttribute('href');
+  $href = $wiff->expandParamValue($href);
+  $action = $process->getAttribute('action');
+  
+  $localFile = $wiff->downloadUrl($href);
+  if( $localFile === false ) {
+    return array(
+		 'ret' => false,
+		 'output' => sprintf("Error downloading '%s'", $href)
+		 );
+  }
+
+  $actionProcess = new Process(sprintf("<process command=\"%s\" />", $action), $process->phase);
+  $actionProcess->attributes['command'] = sprintf("%s %s", $action, escapeshellarg($localFile));
+  $status = wcontrol_process($actionProcess);
+  unlink($localFile);
+  $status_ret = $ret['ret'];
+  $statust_output = $ret['output'];
+  
+  if( $ret_ret === false ) {
+    return array(
+		 'ret' => false,
+		 'output' => sprintf("Error executing action for href '%s': %s", $href, $ret_output)
+		 );
+  }
+
+  return array(
+	       'ret' => true,
+	       'output' => "Ok"
+	       );
 }
 
 /**

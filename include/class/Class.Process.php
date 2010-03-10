@@ -16,9 +16,9 @@ class Process
     public $attributes;
     public $label;
     public $help;
-    private $type;
+    public $type;
 
-    private $phase;
+    public $phase;
 
     public $errorMessage;
 
@@ -77,6 +77,8 @@ class Process
 	}
       } elseif( $this->name == 'process' ) {
 	$label = sprintf('Process %s', $this->attributes['command']);
+      } elseif( $this->name == 'download' ) {
+	$label = sprintf('Download %s', $this->attributes['href']);
       } else {
 	$label = sprintf("<unknwon>");
       }
