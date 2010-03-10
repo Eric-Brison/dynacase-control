@@ -160,13 +160,13 @@ function wcontrol_download(&$process) {
   $actionProcess->attributes['command'] = sprintf("%s %s", $action, escapeshellarg($localFile));
   $status = wcontrol_process($actionProcess);
   unlink($localFile);
-  $status_ret = $ret['ret'];
-  $statust_output = $ret['output'];
+  $status_ret = $status['ret'];
+  $status_output = $status['output'];
   
-  if( $ret_ret === false ) {
+  if( $status_ret === false ) {
     return array(
 		 'ret' => false,
-		 'output' => sprintf("Error executing action for href '%s': %s", $href, $ret_output)
+		 'output' => sprintf("Error executing action for href '%s': %s", $href, $status_output)
 		 );
   }
 
