@@ -410,6 +410,10 @@ Ext.onReady(function(){
             }
         });
         
+	var defaultBox = new Ext.form.Checkbox({
+	    fieldLabel: 'Default'
+	});
+
         var loginField = new Ext.form.TextField({
             fieldLabel: 'Login',
             anchor: '-15',
@@ -442,6 +446,11 @@ Ext.onReady(function(){
             else {
                 authentifiedBox.setValue(false);
             }
+	    if( record.get('default') == 'yes' ) {
+		defaultBox.setValue(true);
+	    } else {
+		defaultBox.setValue(false);
+	    }
             loginField.setValue(record.get('login'));
             passwordField.setValue(record.get('password'));
             confirmPasswordField.setValue(record.get('password'));
@@ -458,7 +467,7 @@ Ext.onReady(function(){
                 labelWidth: 120,
                 border: false,
                 bodyStyle: 'padding:5px;',
-                items: [nameField, descriptionField, protocolField, hostField, pathField, authentifiedBox, loginField, passwordField, confirmPasswordField],
+                items: [nameField, descriptionField, protocolField, hostField, pathField, defaultBox, authentifiedBox, loginField, passwordField, confirmPasswordField],
                 bbar: [{
                     text: 'Save',
                     iconCls: 'x-icon-ok',
@@ -472,6 +481,7 @@ Ext.onReady(function(){
                         var newPassword = passwordField.getValue();
                         var confirmNewPassword = confirmPasswordField.getValue();
                         var newAuthentified = authentifiedBox.getValue() == true ? 'yes' : 'no';
+			var newDefault = defaultBox.getValue() == true ? 'yes' : 'no';
                         
                         if (newName == '') {
                             Ext.Msg.alert('Freedom Web Installer', 'A repository name must be provided.');
@@ -498,6 +508,7 @@ Ext.onReady(function(){
                                     protocol: newProtocol,
                                     host: newHost,
                                     path: newPath,
+				    default: newDefault,
                                     login: newLogin,
                                     password: newPassword,
                                     authentified: newAuthentified
@@ -791,7 +802,7 @@ Ext.onReady(function(){
                                             getRepoList: true
                                         },
                                         root: 'data',
-                                        fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl', 'label'],
+                                        fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'default', 'url', 'authentified', 'login', 'password', 'displayUrl', 'label'],
                                         autoLoad: true
                                     });
                                     
@@ -1015,7 +1026,7 @@ Ext.onReady(function(){
                                         getRepoList: true
                                     },
                                     root: 'data',
-                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl', 'label'],
+                                    fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl', 'label', 'default'],
                                     autoLoad: true
                                 });
                                 
@@ -1023,20 +1034,13 @@ Ext.onReady(function(){
                                 
                                 repoStore.on('load', function(){
                                 
-                                    // First repository is selected by default.
-                                    var first = true;
-                                    
                                     repoStore.each(function(record){
                                     
                                         repoBoxList.push({
                                             boxLabel: '<b>' + record.get('label') + '</b>' + (record.get('description') ? ' <i>(' + record.get('description') + ')</i>' : ''),
                                             name: 'repo-' + record.get('name'),
-                                            checked: first
+                                            checked: (record.get('default')=='yes')?true:false
                                         });
-                                        
-                                        if (first) {
-                                            first = false;
-                                        }
                                         
                                     });
                                     

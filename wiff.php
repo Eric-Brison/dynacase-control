@@ -314,7 +314,7 @@ if (get_magic_quotes_gpc())
     // Request to add a repo
     if ( isset ($_REQUEST['createRepo']) && $_REQUEST['createRepo'] == true)
     {
-        $return = $wiff->createRepo($_REQUEST['name'], $_REQUEST['description'], $_REQUEST['protocol'], $_REQUEST['host'], $_REQUEST['path'], $_REQUEST['authentified'], $_REQUEST['login'], $_REQUEST['password']);
+      $return = $wiff->createRepo($_REQUEST['name'], $_REQUEST['description'], $_REQUEST['protocol'], $_REQUEST['host'], $_REQUEST['path'], $_REQUEST['default'], $_REQUEST['authentified'], $_REQUEST['login'], $_REQUEST['password']);
         if (!$wiff->errorMessage)
         {
             answer($return);
@@ -327,7 +327,7 @@ if (get_magic_quotes_gpc())
 	// request to modify a repo
 	if (isset ($_REQUEST['modifyRepo']) && $_REQUEST['modifyRepo'] == true)
 	{
-		$return = $wiff->modifyRepo($_REQUEST['name'], $_REQUEST['description'], $_REQUEST['protocol'], $_REQUEST['host'], $_REQUEST['path'], $_REQUEST['authentified'], $_REQUEST['login'], $_REQUEST['password']);
+	  $return = $wiff->modifyRepo($_REQUEST['name'], $_REQUEST['description'], $_REQUEST['protocol'], $_REQUEST['host'], $_REQUEST['path'], $_REQUEST['default'], $_REQUEST['authentified'], $_REQUEST['login'], $_REQUEST['password']);
         if (!$wiff->errorMessage)
         {
             answer($return);

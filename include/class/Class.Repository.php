@@ -23,6 +23,7 @@ class Repository
     public $authentified;
     public $login;
     public $password;
+    public $default;
 
     private $context;
 
@@ -36,7 +37,7 @@ class Repository
     public $isValid;
     public $needAuth;
 
-    public function __construct($xml, $context = null)
+    public function __construct($xml, $context = null, $opts = array())
     {
         $this->use = $xml->getAttribute('use');
 
@@ -83,6 +84,7 @@ class Repository
                 $this->authentified = $repository->getAttribute('authentified');
                 $this->login = $repository->getAttribute('login');
                 $this->password = $repository->getAttribute('password');
+		$this->default = $repository->getAttribute('default');
             }
 
             if ($this->authentified)
@@ -116,6 +118,7 @@ class Repository
                 $this->authentified = $xml->getAttribute('authentified');
                 $this->login = $xml->getAttribute('login');
                 $this->password = $xml->getAttribute('password');
+		$this->default = $xml->getAttribute('default');
             }
 
         }
@@ -124,7 +127,9 @@ class Repository
         $this->context = $context;
 
         // Evaluate if repo is valid and need authentification
-        $this->isValid();
+	if( array_key_exists('checkValidity', $opts) && $opts['checkValidity'] === true ) {
+	  $this->isValid();
+	}
 //        $this->needAuth();
 
     }

@@ -2,7 +2,8 @@
 <wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="AGPL3" lang="fr|en">
 
   <repositories>
-	<access name="freedom" description="freedom 3.0" protocol="http" host="ftp.freedom-ecm.org" path="3.0/webinst/" authentified="no" login="" password=""/>
+	<access name="freedom" description="freedom 3.0" protocol="http" host="ftp.freedom-ecm.org" path="3.0/webinst/" authentified="no" login="" password="" default="yes" />
+	<access name="third-party" description="freedom 3.0 third-party modules" protocol="http" host="ftp.freedom-ecm.org" path="3.0/third-party/webinst/" authenticated="no" login="" password="" default="yes" />
   </repositories>
 
   <parameters>

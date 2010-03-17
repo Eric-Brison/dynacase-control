@@ -331,7 +331,7 @@ require valid-user
 
             foreach ($repositories as $repository)
             {
-                $repoList[] = new Repository($repository);
+	      $repoList[] = new Repository($repository, null, array('checkValidity' => true));
             }
 
         }
@@ -384,7 +384,7 @@ require valid-user
      * Add repository to global repo list
      * @return boolean
      */
-    public function createRepo($name, $description, $protocol, $host, $path, $authentified, $login, $password)
+    public function createRepo($name, $description, $protocol, $host, $path, $default, $authentified, $login, $password)
     {
         require_once ('class/Class.Repository.php');
 
@@ -422,6 +422,7 @@ require valid-user
         $repository->setAttribute('protocol', $protocol);
         $repository->setAttribute('host', $host);
         $repository->setAttribute('path', $path);
+	$repository->setAttribute('default', $default);
         $repository->setAttribute('authentified', $authentified);
         $repository->setAttribute('login', $login);
         $repository->setAttribute('password', $password);
@@ -446,7 +447,7 @@ require valid-user
      * Add repository to global repo list
      * @return boolean
      */
-    public function modifyRepo($name, $description, $protocol, $host, $path, $authentified, $login, $password)
+    public function modifyRepo($name, $description, $protocol, $host, $path, $default, $authentified, $login, $password)
     {
         require_once ('class/Class.Repository.php');
 
@@ -486,6 +487,7 @@ require valid-user
         $repository->setAttribute('protocol', $protocol);
         $repository->setAttribute('host', $host);
         $repository->setAttribute('path', $path);
+	$repository->setAttribute('default', $default);
         $repository->setAttribute('authentified', $authentified);
         $repository->setAttribute('login', $login);
         $repository->setAttribute('password', $password);
@@ -651,7 +653,7 @@ require valid-user
 
             foreach ($repositories as $repository)
             {
-                $repoList[] = new Repository($repository);
+	      $repoList[] = new Repository($repository);
             }
 
             $this->errorMessage = null;
