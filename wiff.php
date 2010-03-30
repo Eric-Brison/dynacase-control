@@ -350,6 +350,16 @@ if (get_magic_quotes_gpc())
         }
     }
 	
+// Check repo validity
+if( isset($_REQUEST['checkRepoValidity']) ) {
+  $ret = $wiff->checkRepoValidity($_REQUEST['name']);
+  if( $ret === false ) {
+    answer($ret, $wiff->errorMessage);
+  } else {
+    answer(true, $wiff->errorMessage);
+  }
+}
+
 	// Request to authentify a repo
 	if (isset ($_REQUEST['authRepo']))
 	{

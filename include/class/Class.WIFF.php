@@ -283,8 +283,26 @@ require valid-user
      */
     public function update()
     {
-        $this->download();
-        $this->unpack();
+      $v1 = $this->getVersion();
+
+      $ret = $this->download();
+      if( $ret === false ) {
+	return $ret;
+      }
+
+      $ret = $this->unpack();
+      if( $ret === false ) {
+	return $ret;
+      }
+
+      $v2 = $this->getVersion();
+
+      $ret = $this->postUpgrade($v1, $v2);
+      if( $ret === false ) {
+	return $ret;
+      }
+
+      return true;
     }
 
     public function updateParam()
@@ -429,8 +447,6 @@ require valid-user
 
         $repositoryObject = new Repository($repository);
 		
-		$isValid = $repositoryObject->isValid();
-		
 		$repository->setAttribute('label', $repositoryObject->label);
 		
         $ret = $xml->save($this->params_filepath);
@@ -439,7 +455,7 @@ require valid-user
             $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
             return false;
         }
-        return $isValid;
+        return true;
 
     }
 
@@ -499,7 +515,7 @@ require valid-user
             $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
             return false;
         }
-        return $repositoryObject->isValid();
+        return true;
 
     }
 
@@ -543,7 +559,16 @@ require valid-user
         return true;
 
     }
-	
+
+    public function checkRepoValidity($name) {
+      $repo = $this->getRepo($name);
+      if( $repo === false ) {
+	return false;
+      }
+
+      return $repo->isValid();
+    }
+
 	public function setAuthInfo($request)
 	{
 		//echo 'REQUEST'.print_r($request[0]->name,true);
@@ -603,7 +628,6 @@ require valid-user
                 }
 
                 $context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'));
-				$context->isValid();
 
                 if (!$context->isWritable())
                 {
@@ -1194,6 +1218,79 @@ require valid-user
       return true;
     }
 
+    public function postUpgrade($fromVersion, $toVersion) {
+      include_once('lib/Lib.System.php');
+
+      $v = preg_split('/-/', $fromVersion, 2);
+      $fromVer = $v[0];
+      $fromRel = $v[1];
+
+      $v = preg_split('/-/', $toVersion, 2);
+      $toVer = $v[0];
+      $toRel = $v[1];
+
+      $wiff_root = getenv('WIFF_ROOT');
+      if( $wiff_root !== false ) {
+	$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+      }
+
+      $dir = @opendir(sprintf('%s/%s', $wiff_root, 'migr'));
+      if( $dir === false ) {
+	$this->errorMessage = sprintf("Failed to open 'migr' directory.");
+	return false;
+      }
+
+      $migrList = array();
+      while( $migr = readdir($dir) ) {
+	if( ! preg_match('/^\d+\.\d+\.\d+-\d+$/', $migr) ) {
+	  continue;
+	}
+	$v = preg_split('/-/', $migr, 2);
+	$migrVer = $v[0];
+	$migrRel = $v[1];
+	array_push($migrList,
+		   array(
+			 'migr' => $migr,
+			 'ver' => $migrVer,
+			 'rel' => $migrRel
+			 )
+		   );
+      }
+
+      usort($migrList, array($this, 'postUpgradeCompareVersion'));
+
+      foreach( $migrList as $migr ) {
+	if( $this->compareVersion($migr['ver'], $migr['rel'], $fromVer, $fromRel) <= 0 ) {
+	  continue;
+	}
+
+	error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Executing migr script '%s'.", $migr['migr']));
+	$temp = tempnam(null, sprintf("wiff_migr_%s", $migr['migr']));
+	if( $temp === false ) {
+	  $this->errorMessage = "Could not create temp file.";
+	  return false;
+	}
+
+	$cmd = sprintf("%s/%s/%s > %s 2>&1", $wiff_root, 'migr', $migr['migr'], $temp);
+	system($cmd, $ret);
+	$output = file_get_contents($temp);
+	if( $ret !== 0 ) {
+	  $err = sprintf("Migr script '%s' returned with error status %s (output=[[[%s]]])", $migr['migr'], $ret, $output);
+	  error_log(__CLASS__."::".__FUNCTION__." ".sprintf("%s", $err));
+	  $this->errorMessage = $err;
+	  return false;
+	}
+	error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Migr script '%s': Ok.", $migr['migr']));
+	@unlink($temp);
+      }
+
+      $this->errorMessage = '';
+      return true;
+    }
+
+    function postUpgradeCompareVersion($a, $b) {
+      return $this->compareVersion($a["ver"], $a["rel"], $b["ver"], $b["rel"]);
+    }
 }
 
 ?>

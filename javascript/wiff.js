@@ -458,6 +458,7 @@ Ext.onReady(function(){
         
         var win = new Ext.Window({
             title: 'Freedom Web Installer - Add Repository',
+	    id: 'win-param-repo',
             layout: 'fit',
             modal: true,
             items: [{
@@ -498,53 +499,53 @@ Ext.onReady(function(){
                             });
                             mask.show();
                             
-                            Ext.Ajax.request({
-                                url: 'wiff.php',
-                                params: {
-                                    createRepo: record ? false : true,
-                                    modifyRepo: record ? true : false,
-                                    name: newName,
-                                    description: newDescription,
-                                    protocol: newProtocol,
-                                    host: newHost,
-                                    path: newPath,
-				    default: newDefault,
-                                    login: newLogin,
-                                    password: newPassword,
-                                    authentified: newAuthentified
-                                },
-                                success: function(responseObject){
-                                
-                                    mask.hide();
-                                    
-                                    var response = eval('(' + responseObject.responseText + ')');
-                                    if (response.error) {
-                                        Ext.Msg.alert('Server Error', response.error);
-                                    }
-                                    else {
-                                        if (response.data) {
-                                            Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
-                                                win.close();
-                                                grid.getStore().reload();
-                                                Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
-                                            });
-                                        }
-                                        else {
-                                            Ext.Msg.alert('Freedom Web Installer', 'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.', function(btn){
-                                                win.close();
-                                                grid.getStore().reload();
-                                                Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
-                                            });
-                                        }
-                                        
-                                    }
-                                    
-                                },
-                                failure: function(responseObject){
-                                
-                                }
-                                
-                            });
+			    if( record ) {
+				// Modify repo
+				Ext.Ajax.request({
+                                    url: 'wiff.php',
+                                    params: {
+					modifyRepo: true,
+					name: newName,
+					description: newDescription,
+					protocol: newProtocol,
+					host: newHost,
+					path: newPath,
+				        default: newDefault,
+					login: newLogin,
+					password: newPassword,
+					authentified: newAuthentified
+                                    },
+                                    success: function(responseObject){
+					modifyRepo_success(responseObject, newName, win);
+				    },
+				    failure: function(responseObject){
+					modifyRepo_failure(responseObject, newName, win);
+				    }
+				});				
+			    } else {
+				// Create repo
+				Ext.Ajax.request({
+                                    url: 'wiff.php',
+                                    params: {
+					createRepo: true,
+					name: newName,
+					description: newDescription,
+					protocol: newProtocol,
+					host: newHost,
+					path: newPath,
+				        default: newDefault,
+					login: newLogin,
+					password: newPassword,
+					authentified: newAuthentified
+                                    },
+                                    success: function(responseObject){
+					createRepo_success(responseObject, newName, win);
+				    },
+				    failure: function(responseObject){
+					createRepo_failure(responseObject, newName, win);
+				    }
+				});
+			    }
                             
                         }
                         
@@ -883,6 +884,7 @@ Ext.onReady(function(){
                                     });
                                     
                                     var grid = new Ext.grid.GridPanel({
+					id: 'grid-repo',
                                         border: false,
                                         store: repoStore,
                                         stripeRows: true,
@@ -1078,6 +1080,7 @@ Ext.onReady(function(){
     });
     
     updateContextList();
+
     
     /**
      * Update context list
@@ -3041,5 +3044,93 @@ Ext.onReady(function(){
             }
         });
     }
-    
+
+    function createRepo_success(responseObject, name, win) {
+	// Check repo validity
+
+
+	Ext.Ajax.request({
+            url: 'wiff.php',
+            params: {
+		checkRepoValidity: true,
+		name: name
+            },
+            success: function(responseObject){
+		checkRepoValidity_success(responseObject, name, win);
+	    },
+	    failure: function(responseObject){
+		checkRepoValidity_failure(responseObject, name, win);
+	    }
+	});
+    }
+
+    function checkRepoValidity_success(responseObject, name) {
+        mask.hide();
+        
+	win = Ext.getCmp('win-param-repo');
+	grid = Ext.getCmp('grid-repo');
+
+        var response = eval('(' + responseObject.responseText + ')');
+        if (response.error) {
+            Ext.Msg.alert('Server Error', response.error);
+        } else {
+            if (response.data) {
+                Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn) {
+		    if( win ) {
+			win.close();
+		    }
+		    if( grid ) {
+			grid.getStore().reload();
+		    }
+		    Ext.getCmp('create-context-form').fireEvent('render'
+								, Ext.getCmp('create-context-form'));
+		});
+            } else {
+                Ext.Msg.alert('Freedom Web Installer', 'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.', function(btn){
+			/*
+		    if( win ) {
+			win.close();
+		    }
+		    if( grid ) {
+			grid.getStore().reload();
+		    }
+			*/
+		    Ext.getCmp('create-context-form').fireEvent('render'
+								, Ext.getCmp('create-context-form'));
+		});
+            }
+        }                                
+    }
+
+    function checkRepoValidity_failure(responseObject, name) {
+        mask.hide();
+
+	win = Ext.getCmp('win-param-repo');
+	if( win ) {
+	    win.close();
+	}
+
+	grid = Ext.getCmp('grid-repo');
+	if( grid ) {
+	    grid.getStore().reload();
+	}
+
+	Ext.getCmp('create-context-form').fireEvent('render'
+						    , Ext.getCmp('create-context-form'));
+
+	Ext.Msg.alert('Server Error', 'Could not check validity of repository '+name);
+    }
+
+    function createRepo_failure(responseObject, name) {
+	Ext.Msg.alert('Server Error', 'Could not create repository '+name);
+    }
+
+    function modifyRepo_success(responseObject, name) {
+	createRepo_success(responseObject, name);
+    }
+
+    function modifyRepo_failure(responseObject, name) {
+	Ext.Msg.alert('Server Error', 'Could not modify repository '+name);
+    }
+
 });
