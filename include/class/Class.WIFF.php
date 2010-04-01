@@ -287,19 +287,19 @@ require valid-user
 
       $ret = $this->download();
       if( $ret === false ) {
-	return $ret;
+       return $ret;
       }
 
       $ret = $this->unpack();
       if( $ret === false ) {
-	return $ret;
+       return $ret;
       }
 
       $v2 = $this->getVersion();
 
       $ret = $this->postUpgrade($v1, $v2);
       if( $ret === false ) {
-	return $ret;
+       return $ret;
       }
 
       return true;
@@ -447,6 +447,8 @@ require valid-user
 
         $repositoryObject = new Repository($repository);
 		
+		$isValid = $repositoryObject->isValid();
+		
 		$repository->setAttribute('label', $repositoryObject->label);
 		
         $ret = $xml->save($this->params_filepath);
@@ -455,7 +457,7 @@ require valid-user
             $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
             return false;
         }
-        return true;
+        return $isValid;
 
     }
 
@@ -515,7 +517,7 @@ require valid-user
             $this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
             return false;
         }
-        return true;
+        return $repositoryObject->isValid();
 
     }
 
@@ -559,16 +561,7 @@ require valid-user
         return true;
 
     }
-
-    public function checkRepoValidity($name) {
-      $repo = $this->getRepo($name);
-      if( $repo === false ) {
-	return false;
-      }
-
-      return $repo->isValid();
-    }
-
+	
 	public function setAuthInfo($request)
 	{
 		//echo 'REQUEST'.print_r($request[0]->name,true);
@@ -628,6 +621,7 @@ require valid-user
                 }
 
                 $context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'));
+				$context->isValid();
 
                 if (!$context->isWritable())
                 {

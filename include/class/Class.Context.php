@@ -39,7 +39,7 @@ class Context
 	{
 		foreach ($this->repo as $repository)
 		{
-			$repository->isValid();
+		        // $repository->isValid();
 			$repository->needAuth();
 		}
 	}
@@ -68,7 +68,7 @@ class Context
      * @return
      * @param object $name
      */
-    public function importArchive($archive, $status = '')
+    public function importArchive($archive, $status = 'downloaded')
     {
         require_once ('class/Class.WIFF.php');
         require_once ('class/Class.Module.php');
@@ -689,46 +689,45 @@ public function getModuleDependencies($namelist, $local = false)
             $reqModVersion = $req['version'];
             $reqModComp = $req['comp'];
 
-            $reqMod = $this->getModuleAvail($reqModName);
-            if ($reqMod === false)
-            {
-                $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
-                return false;
-            }
-
-            switch($reqModComp)
-            {
-                case '':
-                    break;
-                case 'ge':
-                    if ($this->cmpVersionReleaseAsc($reqMod->version, 0, $reqModVersion, 0) < 0)
-                    {
-                        $this->errorMessage = sprintf("Module '%s-%s' requires '%s' >= %s, but only '%s-%s' was found on repository.", $mod->name, $mod->version, $reqModName, $reqModVersion, $reqMod->name, $reqMod->version);
-                        return false;
-                    }
-                break;
-                default:
-                    $this->errorMessage = sprintf("Operator of module comparison '%s' is not yet implemented.", $reqModComp);
-                    return false;
-            }
-
-
-            // Check if a version of this module is already installed
-	    if( $this->moduleIsInstalled($reqMod) ) {
-	      if ($this->moduleIsInstalledAndUpToDateWith($reqMod, $reqModComp, $reqModVersion)) {
-                continue ;
+	    $reqMod = $this->getModuleInstalled($reqModName);
+	    if( $reqMod !== false ) {
+	      // Found an installed module
+	      if( $this->moduleMeetsRequiredVersion($reqMod, $reqModComp, $reqModVersion) ) {
+		// The installed module satify the required version
+		// Keep it
+		continue;
+	      } else {
+		// Installed module does not satify required version
+		// so try looking for a matching module in repositories
+		$reqMod = $this->getModuleAvail($reqModName);
+		if( $reqMod !== false ) {
+		  if( $this->moduleMeetsRequiredVersion($reqMod, $reqModComp, $reqModVersion) ) {
+		    $reqMod->needphase = 'upgrade';
+		  }
+		}
 	      }
-	      $reqMod->needphase = 'upgrade';
 	    } else {
-	      $reqMod->needphase = 'install';
+	      // Module is not already installed
+	      // so lookup in repositories for a matching module
+	      $reqMod = $this->getModuleAvail($reqModName);
+	      if( $reqMod !== false ) {
+		if( $this->moduleMeetsRequiredVersion($reqMod, $reqModComp, $reqModVersion) ) {
+		  $reqMod->needphase = 'install';
+		}
+	      }
+	    }
+
+	    if( $reqMod === false ) {
+	      $this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+	      return false;
 	    }
 
             $pos = $this->depsListContains($depsList, $reqMod->name);
-            if ($pos < 0)
-            {
-                // Add the module to the dependencies list
-                array_push($depsList, $reqMod);
+            if( $pos < 0 ) {
+	      // Add the module to the dependencies list
+	      array_push($depsList, $reqMod);
             }
+
         }
         $i++;
     }
@@ -876,6 +875,24 @@ private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = 
         return false;
     }
     return true;
+}
+
+public function moduleMeetsRequiredVersion(&$module, $operator = '', $version = '') {
+  $v = $module->version;
+  $r = $module->release;
+
+  switch( $operator ) {
+  case 'ge':
+    $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+    if( $cmp >= 0 ) {
+      return true;
+    } else {
+      return false;
+    }
+    break;
+  }
+
+  return true;
 }
 
 public function getParamByName($paramName)

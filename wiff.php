@@ -350,16 +350,6 @@ if (get_magic_quotes_gpc())
         }
     }
 	
-// Check repo validity
-if( isset($_REQUEST['checkRepoValidity']) ) {
-  $ret = $wiff->checkRepoValidity($_REQUEST['name']);
-  if( $ret === false ) {
-    answer($ret, $wiff->errorMessage);
-  } else {
-    answer(true, $wiff->errorMessage);
-  }
-}
-
 	// Request to authentify a repo
 	if (isset ($_REQUEST['authRepo']))
 	{
@@ -501,7 +491,7 @@ if( isset($_REQUEST['checkRepoValidity']) ) {
     // Request to unpack module in context
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['unpack']))
     {
-        $module = $context->getModule($_REQUEST['module']);
+        $module = $context->getModuleDownloaded($_REQUEST['module']);
 
         if ($module->unpack($context->root))
         {
@@ -755,12 +745,13 @@ if( isset($_REQUEST['checkRepoValidity']) ) {
     }
 
     // Set module status
-    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['setStatus']) && isset ($_REQUEST['status']))
+if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['setStatus']) && isset ($_REQUEST['status']) && isset($_REQUEST['operation']) )
     {
         $contextName = $_REQUEST['context'];
         $moduleName = $_REQUEST['module'];
         $status = $_REQUEST['status'];
         $errorstatus = $_REQUEST['errorstatus'];
+	$operation = $_REQUEST['operation'];
 
         $context = $wiff->getContext($contextName);
         if ($context === false)
@@ -778,6 +769,7 @@ if( isset($_REQUEST['checkRepoValidity']) ) {
             exit (1);
         }
 
+	/*
         $ret = $module->setStatus($status, $errorstatus);
         if ($ret === false)
         {
@@ -785,6 +777,23 @@ if( isset($_REQUEST['checkRepoValidity']) ) {
             echo $answer->encode();
             exit (1);
         }
+	*/
+
+	if( $operation == 'upgrade' ) {
+	  $ret = $context->removeModuleInstalled($module->name);
+	  if( $ret === false ) {
+	    $answer = new JSONAnswer(null, sprintf("Error removing old installed module '%s': %s", $module->name, $context->errorMessage));
+	    echo $answer->encode();
+	    exit( 1 );
+	  }
+	}
+	$ret = $module->setStatus('installed');
+	if( $ret === false ) {
+	  $answer =  new JSONAnswer(null, sprintf("Error setting installed status on module '%s': %s", $module->name, $module->errorMessage));
+	  echo $answer->encode();
+	  exit( 1 );
+	}
+	$module->cleanupDownload();
 
         answer(true);
     }

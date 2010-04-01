@@ -1,0 +1,39 @@
+#!/usr/bin/env php
+<?php
+
+set_include_path(get_include_path().PATH_SEPARATOR.getcwd().DIRECTORY_SEPARATOR.'include');
+
+putenv('WIFF_ROOT='.getcwd());
+
+require_once ('class/Class.WIFF.php');
+
+function __autoload($class_name) {
+  require_once 'class/Class.'.$class_name.'.php';
+}
+
+$wiff = WIFF::getInstance();
+if( $wiff === false ) {
+  error_log(sprintf("%s", $wiff->errorMessage));
+  exit(1);
+}
+
+$repo = $wiff->getRepo('third-party');
+if( $repo === false ) {
+  // Add the third-party repo
+  $ret = $wiff->createRepo("third-party", "third-party modules", "http", "ftp.freedom-ecm.org", "third-party/webinst/", "yes", "no", "", "");
+  if( $ret === false ) {
+    error_log(sprintf("%s", $wiff->errorMessage));
+    exit(2);
+  }
+} else {
+  // Change the third-party repo
+  $ret = $wiff->modifyRepo("third-party", "third-party modules", "http", "ftp.freedom-ecm.org", "third-party/webinst/", "yes", "no", "", "");
+  if( $ret === false ) {
+    error_log(sprintf("%s", $wiff->errorMessage));
+    exit(3);
+  }
+}
+
+exit(0);
+
+?>

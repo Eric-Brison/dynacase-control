@@ -181,8 +181,6 @@ class Repository
         require_once ('class/Class.WIFF.php');
         require_once ('class/Class.Module.php');
 
-        $this->contenturl = $this->getUrl().'/content.xml';
-
         $wiff = WIFF::getInstance();
         $tmpfile = $wiff->downloadUrl($this->contenturl);
         if ($tmpfile === false)
@@ -232,8 +230,6 @@ class Repository
     {
         require_once ('class/Class.WIFF.php');
         require_once ('class/Class.Module.php');
-
-        $this->contenturl = $this->getUrl().'/content.xml';
 
         $wiff = WIFF::getInstance();
         $tmpfile = $wiff->downloadUrl($this->contenturl);

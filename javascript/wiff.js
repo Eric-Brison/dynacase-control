@@ -458,7 +458,6 @@ Ext.onReady(function(){
         
         var win = new Ext.Window({
             title: 'Freedom Web Installer - Add Repository',
-	    id: 'win-param-repo',
             layout: 'fit',
             modal: true,
             items: [{
@@ -499,53 +498,53 @@ Ext.onReady(function(){
                             });
                             mask.show();
                             
-			    if( record ) {
-				// Modify repo
-				Ext.Ajax.request({
-                                    url: 'wiff.php',
-                                    params: {
-					modifyRepo: true,
-					name: newName,
-					description: newDescription,
-					protocol: newProtocol,
-					host: newHost,
-					path: newPath,
-				        default: newDefault,
-					login: newLogin,
-					password: newPassword,
-					authentified: newAuthentified
-                                    },
-                                    success: function(responseObject){
-					modifyRepo_success(responseObject, newName, win);
-				    },
-				    failure: function(responseObject){
-					modifyRepo_failure(responseObject, newName, win);
-				    }
-				});				
-			    } else {
-				// Create repo
-				Ext.Ajax.request({
-                                    url: 'wiff.php',
-                                    params: {
-					createRepo: true,
-					name: newName,
-					description: newDescription,
-					protocol: newProtocol,
-					host: newHost,
-					path: newPath,
-				        default: newDefault,
-					login: newLogin,
-					password: newPassword,
-					authentified: newAuthentified
-                                    },
-                                    success: function(responseObject){
-					createRepo_success(responseObject, newName, win);
-				    },
-				    failure: function(responseObject){
-					createRepo_failure(responseObject, newName, win);
-				    }
-				});
-			    }
+                            Ext.Ajax.request({
+                                url: 'wiff.php',
+                                params: {
+                                    createRepo: record ? false : true,
+                                    modifyRepo: record ? true : false,
+                                    name: newName,
+                                    description: newDescription,
+                                    protocol: newProtocol,
+                                    host: newHost,
+                                    path: newPath,
+				    default: newDefault,
+                                    login: newLogin,
+                                    password: newPassword,
+                                    authentified: newAuthentified
+                                },
+                                success: function(responseObject){
+                                
+                                    mask.hide();
+                                    
+                                    var response = eval('(' + responseObject.responseText + ')');
+                                    if (response.error) {
+                                        Ext.Msg.alert('Server Error', response.error);
+                                    }
+                                    else {
+                                        if (response.data) {
+                                            Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn){
+                                                win.close();
+                                                grid.getStore().reload();
+                                                Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
+                                            });
+                                        }
+                                        else {
+                                            Ext.Msg.alert('Freedom Web Installer', 'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.', function(btn){
+                                                win.close();
+                                                grid.getStore().reload();
+                                                Ext.getCmp('create-context-form').fireEvent('render', Ext.getCmp('create-context-form'));
+                                            });
+                                        }
+                                        
+                                    }
+                                    
+                                },
+                                failure: function(responseObject){
+                                
+                                }
+                                
+                            });
                             
                         }
                         
@@ -884,7 +883,6 @@ Ext.onReady(function(){
                                     });
                                     
                                     var grid = new Ext.grid.GridPanel({
-					id: 'grid-repo',
                                         border: false,
                                         store: repoStore,
                                         stripeRows: true,
@@ -1080,7 +1078,6 @@ Ext.onReady(function(){
     });
     
     updateContextList();
-
     
     /**
      * Update context list
@@ -1315,7 +1312,58 @@ Ext.onReady(function(){
                 this.remove(item, true);
             }
         }, panel);
-        
+
+	var importButton = new Ext.ux.form.FileUploadField({
+		name: 'module',
+		buttonOnly: true,
+		buttonCfg: {
+		    text: 'Import Module',
+		    iconCls: 'x-icon-import',
+		    tooltip: 'Open a local file browser'
+		},
+		listeners: {
+		    fileselected: function(button, file){
+			
+			if (!button.importForm) {
+			    var importFormEl = button.container.createChild({
+				    tag: 'form',
+				    style: 'display:none;'
+				});
+			    button.container.importForm = new Ext.form.BasicForm(importFormEl, {
+				    url: 'wiff.php',
+				    fileUpload: true
+				});
+			}
+                        
+			var inputFileEl = button.detachFileInput();
+			inputFileEl.appendTo(button.container.importForm.getEl());
+                        
+			button.container.importForm.submit({
+				waitTitle: 'Module Import',
+				    waitMsg: 'Importing...',
+				    params: {
+				    importArchive: true,
+					context: currentContext
+					},
+				    success: button.onImportSuccess,
+				    failure: button.onImportFailure
+				    });
+			
+		    }
+		},
+		onImportSuccess: function(form, action){
+		    var inputFileEl = form.getEl().child('input');
+		    inputFileEl.remove();
+		    installLocal(action.result.data);
+		},
+		onImportFailure: function(form, action){
+		    var response = eval('(' + action.response.responseText + ')');
+		    var inputFileEl = form.getEl().child('input');
+		    inputFileEl.remove();
+		    Ext.Msg.alert('Import Failed', response.error);
+		}
+	    });
+
         for (var i = 0; i < data.length; i++) {
         
             panel.add({
@@ -1480,12 +1528,13 @@ Ext.onReady(function(){
                                 
                                 
                             }
-                        }],
+			},
+                        importButton],
                         refresh: function(){
                             var repositoryHtml = '<ul>';
                             
                             for (var j = 0; j < this.context.repo.length; j++) {
-                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;" />'))) + '<b>' + this.context.repo[j].label + '</b>'                                //this.context.repo[j].displayUrl + ')</i>' + '</li>'
+                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;visibility:hidden" />'))) + '<!-- <b>' + this.context.repo[j].label + ' --></b>'                                //this.context.repo[j].displayUrl + ')</i>' + '</li>'
                                 +
                                 (this.context.repo[j].description ? ('<i> (' + this.context.repo[j].description + ')</i>') : '') +
                                 '</li>'
@@ -1670,57 +1719,6 @@ Ext.onReady(function(){
                                     }
                                 });
                                 
-                                var importButton = new Ext.ux.form.FileUploadField({
-                                    name: 'module',
-                                    buttonOnly: true,
-                                    buttonCfg: {
-                                        text: 'Import Module',
-                                        iconCls: 'x-icon-import',
-                                        tooltip: 'Open a local file browser'
-                                    },
-                                    listeners: {
-                                        fileselected: function(button, file){
-                                        
-                                            if (!button.importForm) {
-                                                var importFormEl = button.container.createChild({
-                                                    tag: 'form',
-                                                    style: 'display:none;'
-                                                });
-                                                button.container.importForm = new Ext.form.BasicForm(importFormEl, {
-                                                    url: 'wiff.php',
-                                                    fileUpload: true
-                                                });
-                                            }
-                                            
-                                            var inputFileEl = button.detachFileInput();
-                                            inputFileEl.appendTo(button.container.importForm.getEl());
-                                            
-                                            button.container.importForm.submit({
-                                                waitTitle: 'Module Import',
-                                                waitMsg: 'Importing...',
-                                                params: {
-                                                    importArchive: true,
-                                                    context: currentContext
-                                                },
-                                                success: button.onImportSuccess,
-                                                failure: button.onImportFailure
-                                            });
-                                            
-                                        }
-                                    },
-                                    onImportSuccess: function(form, action){
-                                        var inputFileEl = form.getEl().child('input');
-                                        inputFileEl.remove();
-                                        installLocal(action.result.data);
-                                    },
-                                    onImportFailure: function(form, action){
-                                        var response = eval('(' + action.response.responseText + ')');
-                                        var inputFileEl = form.getEl().child('input');
-                                        inputFileEl.remove();
-                                        Ext.Msg.alert('Import Failed', response.error);
-                                    }
-                                });
-                                
                                 var grid = new Ext.grid.GridPanel({
                                     selModel: selModel,
                                     loadMask: true,
@@ -1749,7 +1747,7 @@ Ext.onReady(function(){
                                                 installedStore[currentContext].load();
                                             }
                                         }
-                                    }, importButton],
+				    }],
                                     border: false,
                                     store: installedStore[currentContext],
                                     stripeRows: true,
@@ -3023,6 +3021,7 @@ Ext.onReady(function(){
                 module: module.name,
                 status: 'installed',
                 errorstatus: '',
+		operation: operation,
                 authInfo: Ext.encode(authInfo)
             },
             callback: function(option, success, responseObject){
@@ -3044,93 +3043,5 @@ Ext.onReady(function(){
             }
         });
     }
-
-    function createRepo_success(responseObject, name, win) {
-	// Check repo validity
-
-
-	Ext.Ajax.request({
-            url: 'wiff.php',
-            params: {
-		checkRepoValidity: true,
-		name: name
-            },
-            success: function(responseObject){
-		checkRepoValidity_success(responseObject, name, win);
-	    },
-	    failure: function(responseObject){
-		checkRepoValidity_failure(responseObject, name, win);
-	    }
-	});
-    }
-
-    function checkRepoValidity_success(responseObject, name) {
-        mask.hide();
-        
-	win = Ext.getCmp('win-param-repo');
-	grid = Ext.getCmp('grid-repo');
-
-        var response = eval('(' + responseObject.responseText + ')');
-        if (response.error) {
-            Ext.Msg.alert('Server Error', response.error);
-        } else {
-            if (response.data) {
-                Ext.Msg.alert('Freedom Web Installer', 'Save successful.', function(btn) {
-		    if( win ) {
-			win.close();
-		    }
-		    if( grid ) {
-			grid.getStore().reload();
-		    }
-		    Ext.getCmp('create-context-form').fireEvent('render'
-								, Ext.getCmp('create-context-form'));
-		});
-            } else {
-                Ext.Msg.alert('Freedom Web Installer', 'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.', function(btn){
-			/*
-		    if( win ) {
-			win.close();
-		    }
-		    if( grid ) {
-			grid.getStore().reload();
-		    }
-			*/
-		    Ext.getCmp('create-context-form').fireEvent('render'
-								, Ext.getCmp('create-context-form'));
-		});
-            }
-        }                                
-    }
-
-    function checkRepoValidity_failure(responseObject, name) {
-        mask.hide();
-
-	win = Ext.getCmp('win-param-repo');
-	if( win ) {
-	    win.close();
-	}
-
-	grid = Ext.getCmp('grid-repo');
-	if( grid ) {
-	    grid.getStore().reload();
-	}
-
-	Ext.getCmp('create-context-form').fireEvent('render'
-						    , Ext.getCmp('create-context-form'));
-
-	Ext.Msg.alert('Server Error', 'Could not check validity of repository '+name);
-    }
-
-    function createRepo_failure(responseObject, name) {
-	Ext.Msg.alert('Server Error', 'Could not create repository '+name);
-    }
-
-    function modifyRepo_success(responseObject, name) {
-	createRepo_success(responseObject, name);
-    }
-
-    function modifyRepo_failure(responseObject, name) {
-	Ext.Msg.alert('Server Error', 'Could not modify repository '+name);
-    }
-
+    
 });
