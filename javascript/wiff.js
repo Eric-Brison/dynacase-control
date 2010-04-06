@@ -203,10 +203,10 @@ Ext.onReady(function(){
             title: 'Freedom Web Installer - Define Password',
             layout: 'fit',
             modal: true,
+	    height: 200,
+	    width: 300,
             items: [{
                 xtype: 'form',
-                height: 200,
-                width: 300,
                 labelWidth: 120,
                 bodyStyle: 'padding:10px',
                 border: false,
@@ -460,10 +460,10 @@ Ext.onReady(function(){
             title: 'Freedom Web Installer - Add Repository',
             layout: 'fit',
             modal: true,
+            height: 300,
+            width: 300,
             items: [{
                 xtype: 'form',
-                height: 300,
-                width: 300,
                 labelWidth: 120,
                 border: false,
                 bodyStyle: 'padding:5px;',
@@ -508,7 +508,7 @@ Ext.onReady(function(){
                                     protocol: newProtocol,
                                     host: newHost,
                                     path: newPath,
-				    default: newDefault,
+				    'default': newDefault,
                                     login: newLogin,
                                     password: newPassword,
                                     authentified: newAuthentified
@@ -1204,10 +1204,10 @@ Ext.onReady(function(){
             title: 'Freedom Web Installer - Authentify Repository',
             layout: 'fit',
             modal: true,
+            height: 300,
+            width: 300,
             items: [{
                 xtype: 'form',
-                height: 300,
-                width: 300,
                 labelWidth: 120,
                 border: false,
                 bodyStyle: 'padding:5px;',
@@ -1404,6 +1404,7 @@ Ext.onReady(function(){
                                     layout: 'fit',
                                     border: false,
                                     modal: true,
+                                    width: 600,
                                     items: [{
                                         xtype: 'form',
                                         id: 'save-context-form',
@@ -1411,7 +1412,6 @@ Ext.onReady(function(){
                                         bodyStyle: 'padding:10px',
                                         frame: true,
                                         autoHeight: true,
-                                        width: 600,
                                         items: [{
                                             xtype: 'textfield',
                                             fieldLabel: 'Name',
@@ -2430,6 +2430,7 @@ Ext.onReady(function(){
                 frame: true,
                 bodyStyle: 'padding:15px;',
                 monitorValid: true,
+		autoHeight: true,
                 buttons: [{
                     text: 'Save Parameters',
                     formBind: true,
@@ -2522,7 +2523,10 @@ Ext.onReady(function(){
             var parameterWindow = new Ext.Window({
                 title: 'Parameters for ' + module.name,
                 id: 'parameter-window',
-                modal: true
+                modal: true,
+		layout: 'fit',
+		width: 400,
+		autoHeight: true
             });
             
             parameterWindow.add(form);
