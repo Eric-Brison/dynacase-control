@@ -460,8 +460,8 @@ Ext.onReady(function(){
             title: 'Freedom Web Installer - Add Repository',
             layout: 'fit',
             modal: true,
-            height: 300,
             width: 300,
+	    height: 350,
             items: [{
                 xtype: 'form',
                 labelWidth: 120,
@@ -2249,11 +2249,11 @@ Ext.onReady(function(){
                 authInfo: Ext.encode(authInfo)
             },
             callback: function(option, success, responseObject){
-            
+
                 getGlobalwin();
-                
-                askParameter(toInstall[0], operation);
-                
+
+		getLicenseAgreement(toInstall[0], operation);
+
             }
         });
     }
@@ -2340,7 +2340,7 @@ Ext.onReady(function(){
     
         if (module.status != 'downloaded') {
             mask = new Ext.LoadMask(Ext.getBody(), {
-                msg: 'Downloading...'
+                msg: 'Downloading "'+module.name+'"...'
             });
             
             mask.show();
@@ -2543,6 +2543,144 @@ Ext.onReady(function(){
     }
     
     function askParameter_failure(module, operation, responseObject){
+    }
+
+    /**
+     * License agreement
+     */
+    function getLicenseAgreement(module, operation) {
+	license = module.license;
+	if( license != '' ) {
+	    Ext.Ajax.request({
+		    'url': 'wiff.php',
+		    'params': {
+			'getLicenseAgreement': true,
+			'context': currentContext,
+			'module': module.name,
+			'license': module.license
+		    },
+		    'success': function(responseObject) {
+			getLicenseAgreement_success(module, operation, responseObject);
+		    },
+		    'failure': function(responseObject) {
+			getLicenseAgreement_failure(module, operation, responseObject);
+                    }
+		});
+	} else {
+	    askParameter(module, operation);
+	}
+    }
+
+    function getLicenseAgreement_success(module, operation, responseObject) {
+        var response = eval('(' + responseObject.responseText + ')');
+        if (response.error) {
+            Ext.Msg.alert('Server Error', response.error);
+        }
+
+        var data = response.data;
+
+	if( data.agree == 'yes' || data.license == '' ) {
+	    askParameter(module, operation);
+	} else {
+	    var licenseText = Ext.util.Format.htmlEncode(data.license);
+
+	    var headerPanel = new Ext.Panel({
+		    bodyStyle: 'padding-bottom:10px;text-align:center',
+		    html: '<p>License agreement for "'+Ext.util.Format.htmlEncode(module.name)+'"</p><p>License: "'+Ext.util.Format.htmlEncode(module.license)+'"'
+		});
+
+	    var licensePanel = new Ext.Panel({
+		    border: false,
+		    bodyStyle: 'padding-bottom:10px;',
+		    autoScroll: true,
+		    flex: 1,
+		    items: [
+			    new Ext.Panel({
+				    html: '<pre style="color: black; background-color: white;">'+licenseText+'</pre>'
+				})
+			    ]
+	    });
+
+	    var licenseAsk = new Ext.form.FormPanel({
+		    id: 'license-formpanel',
+		    border: false,
+		    frame: true,
+		    bodyStyle: 'padding:15px;',
+		    monitorValid: true,
+		    layout: 'vbox',
+		    items: [headerPanel, licensePanel],
+		    buttons: [{
+			    text: 'Yes',
+			    handler: function() {
+				storeLicenseAgreement(module, operation, 'yes');
+				// askParameter(module, operation);
+			    }
+			}, {
+			    text: 'No',
+			    handler: function() {
+				licenseWin.close();
+				if( Ext.getCmp('module-window') ) {
+				    Ext.getCmp('module-window').close();
+				}
+			    }
+			}]
+		});
+
+	    var licenseWin = new Ext.Window({
+		    id: 'license-window',
+		    items: [licenseAsk],
+		    height: 400,
+		    width: 600,
+		    modal: true,
+		    closable: false,
+		    layout: 'fit'
+		});
+
+	    licenseWin.show();
+	}
+    }
+
+    function getLicenseAgreement_failure(module, operation, responseObject) {
+	alert('KABOOM');
+    }
+
+    function storeLicenseAgreement(module, operation, agree) {
+	Ext.Ajax.request({
+		'url': 'wiff.php',
+		'params': {
+		    'storeLicenseAgreement': true,
+		    'context': currentContext,
+		    'module': module.name,
+		    'license': module.license,
+		    'agree': agree
+		 },
+		 'success': function(responseObject) {
+		     storeLicenseAgreement_success(module, operation, responseObject);
+		 },
+		 'failure': function(responseObject) {
+		     storeLicenseAgreement_failure(module, operation, responseObject);
+                 }
+	});
+    }
+
+    function storeLicenseAgreement_success(module, operation, responseObject) {
+        var response = eval('(' + responseObject.responseText + ')');
+        if (response.error) {
+            Ext.Msg.alert('Server Error', response.error);
+        }
+
+	if( Ext.getCmp('license-window') ) {
+	    Ext.getCmp('license-window').close();
+	}
+
+	askParameter(module, operation);
+    }
+
+    function storeLicenseAgreement_failure(module, operation, responseObject) {
+        var response = eval('(' + responseObject.responseText + ')');
+        if (response.error) {
+            Ext.Msg.alert('Server Error', response.error);
+        }
     }
     
     /**

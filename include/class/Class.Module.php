@@ -347,6 +347,24 @@ class Module
         return $infoxml;
     }
 
+    /**
+     * Get the content of the `LICENSE' file from temporary downloaded
+     * module archive.
+     * @return string of the content of `LICENSE'
+     */
+    public function getLicenseText() {
+      if( ! is_file($this->tmpfile) ) {
+	$this->errorMessage = sprintf("Temporary file of downloaded module does not exists.");
+	return false;
+      }
+
+      $cmd = sprintf('tar zxOf %s LICENSE', escapeshellarg($this->tmpfile));
+
+      $license = shell_exec($cmd);
+
+      return $license;
+    }
+
     public function loadInfoXml()
     {
         $infoxml = $this->getInfoXml();
@@ -765,6 +783,22 @@ class Module
 
             return $tmpfile;
         }
+
+	public function getLicenseAgreement() {
+	  require_once('class/Class.WIFF.php');
+
+	  $wiff = WIFF::getInstance();
+
+	  return $wiff->getLicenseAgreement($this->context->name, $this->name, $this->license);
+	}
+
+	public function storeLicenseAgreement($agree) {
+	  require_once('class/Class.WIFF.php');
+
+	  $wiff = WIFF::getInstance();
+
+	  return $wiff->storeLicenseAgreement($this->context->name, $this->name, $this->license, $agree);
+	}
 
     }
 

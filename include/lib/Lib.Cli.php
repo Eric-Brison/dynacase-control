@@ -83,6 +83,10 @@ function wiff_list_context(&$argv) {
   $wiff = WIFF::getInstance();
 
   $ctxList = $wiff->getContextList();
+  if( $ctxList === false ) {
+    error_log(sprintf("Error: cound not get contexts list: %s\n", $wiff->errorMessage));
+    return 1;
+  }
 
   if( boolopt('pretty', $options) ) {
     echo sprintf("%-16s   %-64s\n", "Name", "Description");
@@ -492,10 +496,32 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
     }
     
     /**
+     * ask license
+     */
+    if( $module->license != '' ) {
+      $license = $module->getLicenseText();
+      if( $license === false ) {
+	error_log(sprintf("Error: could not get license '%s' for module '%s': %s\n", $module->license, $module->name, $module->errorMessage));
+	return 1;
+      }
+
+      $licenseAgreement = $module->getLicenseAgreement();
+      if( $license != '' && $licenseAgreement != 'yes' ) {
+	$agree = license_ask($module->name, $module->license, $license);
+	if( $agree == 'yes' ) {
+	  $ret = $module->storeLicenseAgreement($agree);
+	} else {
+	  error_log(sprintf("Notice: you did not agreed to '%s' for module '%s'.", $module->license, $module->name));
+	  exit( 1 );
+	}
+      }
+    }
+
+    /**
      * wstop
      */
     $ret = $context->wstop();
-    
+
     /**
      * ask module parameters
      */
@@ -1310,6 +1336,51 @@ function param_ask($prompt, $choice, $default) {
     return $default;
   }
   return $ans;
+}
+
+function license_ask($moduleName, $licenseName, $license) {
+  $licStart = sprintf("=== License agreement for module '%s' ===\n", $moduleName);
+  $licSub   = sprintf("License: %s\n", $licenseName);
+  $licSep   = sprintf("%s", str_repeat("-", 72));
+
+  $licenseLines = preg_split("/\r?\n/", $license);
+
+  echo $licStart;
+  echo $licSub;
+  echo $licSep."\n";
+
+  $max_lines = getenv('LINES');
+  if( ! is_numeric($max_lines) || $max_lines <= 6 ) {
+    $max_lines = 20;
+  }
+  $max_lines -= 5;
+
+  $ans = "";
+  while( true ) {
+    $lines = array_splice($licenseLines, 0, $max_lines);
+    echo join("\n", $lines);
+    if( count($lines) < $max_lines ) {
+      break;
+    }
+    echo "\n";
+    $ans = param_ask("--- View next page ---", "press enter to view next page", "");
+    if( preg_match("/^(q|quit|end)$/i", $ans) ) {
+      break;
+    }
+  }
+  echo "\n".$licSep."\n";
+
+  while( true ) {
+    $ans = param_ask("Do you agree", "y/n", "");
+    if( preg_match("/^(y|yes|oui)/i", $ans) ) {
+      return 'yes';
+    }
+    if( preg_match("/^(n|no|non)/i", $ans) ) {
+      return 'no';
+    }
+  }
+
+  return 'no';
 }
 
 /**

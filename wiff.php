@@ -744,6 +744,63 @@ if (get_magic_quotes_gpc())
         answer(true);
     }
 
+// Get license agreement
+if( isset($_REQUEST['getLicenseAgreement']) && isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['license']) ) {
+  $context = $wiff->getContext($_REQUEST['context']);
+  if( $context === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $agree = $wiff->getLicenseAgreement($_REQUEST['context'], $_REQUEST['module'], $_REQUEST['license']);
+  if( $agree === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getLicenseAgreement(%s, %s, %s): %s", $_REQUEST['context'], $_REQUEST['module'], $_REQUEST['license'], $wiff->errorMessage));
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  if( $agree == 'yes' ) {
+    $answer = new JSONAnswer(array('agree' => 'yes', 'license' => ''));
+    echo $answer->encode();
+    exit( 0 );
+  }
+
+  $module = $context->getModuleDownloaded($_REQUEST['module']);
+  if( $module === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getting downloaded module '%s': %s", $_REQUEST['module'], $context->errorMessage));
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $license = $module->getLicenseText();
+
+  $answer = new JSONAnswer(array('agree' => 'no', 'license' => $license));
+  echo $answer->encode();
+  exit( 0 );
+}
+
+// Store license agreement
+if( isset($_REQUEST['storeLicenseAgreement']) && isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['license']) && isset($_REQUEST['agree']) ) {
+  $context = $wiff->getContext($_REQUEST['context']);
+  if( $context === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $agree = $wiff->storeLicenseAgreement($_REQUEST['context'], $_REQUEST['module'], $_REQUEST['license'], $_REQUEST['agree']);
+  if( $agree === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error storeLicenseAgreement(%s, %s, %s, %s): %s", $_REQUEST['context'], $_REQUEST['module'], $_REQUEST['license'], $_REQUEST['agree'], $wiff->errorMessage));
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $answer = new JSONAnswer(null);
+  echo $answer->encode();
+  exit(0);
+}
+
     // Set module status
 if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['setStatus']) && isset ($_REQUEST['status']) && isset($_REQUEST['operation']) )
     {

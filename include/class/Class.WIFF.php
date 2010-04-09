@@ -23,9 +23,12 @@ class WIFF
 
     public $archiveFile;
 	
-	public $authInfo = array();
+    public $authInfo = array();
 
     private static $instance;
+
+    public $lock = null;
+    public $lock_level = 0;
 
     private function __construct()
     {
@@ -1185,6 +1188,11 @@ require valid-user
     }
 
     public function lock() {
+      if( $this->lock != null ) {
+	$this->lock_level++;
+	return $this->lock;
+      }
+
       $fh = fopen(sprintf("%s.lock", $this->contexts_filepath), "a");
       if( $fh === false ) {
 	$this->errorMessage = sprintf("Could not open '%s' for lock.", sprintf("%s.lock", $this->contexts_filepath));
@@ -1197,16 +1205,28 @@ require valid-user
 	return false;
       }
 
+      $this->lock = $fh;
+      $this->lock_level++;
+
       return $fh;
     }
 
     public function unlock($fh) {
+      if( $this->lock != null ) {
+	$this->lock_level--;
+	if( $this->lock_level > 0 ) {
+	  return $this->lock;
+	}
+      }
+
       $ret = flock($fh, LOCK_UN);
       if( $ret == false ) {
 	$this->errorMessage = sprintf("Could not release lock on '%s'.", sprintf("%s.lock", $this->contexts_filepath));
 	return false;
       }
 
+      $this->lock = null;
+      $this->lock_level = 0;
       fclose($fh);
 
       return true;
@@ -1285,6 +1305,142 @@ require valid-user
     function postUpgradeCompareVersion($a, $b) {
       return $this->compareVersion($a["ver"], $a["rel"], $b["ver"], $b["rel"]);
     }
+
+    function getLicenseAgreement($ctxName, $moduleName, $licenseName) {
+      $lock = $this->lock();
+      if( $lock === false ) {
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on context XML file.");
+	error_log($err);
+	$this->errorMessage($err);
+	return false;
+      }
+
+      $xml = new DOMDocument();
+      $xml->preserveWhiteSpace = false;
+      $xml->formatOutput = true;
+      $ret = $xml->load($this->contexts_filepath);
+      if( $ret === false ) {
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not load XML file '%s'.", $this->contexts_filepath);
+	error_log($err);
+	$this->errorMessage = $err;
+	$this->unlock($lock);
+	return false;
+      }
+
+      $xpath = new DOMXpath($xml);
+      $query = sprintf("/contexts/context[@name='%s']/licenses/license[@module='%s' and @license='%s']", $ctxName, $moduleName, $licenseName);
+      $licensesList = $xpath->query($query);
+
+      if( $licensesList->length <= 0 ) {
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not find a license for module '%s' in context '%s'.", $moduleName, $ctxName);
+	$this->errorMessage = $err;
+	$this->unlock($lock);
+	return 'no';
+      }
+
+      if( $licensesList->length > 1 ) {
+	$warn = sprintf(__CLASS__."::".__FUNCTION__." "."Warning: found more than one license for module '%s' in context '%s'", $moduleName, $ctxName);
+	error_log($warn);
+      }
+
+      $licenseNode = $licensesList->item(0);
+
+      $agree = ($licenseNode->getAttribute('agree') != 'yes')?'no':'yes';
+
+      $this->unlock($lock);
+      return $agree;
+    }
+
+    function storeLicenseAgreement($ctxName, $moduleName, $licenseName, $agree) {
+      $lock = $this->lock();
+      if( $lock === false ) {
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on context XML file.");
+	error_log($err);
+	$this->errorMessage($err);
+	return false;
+      }
+
+      $xml = new DOMDocument();
+      $xml->preserveWhiteSpace = false;
+      $xml->formatOutput = true;
+      $ret = $xml->load($this->contexts_filepath);
+      if( $ret === false ) {
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not load XML file '%s'.", $this->contexts_filepath);
+	error_log($err);
+	$this->errorMessage = $err;
+	$this->unlock($lock);
+	return false;
+      }
+
+      $xpath = new DOMXpath($xml);
+
+      $query = sprintf("/contexts/context[@name='%s']", $ctxName);
+      $contextNodeList = $xpath->query($query);
+      if( $contextNodeList->length <= 0 ) {
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not find context '%s' in '%s'.", $ctxName, $this->xcontexts_filepath);
+	$this->errorMessage = $err;
+	$this->unlock($lock);
+	return false;
+      }
+      $contextNode = $contextNodeList->item(0);
+
+      $licensesNode = null;
+      $query = sprintf("/contexts/context[@name='%s']/licenses", $ctxName);
+      $licensesNodeList = $xpath->query($query);
+      if( $licensesNodeList->length <= 0 ) {
+	// Create licenses node
+	$licensesNode = $xml->createElement('licenses');
+	$contextNodeList->item(0)->appendChild($licensesNode);
+      } else {
+	$licensesNode = $licensesNodeList->item(0);
+      }
+
+      $query = sprintf("/contexts/context[@name='%s']/licenses/license[@module='%s' and @license='%s']", $ctxName, $moduleName, $licenseName);
+      $licenseNodeList = $xpath->query($query);
+
+      if( $licenseNodeList->length > 1 ) {
+	// That should not happen...
+	// Cannot store/update license if multiple licenses exists.
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Warning: found more than one license for module '%s' in context '%s'", $moduleName, $ctxName);
+	error_log($err);
+	$this->errorMessage = $err;
+	$this->unlock($lock);
+	return false;
+      }
+
+      if( $licenseNodeList->length <= 0 ) {
+	// Add a new license node.
+	$licenseNode = $xml->createElement('license');
+	$licenseNode->setAttribute('module', $moduleName);
+	$licenseNode->setAttribute('license', $licenseName);
+	$licenseNode->setAttribute('agree', $agree);
+
+	$ret = $licensesNode->appendChild($licenseNode);
+	if( ! is_object($ret) ) {
+	  $err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not append license '%s' for module '%s' in context '%s'.", $moduleName, $licenseName, $ctxName);
+	  error_log($err);
+	  $this->errorMessage = $err;
+	  $this->unlock($lock);
+	  return false;
+	}
+      } else {
+	// Update the existing license.
+	$licenseNode = $licenseNodeList->item(0);
+	$licenseNode->setAttribute('agree', $agree);
+      }
+
+      $ret = $xml->save($this->contexts_filepath);
+      if( $ret === false ) {
+	$err = sprintf(__CLASS__."::".__FUNCTION__." "."Error writing file '%s'.", $this->contexts_filepath);
+	error_log($err);
+	$this->errorMessage = $err;
+	$this->unlock($lock);
+	return false;
+      }
+
+      return $agree;
+    }
+
 }
 
 ?>
