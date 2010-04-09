@@ -1441,6 +1441,22 @@ require valid-user
       return $agree;
     }
 
+    /**
+     * Check repo validity
+     */
+    public function checkRepoValidity($name) {
+      $repo = $this->getRepo($name);
+      if( $repo === false ) {
+	return false;
+      }
+
+      if( $repo->isValid() === false ) {
+	return false;
+      }
+
+      return array('valid' => true, 'label' => $repo->label);
+    }
+
 }
 
 ?>

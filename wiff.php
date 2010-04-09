@@ -879,6 +879,12 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 
     }
 
+// Check repo validity
+if( isset($_REQUEST['checkRepoValidity']) && isset($_REQUEST['name']) ) {
+  $ret = $wiff->checkRepoValidity($_REQUEST['name']);
+  answer($ret, $wiff->errorMessage);
+}
+
     // Call to get a param value
     if ( isset ($argv))
     {

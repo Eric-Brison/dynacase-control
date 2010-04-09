@@ -1533,16 +1533,41 @@ Ext.onReady(function(){
                         refresh: function(){
                             var repositoryHtml = '<ul>';
                             
+			    var needRepoValidationList = new Array();
                             for (var j = 0; j < this.context.repo.length; j++) {
-                                repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">' + (getRepoAuth(this.context.repo[j].name) ? '<img src=images/icons/lock_open.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].isValid ? '<img src=images/icons/accept.png style="position:relative;top:3px;margin-right:3px;" />' : (this.context.repo[j].needAuth ? '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>' : '<img src=images/icons/error.png style="position:relative;top:3px;margin-right:3px;visibility:hidden" />'))) + '<!-- <b>' + this.context.repo[j].label + ' --></b>'                                //this.context.repo[j].displayUrl + ')</i>' + '</li>'
-                                +
-                                (this.context.repo[j].description ? ('<i> (' + this.context.repo[j].description + ')</i>') : '') +
-                                '</li>'
+				var repoName = this.context.repo[j].name;
+				var repoIconId = 'repo-icon-' + repoName;
+				var repoLabelId = 'repo-label-' + repoName;
+
+				repositoryHtml += '<li class="x-form-item" style="margin-left:30px;">';
+				if( getRepoAuth(this.context.repo[j].name) ) {
+				    repositoryHtml += '<img id="' + repoIconId + '" src="images/icons/lock_open.png" style="position:relative;top:3px;margin-right:3px;" />';
+				} else if( this.context.repo[j].needAuth ) {
+				    repositoryHtml += '<a href=javascript:askRepoAuth("' + this.context.repo[j].name + '")><img id="' + repoIconId + '" src=images/icons/lock.png style="position:relative;top:3px;margin-right:3px;" /></a>';
+				} else {
+				    repositoryHtml += '<img id="' + repoIconId + '" src="images/icons/loading.gif" style="position:relative;top:3px;margin-right:3px;" />';
+				    needRepoValidationList.push({'name': repoName, 'icon': repoIconId, 'label' : repoLabelId});
+				}
+				repositoryHtml += '<!-- <b>' + this.context.repo[j].label + ' --></b>';
+				if( this.context.repo[j].description ) {
+				    repositoryHtml += '<i> (' + this.context.repo[j].description + ')</i>';
+				}
+				repositoryHtml += '&nbsp;<span id="' + repoLabelId + '"i style="font-weight: bold;"></span>';
+				repositoryHtml += '</li>';
                             }
                             repositoryHtml += '</ul>'
                             var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> ' + this.context.root + '</li><li class="x-form-item"><b>Description :</b> ' + this.context.description + '</li><li class="x-form-item"><b>Url :</b>' + (this.context.url ? '<a href=' + this.context.url + ' target="_blank" > ' + this.context.url + '</a>' : '<i> no url</i>') + '</li><li class="x-form-item"><b>Repositories :</b> ' + repositoryHtml + '</li></ul><p>';
                             
                             this.body.update(contextInfoHtml);
+
+			    for( var j = 0; j < needRepoValidationList.length; j++ ) {
+
+				var repoName = needRepoValidationList[j]['name'];
+				var repoIconId = needRepoValidationList[j]['icon'];
+				var repoLabelId = needRepoValidationList[j]['label'];
+
+				setRepoValidityIconLabel(repoName, repoIconId, repoLabelId);
+			    }
                             
                         },
                         listeners: {
@@ -3185,5 +3210,54 @@ Ext.onReady(function(){
             }
         });
     }
-    
+
+    function setRepoValidityIconLabel(repoName, repoIconId, repoLabelId) {
+	Ext.Ajax.request({
+		'url': 'wiff.php',
+		'params': {
+		    'checkRepoValidity': true,
+		    'name': repoName
+		},
+		'cb_data': {
+		    'name': repoName,
+		    'icon': repoIconId,
+		    'label': repoLabelId
+		},
+		'success': function(responseObject, requestObject){
+		    var response = eval('(' + responseObject.responseText + ')');
+
+		    var repoName = requestObject.cb_data['name'];
+		    var repoIconId = requestObject.cb_data['icon'];
+		    var repoLabelId = requestObject.cb_data['label'];
+
+		    var icon = Ext.get(repoIconId);
+		    var label = Ext.get(repoLabelId);
+
+		    if( icon ) {
+			if( response.success ) {
+			    if( response.data['valid'] ) {
+				icon.dom.setAttribute('src', 'images/icons/accept.png');
+				if( label ) {
+				    label.dom.innerHTML = Ext.util.Format.htmlEncode(response.data['label']);
+				}
+			    } else {
+				icon.dom.setAttribute('src', 'images/icons/error.png');
+				icon.dom.setAttribute('title', 'Repository '+repoName+' is not accessible or invalid.');
+			    }
+			} else {
+			    icon.dom.setAttribute('src', 'images/icons/exclamation.png');
+			    icon.dom.setAttribute('title', 'Server could not check validity of repository '+repoName);
+			}
+		    }
+		},
+		'failure': function(responseObject){
+		    var icon = Ext.get(repoIconId);
+		    if( icon ) {
+			icon.setAttribute('src', 'images/icons/exclamation.png');
+			icon.setAttribute('title', 'Request failed!');
+		    }
+		}
+	});
+    }
+
 });
