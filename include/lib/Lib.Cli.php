@@ -1456,12 +1456,12 @@ function setuid_wiff($path) {
   if( $uid != $wiff_uid ) {
     $ret = posix_setgid($wiff_gid);
     if( $ret === false ) {
-      error_log(sprintf("Error: could not setgid to gid '%s'.\n", $http_gid));
+      error_log(sprintf("Error: could not setgid to gid '%s'.\n", $wiff_gid));
       return false;
     }
     $ret = posix_setuid($wiff_uid);
     if( $ret === false ) {
-      error_log(sprintf("Error: could not setuid to uid '%s'.\n", $http_uid));
+      error_log(sprintf("Error: could not setuid to uid '%s'.\n", $wiff_uid));
       return false;
     }
   }
