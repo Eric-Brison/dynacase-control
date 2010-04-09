@@ -172,6 +172,8 @@ class Module
         $changelogNodeList = $xmlNode->getElementsByTagName('version');
         if ($changelogNodeList->length > 0)
         {
+	    $this->changelog = array();
+
             foreach ($changelogNodeList as $changelogNode)
             {
 
