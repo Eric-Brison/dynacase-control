@@ -648,6 +648,7 @@ if (get_magic_quotes_gpc())
         }
 
         $phase = $module->getPhase($_REQUEST['phase']);
+
         $process = $phase->getProcess(intval($_REQUEST['process']));
         if ($process === null)
         {
@@ -660,13 +661,17 @@ if (get_magic_quotes_gpc())
 
         if ($result['ret'] === true)
         {
+	  if( $phase->name != 'unregister-module' ) {
             $module->setErrorStatus('');
-            $answer = new JSONAnswer(null, $result['output'], true);
-            echo $answer->encode();
-            exit (1);
+	  }
+	  $answer = new JSONAnswer(null, $result['output'], true);
+	  echo $answer->encode();
+	  exit (1);
         }
 
-        $module->setErrorStatus($phase->name);
+	if( $phase->name != 'unregister-module' ) {
+	  $module->setErrorStatus($phase->name);
+	}
         $answer = new JSONAnswer(null, $result['output'], false);
         echo $answer->encode();
         exit (1);
@@ -810,6 +815,12 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
         $errorstatus = $_REQUEST['errorstatus'];
 	$operation = $_REQUEST['operation'];
 
+	if( $operation == 'replaced' ) {
+	  $answer = new JSONAnswer(null, sprintf("Notice: need to set status on %s operation.", $operation), true);
+	  echo $answer->encode();
+	  exit(0);
+	}
+
         $context = $wiff->getContext($contextName);
         if ($context === false)
         {
@@ -821,7 +832,7 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
         $module = $context->getModule($moduleName);
         if ($module === false)
         {
-            $anwser = new JSONAnswer(null, sprintf("Error getting module '%s' in context '%s'!", $moduleName, $contextName), true);
+            $answer = new JSONAnswer(null, sprintf("Error getting module '%s' in context '%s'!", $moduleName, $contextName), true);
             echo $answer->encode();
             exit (1);
         }
@@ -883,6 +894,16 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
 if( isset($_REQUEST['checkRepoValidity']) && isset($_REQUEST['name']) ) {
   $ret = $wiff->checkRepoValidity($_REQUEST['name']);
   answer($ret, $wiff->errorMessage);
+}
+
+// Unregister module
+if( isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['unregister']) ) {
+  $moduleName = $_REQUEST['module'];
+  $ret = $context->removeModule($moduleName);
+  if( $ret === false ) {
+    answer(null, $context->errorMessage);
+  }
+  answer(true);
 }
 
     // Call to get a param value

@@ -780,6 +780,26 @@ public function getModuleDependencies($namelist, $local = false)
 
     recursiveOrdering($depsList, $orderList);
 
+    // Check for and add replaced modules to the dep list
+    // and mark them with needPhase='replaced'
+
+    $removeList = array();
+    foreach( $orderList as $mod ) {
+      foreach( $mod->replaces as $replace ) {
+	$replacedModule = $this->getModuleInstalled($replace['name']);
+	if( $replacedModule !== false ) {
+	  // This module is installed, so mark it for removal
+	  array_push($removeList, $replacedModule);
+	}
+      }
+    }
+    foreach( $removeList as $mod ) {
+      if( ! listContains($orderList, $mod->name) ) {
+	$mod->needphase = 'replaced';
+	array_push($orderList, $mod);
+      }
+    }
+
     return $orderList;
 }
 

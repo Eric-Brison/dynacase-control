@@ -39,12 +39,27 @@ class Phase
         if (!in_array($this->name, array (
         'pre-install', 'pre-upgrade', 'pre-remove',
         'unpack', 'remove', 'param',
-        'post-install', 'post-upgrade', 'post-remove', 'post-param'
+        'post-install', 'post-upgrade', 'post-remove', 'post-param',
+	'unregister-module'
         )
         ))
         {
             return $plist;
         }
+
+	// Special internal phase for 'replaced' modules
+	if( $this->name == 'unregister-module' ) {
+	  $moduleName = $this->xmlNode->getAttribute('name');
+	  if( $moduleName == '' ) {
+	    return $plist;
+	  }
+	  $labelMsg = sprintf("Unregistering module '%s'", $moduleName);
+	  $unregisterProcessXML = sprintf('<unregister-module module="%s"><label lang="en">%s</label><help>%s</help></unregister-module>',
+					  $moduleName, $labelMsg, $helpMsg);
+	  array_push($plist, new Process($unregisterProcessXML, $this));
+
+	  return $plist;
+	}
 
         $phaseNodeList = $this->xmlNode->getElementsByTagName($this->name);
         if ($phaseNodeList->length <= 0)

@@ -39,6 +39,8 @@ class Module
 
     public $requires;
 
+    public $replaces;
+
     public $xmlNode;
 
     public $needphase = '';
@@ -150,6 +152,17 @@ class Module
                 );
             }
         }
+
+	// Load xmlNode <replaces> elements
+	$this->replaces = array();
+	$replacesNodeList = $xmlNode->getElementsByTagName('replaces');
+	if( $replacesNodeList->length > 0 ) {
+	  $replacesNode = $replacesNodeList->item(0);
+	  $moduleNodeList = $replacesNode->getElementsByTagName('module');
+	  foreach( $moduleNodeList as $moduleNode ) {
+	    array_push($this->replaces, array('name' => $moduleNode->getAttribute('name')));
+	  }
+	}
 
         return $xmlNode;
     }
@@ -639,6 +652,10 @@ class Module
                     break;
                 case 'parameter':
                     return array ('param', 'post-param');
+		    break;
+	        case 'replaced':
+		    return array('unregister-module');
+		    break;
                 default:
             }
             return array ();
@@ -694,6 +711,14 @@ class Module
             $modules = $this->requires['modules'];
             return $modules;
         }
+
+	/**
+	 * Return modules replaced by this module
+	 * @return array( array('name' => $name), [...] )
+	 */
+	public function getReplacesModules() {
+	  return $this->replaces;
+	}
 
         /**
          * Set the status of a module

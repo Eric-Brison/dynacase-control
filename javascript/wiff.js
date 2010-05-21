@@ -2228,15 +2228,40 @@ Ext.onReady(function(){
         toDownload = data;
         toInstall = data.slice();
         
-        htmlModuleList = '<ul>';
-        for (var i = 0; i < toDownload.length; i++) {
-            htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(' + toDownload[i].versionrelease + ')</i></li>';
-        }
-        htmlModuleList = htmlModuleList + '</ul>';
-        
+	removeList = new Array();
+	installList = new Array();
+
+	for( var i =0; i < toDownload.length; i++ ) {
+	    if( toDownload[i].needphase == 'replaced' ) {
+		removeList.push(toDownload[i]);
+	    } else {
+		installList.push(toDownload[i]);
+	    }
+	}
+
+	htmlModuleList = '';
+	if( installList.length > 0 ) {
+	    htmlModuleList = htmlModuleList + 'Installer will install the following module(s):<br/><br/>';
+	    htmlModuleList = htmlModuleList + '<ul>';
+	    for( var i = 0; i < installList.length; i++ ) {
+		htmlModuleList = htmlModuleList + '<li><b>' + installList[i].name + '</b> <i>(' + installList[i].versionrelease + ')</i></li>';
+	    }
+	    htmlModuleList = htmlModuleList + '</ul>';
+	    htmlModuleList = htmlModuleList + '<br/><br/>';
+	}
+	if( removeList.length > 0 ) {
+	    htmlModuleList = htmlModuleList + 'Installer will remove the following module(s):<br/><br/>';
+	    htmlModuleList = htmlModuleList + '<ul>';
+	    for( var i = 0; i < removeList.length; i++ ) {
+		htmlModuleList = htmlModuleList + '<li><b>' + removeList[i].name + '</b> <i>(' + removeList[i].versionrelease + ')</i></li>';
+	    }
+	    htmlModuleList = htmlModuleList + '</ul>';
+	    htmlModuleList = htmlModuleList + '<br/><br/>';
+	}
+
         Ext.Msg.show({
             title: 'Freedom Web Installer',
-            msg: 'Installer will install following module(s) : <br/><br/>' + htmlModuleList,
+            msg: htmlModuleList,
             buttons: {
                 ok: true,
                 cancel: true
@@ -2276,9 +2301,15 @@ Ext.onReady(function(){
             callback: function(option, success, responseObject){
 
                 getGlobalwin();
-
-		getLicenseAgreement(toInstall[0], operation);
-
+		
+		if( toInstall[0].needphase == 'replaced' ) {
+		    /**
+		     * Skip license/param and go directly to phases
+		     */
+		    getPhaseList(module, operation);
+		} else {
+		    getLicenseAgreement(toInstall[0], operation);
+		}
             }
         });
     }
@@ -2363,7 +2394,7 @@ Ext.onReady(function(){
      */
     function download(module, operation){
     
-        if (module.status != 'downloaded') {
+        if (module.status != 'downloaded' && module.needphase != 'replaced' ) {
             mask = new Ext.LoadMask(Ext.getBody(), {
                 msg: 'Downloading "'+module.name+'"...'
             });
@@ -2718,14 +2749,26 @@ Ext.onReady(function(){
             operation = 'upgrade';
         }
         
-        currentModule = module;
-        
+	currentModule = module;
+
+	localOperation = operation;
+	if( currentModule.replaces.length > 0 ) {
+	    // This module replaces other modules
+	    // so, we force the operation to 'upgrade'
+	    localOperation = 'upgrade';
+	}
+	if( currentModule.needphase == 'replaced' ) {
+	    // This module is replaced by another module
+	    // so, we mark it for replacement
+	    localOperation = 'replaced';
+	}
+
         Ext.Ajax.request({
             url: 'wiff.php',
             params: {
                 context: currentContext,
                 module: module.name,
-                operation: operation,
+                operation: localOperation,
                 getPhaseList: true,
                 authInfo: Ext.encode(authInfo)
             },
@@ -2807,7 +2850,28 @@ Ext.onReady(function(){
                 });
                 
                 break;
-                
+		// HERE HERE HERE
+            case 'unregister-module':
+
+	    Ext.Ajax.request({
+		url: 'wiff.php',
+		params: {
+		    context: currentContext,
+		    module: module.name,
+		    unregister: true
+		},
+		success: function(responseObject) {
+		    var response = eval('(' + responseObject.responseText + ')');
+		    if( response.error ) {
+			Ext.Msg.alert('Server Error', response.error);
+		    }
+		    var data = response.data;
+		    currentPhaseIndex++;
+		    executePhaseList(operation);
+		}
+	    });
+	    break;
+	    
             default:
                 
                 Ext.Ajax.request({

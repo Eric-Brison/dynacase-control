@@ -413,7 +413,13 @@ function wiff_context_module_install_local(&$context, &$options, &$pkgName, &$ar
       if( $module->needphase == '' ) {
 	$module->needphase = 'install';
       }
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
+      $op = '(i)';
+      if( $module->needphase == 'upgrade' ) {
+	$op = '(u)';
+      } else if( $module->needphase == 'replaced' ) {
+	$op = '(r)';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, $op);
     }
     $ret = param_ask("Proceed with installation", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
@@ -448,6 +454,12 @@ function wiff_context_module_install_remote(&$context, &$options, &$modName, &$a
       if( $module->needphase == '' ) {
 	$module->needphase = 'install';
       }
+      $op = '(i)';
+      if( $module->needphase == 'upgrade' ) {
+	$op = '(u)';
+      } else if( $module->needphase == 'replaced' ) {
+	$op = '(r)';
+      }
       echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
     }
     $ret = param_ask("Proceed with installation", "Y/n", "Y");
@@ -463,10 +475,31 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
   $downloaded = array();
   foreach( $depList as $module ) {
     if( $module->needphase != '' ) {
-      $type = $module->needphase;
+      if( $module->needphase == 'replaced' ) {
+	$type = 'unregister';
+      } else {
+	$type = $module->needphase;
+      }
     }
 
-    echo sprintf("\nProcessing required module '%s' (%s-%s) for %s.\n", $module->name, $module->version, $module->release, $type);
+    echo sprintf("\nProcessing module '%s' (%s-%s) for %s.\n", $module->name, $module->version, $module->release, $type);
+
+    if( $module->needphase == 'replaced' ) {
+      /**
+       * Unregister module
+       */
+      $mod = $context->getModuleInstalled($module->name);
+      if( $mod === false ) {
+	continue;
+      }
+      echo sprintf("Unregistering module '%s'.\n", $module->name);
+      $ret = $context->removeModule($module->name);
+      if( $ret === false ) {
+	error_log(sprintf("Error: cound not unregister module '%s' from context: %s\n", $module->name, $context->errorMessage));
+	return 1;
+      }
+      continue;
+    }
 
     if( $module->status == 'downloaded' && is_file($module->tmpfile) ) {
       echo sprintf("Module '%s-%s-%s' is already downloaded in '%s'.\n", $module->name, $module->version, $module->release, $module->tmpfile);
