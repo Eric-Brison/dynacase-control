@@ -2373,7 +2373,14 @@ Ext.onReady(function(){
                 //Ext.Msg.alert('Freedom Web Installer','Module <b>' + module.name + '</b> installed successfully', function(){
                 // If applicable, start installing next module in list
                 if (toInstall[0]) {
-                    askParameter(toInstall[0], operation);
+		    if( toInstall[0].needphase == 'replaced' ) {
+			/**
+			 * Skip parameter prompt and perform the replacement processes
+			 */
+			getPhaseList(toInstall[0], operation);
+		    } else {
+			askParameter(toInstall[0], operation);
+		    }
                 }
                 else {
                     Ext.Msg.alert('Freedom Web Installer', 'Install successful', function(){
