@@ -495,9 +495,21 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
       echo sprintf("Unregistering module '%s'.\n", $module->name);
       $ret = $context->removeModule($module->name);
       if( $ret === false ) {
-	error_log(sprintf("Error: cound not unregister module '%s' from context: %s\n", $module->name, $context->errorMessage));
+	error_log(sprintf("Error: could not unregister module '%s' from context: %s\n", $module->name, $context->errorMessage));
 	return 1;
       }
+      $ret = $context->deleteFilesFromModule($module->name);
+      if( $ret === false ) {
+	error_log(sprintf("Error: could not delete files for module '%s': %s\n", $module->name, $context->errorMessage));
+	return 1;
+      }
+
+      $ret = $context->deleteManifestForModule($module->name);
+      if( $ret === false ) {
+	error_log(sprintf("Error: could not delete manifest file for module '%s': %s\n", $module->name, $context->errorMessage));
+	return 1;
+      }
+
       continue;
     }
 

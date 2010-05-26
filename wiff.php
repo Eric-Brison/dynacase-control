@@ -903,6 +903,15 @@ if( isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST
   if( $ret === false ) {
     answer(null, $context->errorMessage);
   }
+  $ret = $context->deleteFilesFromModule($moduleName);
+  if( $ret === false ) {
+    answer(null, $context->errorMessage);
+  }
+  $ret = $context->deleteManifestForModule($moduleName);
+  if( $ret === false ) {
+    answer(null, $context->errorMessage);
+  }
+
   answer(true);
 }
 

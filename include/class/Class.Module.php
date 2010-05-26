@@ -427,27 +427,34 @@ class Module
      */
     public function unpack($destDir = '')
     {
-        include_once ('lib/Lib.System.php');
-
-        if (!is_file($this->tmpfile))
+      include_once ('lib/Lib.System.php');
+      
+      if (!is_file($this->tmpfile))
         {
-            $this->errorMessage = sprintf("Temporary file of downloaded module does not exists.");
-            return false;
+	  $this->errorMessage = sprintf("Temporary file of downloaded module does not exists.");
+	  return false;
         }
 
-        $cmd = 'tar -zxOf '.escapeshellarg($this->tmpfile).' content.tar.gz | tar '.(($destDir != '')?'-C '.escapeshellarg($destDir):
-            '').' -zxf -';
-
-            $ret = null;
-            system($cmd, $ret);
-            if ($ret != 0)
-            {
-                $this->errorMessage = sprintf("Error executing command [%s]", $cmd);
-                return false;
-            }
-
-            return $destDir;
-        }
+      // Store BOM/manifest
+      $ret = $this->context->storeManifestForModule($this);
+      if( $ret === false ) {
+	$this->errorMessage = sprintf("Error getting manifest for '%s': %s", $this->name, $this->context->errorMessage);
+	return false;
+      }
+      
+      // Unpack archive
+      $cmd = 'tar -zxOf '.escapeshellarg($this->tmpfile).' content.tar.gz | tar '.(($destDir != '')?'-C '.escapeshellarg($destDir):'').' -zxf -';
+      
+      $ret = null;
+      system($cmd, $ret);
+      if ($ret != 0)
+	{
+	  $this->errorMessage = sprintf("Error executing command [%s]", $cmd);
+	  return false;
+	}
+      
+      return $destDir;
+    }
 
         /**
          * Delete module folder

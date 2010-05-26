@@ -152,6 +152,23 @@ class Process
 		     'output' => sprintf("Error unregistering module '%s': %s", $moduleName, $this->phase->module->context->errorMessage)
 		     );
       }
+      
+      $ret = $this->phase->module->context->deleteFilesFromModule($moduleName);
+      if( $ret === false ) {
+	return array(
+		     'ret' => false,
+		     'output' => sprintf("Error deleting files for module '%s': %s", $moduleName, $this->phase->module->context->errorMessage)
+		     );
+      }
+
+      $ret = $this->phase->module->context->deleteManifestForModule($moduleName);
+      if( $ret === false ) {
+	return array(
+		     'ret' => false,
+		     'output' => sprintf("Error deleting manifest file for module '%s': %s", $moduleName, $this->phase->module->context->errorMessage)
+		     );
+      }
+
       return array(
 		   'ret' => true,
 		   'output' => sprintf("Unregistered module '%s'.", $moduleName)

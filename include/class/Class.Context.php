@@ -796,7 +796,7 @@ public function getModuleDependencies($namelist, $local = false)
     foreach( $removeList as $mod ) {
       if( ! listContains($orderList, $mod->name) ) {
 	$mod->needphase = 'replaced';
-	array_push($orderList, $mod);
+	array_unshift($orderList, $mod);
       }
     }
 
@@ -1118,11 +1118,211 @@ public function removeModule($moduleName, $status = '') {
 }
 
 public function removeModuleInstalled($moduleName) {
-  return $this->removeModule($moduleName, 'installed');
+  $ret = $this->removeModule($moduleName, 'installed');
+  if( $ret === false ) {
+    return false;
+  }
+
+  return true;
 }
 
 public function removeModuleDownloaded($moduleName) {
   return $this->removeModule($moduleName, 'downloaded');
+}
+
+/**
+ * Store the manifest of a downloaded module
+ */
+public function storeManifestForModule($module) {
+  if( ! is_object($module) ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."not an object");
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $manifest = $module->getManifest();
+  if( $manifest == '' ) {
+    $err = sprinf(__CLASS__."::".__FUNCTION__." "."empty manifest for '%s'", $module->name);
+    $this->errorMessage = $err;
+    return $manifest;
+  }
+
+  $manifestDir = sprintf("%s/", $this->root);
+  $manifestFile = sprintf("%s.manifest", $module->name);
+
+  $tmpfile = tempnam($manifestDir, $manifestFile);
+  if( $tmpfile === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error creating temp file in '%s'", $manifestDir);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $fout = fopen($tmpfile, 'w');
+  if( $fout === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error opening output file '%s' for writing.", $tmpfile);
+    $this->errorMessage = $err;
+    unlink($tmpfile);
+    return false;
+  }
+
+  $ret = fwrite($fout, $manifest);
+  if( $ret === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error writing manifest to '%s'.", $tmpfile);
+    $this->errorMessage = $err;
+    unlink($tmpfile);
+    return false;
+  }
+
+  fclose($fout);
+
+  $ret = rename($tmpfile, sprintf("%s/%s", $manifestDir, $manifestFile));
+  if( $ret === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error moving '%s' to '%s'", $tmpfile, sprintf("%s/%s", $manifestDir, $manifestFile));
+    $this->errorMessage = $err;
+    unlink($tmpfile);
+    return false;
+  }
+
+  return $manifest;
+}
+
+/**
+ * get the manifest of a module name
+ */
+public function getManifestForModule($moduleName) {
+  if( is_object($moduleName) ) {
+    $moduleName = $module->name;
+  }
+
+  $manifestFile = sprintf("%s/%s.manifest", $this->root, $moduleName);
+  if( ! is_file($manifestFile) ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Manifest file '%s' does not exists.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $manifest = file_get_contents($manifestFile);
+  if( $manifest === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error getting content from manifest file '%s'.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  return $manifest;
+}
+
+/**
+ * Delete the manifest file of a module name
+ */
+public function deleteManifestForModule($moduleName) {
+  if( is_object($moduleName) ) {
+    $moduleName = $module->name;
+  }
+
+  $manifestFile = sprintf("%s/%s.manifest", $this->root, $moduleName);
+  if( ! file_exists($manifestFile) ) {
+    return $manifestFile;
+  }
+  if( ! is_file($manifestFile) ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."'%s' is not a file.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $ret = unlink($manifestFile);
+  if( $ret === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error unlinking manifest file '%s'.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  return $manifestfile;
+}
+
+/**
+ * Delete files from the given module name
+ */
+public function deleteFilesFromModule($moduleName) {
+  if( is_object($moduleName) ) {
+    $moduleName = $module->name;
+  }
+
+  $manifestEntries = $this->getManifestEntriesForModule($moduleName);
+  if( $manifestEntries === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error getting manifest entries for module '%s': %s", $moduleName, $this->errorMessage);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  // Sort files in reverse order in order to be able to processs
+  // removal of directories after their contained files
+  usort($manifestEntries, array($this, "sortManifestEntriesByNameReverse"));
+
+  foreach( $manifestEntries as $mentry ) {
+    $fpath = sprintf("%s/%s", $this->root, $mentry['name']);
+
+    $ret = false;
+    $stat = lstat($fpath);
+    if( $mentry['type'] == 'd' ) {
+      if( $stat['nlink'] <= 2 ) {
+	$ret = @rmdir($fpath);
+      } else {
+	error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Keeping directory '%s' from module '%s' as it contains files.", $fpath, $moduleName));
+	continue;
+      }
+    } else {
+      $ret = @unlink($fpath);
+    }
+
+    if( $ret === false ) {
+      error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Error removing '%s' (%s) from module '%s'.", $fpath, $mentry['type'], $moduleName));
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Sort helper function for manifest entries
+ */
+private function sortManifestEntriesByNameReverse($a, $b) {
+  return strcmp($b['name'], $a['name']);
+}
+
+/**
+ * Parse the manifest str into a structure
+ *
+ * Returns array(
+ *               0 => array(
+ *                          'type' => 'l',
+ *                          'mode' => 'rwxr-xr-x',
+ *                          'uid' => 'foo',
+ *                          'gid' => 'bar',
+ *                          'size' => '1234',
+ *                          'date' => '1970-01-01 10:11:12',
+ *                          'name' => 'Symlink Example.txt',
+ *                          'link' => ' -> Symlink Target.txt'
+ *                          ),
+ *               N => array(
+ *                          ...
+ *                          ),
+ *               ...
+ *               );
+ */ 
+public function getManifestEntriesForModule($moduleName) {
+  $manifest = $this->getManifestForModule($moduleName);
+  $manifestLines = preg_split("/\n/", $manifest);
+  $manifestEntries = array();
+
+  foreach( $manifestLines as $line ) {
+    $minfo = array();
+    if( ! preg_match("|^(?P<type>.)(?P<mode>.........)\s+(?P<uid>.*?)/(?P<gid>.*?)\s+(?P<size>\d+)\s+(?P<date>\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d:\d\d)\s+(?P<name>.*?)(?P<link>\s+->\s+.*?)?$|", $line, $minfo) ) {
+      continue;
+    }
+    array_push($manifestEntries, $minfo);
+  }
+  
+  return $manifestEntries;
 }
 
 }

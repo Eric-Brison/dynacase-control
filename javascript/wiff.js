@@ -2306,7 +2306,7 @@ Ext.onReady(function(){
 		    /**
 		     * Skip license/param and go directly to phases
 		     */
-		    getPhaseList(module, operation);
+		    getPhaseList(toInstall[0], operation);
 		} else {
 		    getLicenseAgreement(toInstall[0], operation);
 		}
