@@ -510,10 +510,10 @@ if (get_magic_quotes_gpc())
     
     }
     
-    if( isset ($REQUEST['downloadArchive']))
+    if( isset ($_REQUEST['downloadArchive']))
     {
     
-        if ($wiff->downloadArchive($_REQUEST['name']))
+        if ($wiff->downloadArchive($_REQUEST['archiveId']))
         {
             answer(true);
         } else

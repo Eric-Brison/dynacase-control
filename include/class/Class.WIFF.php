@@ -660,13 +660,17 @@ require valid-user
     
     	// ...
     
-    	return true ;
+    	$this->errorMessage = 'deleteArchive() not yet implemented.';
+    	return false ;
     
     }
     
     public function downloadArchive($archiveId){
     
     	// ...
+    	
+    	$this->errorMessage = 'downloadArchive() not yet implemented.';
+    	return false ;
     
     }
 
