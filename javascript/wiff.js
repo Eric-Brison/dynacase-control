@@ -2240,20 +2240,20 @@ Ext.onReady(function(){
 	}
 
 	htmlModuleList = '';
-	if( installList.length > 0 ) {
-	    htmlModuleList = htmlModuleList + 'Installer will install the following module(s):<br/><br/>';
-	    htmlModuleList = htmlModuleList + '<ul>';
-	    for( var i = 0; i < installList.length; i++ ) {
-		htmlModuleList = htmlModuleList + '<li><b>' + installList[i].name + '</b> <i>(' + installList[i].versionrelease + ')</i></li>';
-	    }
-	    htmlModuleList = htmlModuleList + '</ul>';
-	    htmlModuleList = htmlModuleList + '<br/><br/>';
-	}
 	if( removeList.length > 0 ) {
 	    htmlModuleList = htmlModuleList + 'Installer will remove the following module(s):<br/><br/>';
 	    htmlModuleList = htmlModuleList + '<ul>';
 	    for( var i = 0; i < removeList.length; i++ ) {
 		htmlModuleList = htmlModuleList + '<li><b>' + removeList[i].name + '</b> <i>(' + removeList[i].versionrelease + ')</i></li>';
+	    }
+	    htmlModuleList = htmlModuleList + '</ul>';
+	    htmlModuleList = htmlModuleList + '<br/><br/>';
+	}
+	if( installList.length > 0 ) {
+	    htmlModuleList = htmlModuleList + 'Installer will install the following module(s):<br/><br/>';
+	    htmlModuleList = htmlModuleList + '<ul>';
+	    for( var i = 0; i < installList.length; i++ ) {
+		htmlModuleList = htmlModuleList + '<li><b>' + installList[i].name + '</b> <i>(' + installList[i].versionrelease + ')</i></li>';
 	    }
 	    htmlModuleList = htmlModuleList + '</ul>';
 	    htmlModuleList = htmlModuleList + '<br/><br/>';
@@ -2854,18 +2854,40 @@ Ext.onReady(function(){
                     //});
                     
                     }
-                });
-                
+                });                
                 break;
-		// HERE HERE HERE
-            case 'unregister-module':
 
+		// HERE HERE HERE
+	case 'clean-unpack':
+	    Ext.Ajax.request(
+		{
+		    url: 'wiff.php',
+		    params: {
+			context: currentContext,
+			module: module.name,
+			cleanUnpack: true,
+			authInfo: Ext.encode(authInfo)
+		    },
+		    success: function(responseObject) {
+                        var response = eval('(' + responseObject.responseText + ')');
+                        if (response.error) {
+                            Ext.Msg.alert('Server Error', response.error);
+                        }
+                        var data = response.data;
+                        currentPhaseIndex++;
+                        executePhaseList(operation);
+		    }
+		}
+	    );
+	    break;
+
+        case 'unregister-module':
 	    Ext.Ajax.request({
 		url: 'wiff.php',
 		params: {
 		    context: currentContext,
 		    module: module.name,
-		    unregister: true
+		    unregisterModule: true
 		},
 		success: function(responseObject) {
 		    var response = eval('(' + responseObject.responseText + ')');
@@ -2879,7 +2901,28 @@ Ext.onReady(function(){
 	    });
 	    break;
 	    
-            default:
+	case 'purge-unreferenced-parameters-value':
+	    Ext.Ajax.request(
+		{
+		    url: 'wiff.php',
+		    params: {
+			context: currentContext,
+			purgeUnreferencedParametersValue: true
+		    },
+		    success: function(responseObject) {
+			var response = eval('(' + responseObject.responseText + ')');
+			if( response.error ) {
+			    Ext.Msg.alert('Server Error', response.error);
+			}
+			var data = response.data;
+			currentPhaseIndex++;
+			executePhaseList(operation);
+		    }
+		}
+	    );
+	    break;
+
+        default:
                 
                 Ext.Ajax.request({
                     url: 'wiff.php',

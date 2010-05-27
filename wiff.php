@@ -503,6 +503,22 @@ if (get_magic_quotes_gpc())
 
     }
 
+// Clean/delete previous module's files and unpack new files
+if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_REQUEST['module']) ) {
+  $moduleName = $_REQUEST['module'];
+  $ret = $context->deleteFilesFromModule($moduleName);
+  if( $ret === false ) {
+    answer(null, $context->errorMessage);
+  }
+
+  $module = $context->getModuleDownloaded($_REQUEST['module']);
+  $ret = $module->unpack($context->root);
+  if( $ret === false ) {
+    answer(null, $module->errorMessage);
+  }
+  answer(true);
+}
+
 
     // Request to activate a repo list in context
     // TODO Unused
@@ -837,16 +853,6 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
             exit (1);
         }
 
-	/*
-        $ret = $module->setStatus($status, $errorstatus);
-        if ($ret === false)
-        {
-            $answer = new JSONAnswer(null, sprintf("Error setting status '%s' of module '%s' in context '%s': %s", $status, $moduleName, $contextName, $module->errorMessage));
-            echo $answer->encode();
-            exit (1);
-        }
-	*/
-
 	if( $operation == 'upgrade' ) {
 	  $ret = $context->removeModuleInstalled($module->name);
 	  if( $ret === false ) {
@@ -897,19 +903,49 @@ if( isset($_REQUEST['checkRepoValidity']) && isset($_REQUEST['name']) ) {
 }
 
 // Unregister module
-if( isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['unregister']) ) {
+if( isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['unregisterModule']) ) {
+  $contextName = $_REQUEST['context'];
+  $context = $wiff->getContext($contextName);
+  if( $context === false ) {
+    $answer =  new JSONAnswer(null, sprintf("Error getting context '%s': %s", $contextName, $wiff->errorMessage));
+    echo $answer->encode();
+    exit( 1 );
+  }
+
   $moduleName = $_REQUEST['module'];
   $ret = $context->removeModule($moduleName);
   if( $ret === false ) {
     answer(null, $context->errorMessage);
   }
+
   $ret = $context->deleteFilesFromModule($moduleName);
   if( $ret === false ) {
     answer(null, $context->errorMessage);
   }
+
   $ret = $context->deleteManifestForModule($moduleName);
   if( $ret === false ) {
     answer(null, $context->errorMessage);
+  }
+
+  answer(true);
+}
+
+// Purge parameters value
+if( isset($_REQUEST['purgeUnreferencedParametersValue']) && isset($_REQUEST['context']) ) {
+  $contextName = $_REQUEST['context'];
+  $context = $wiff->getContext($_REQUEST['context']);
+  if( $context === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error getting context '%s': %s", $contextName, $wiff->errorMessage));
+    echo $answer->encode();
+    exit( 1 );
+  }
+
+  $ret = $context->purgeUnreferencedParametersValue();
+  if( $ret === false ) {
+    $answer = new JSONAnswer(null, sprintf("Error purging unreferenced parameters value in context '%s': %s", $contextName, $context->errorMessage));
+    echo $answer->encode();
+    exit( 1 );
   }
 
   answer(true);

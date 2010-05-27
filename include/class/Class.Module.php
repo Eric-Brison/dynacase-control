@@ -528,7 +528,7 @@ class Module
                 $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$p->name."' and @modulename='".$this->name."']");
                 if ($storedParamValue->length <= 0)
                 {
-                    $p->value = "";
+		    $p->value = $this->getParameterValueFromReplacedModules($contextsXpath, $p->name);
                 } else
                 {
                     $p->value = $storedParamValue->item(0)->getAttribute('value');
@@ -539,6 +539,23 @@ class Module
 
             return $plist;
         }
+
+	/**
+	 * Try to get parameter value from replaced modules
+	 */
+	public function getParameterValueFromReplacedModules(&$contextsXpath, $paramName) {
+	  $value = '';
+	  foreach( $this->replaces as $replaced ) {
+	    $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$paramName."' and @modulename='".$replaced['name']."']");
+	    if( $storedParamValue->length <= 0 ) {
+	      continue;
+	    }
+	    $value = $storedParamValue->item(0)->getAttribute('value');
+	    break;
+	  }
+
+	  return $value;
+	}
 
         /**
          * Get Module parameter by name
@@ -652,7 +669,11 @@ class Module
                     return array ('pre-install', 'unpack', 'post-install');
                     break;
                 case 'upgrade':
-                    return array ('pre-upgrade', 'unpack', 'post-upgrade');
+		    if( count($this->replaces) <= 0 ) {
+		      return array ('pre-upgrade', 'clean-unpack', 'post-upgrade');
+		    } else {
+		      return array ('pre-upgrade', 'clean-unpack', 'post-upgrade', 'purge-unreferenced-parameters-value');
+		    }
                     break;
                 case 'uninstall':
                     return array ('pre-remove', 'remove', 'post-remove');
@@ -834,6 +855,6 @@ class Module
 	  return $wiff->storeLicenseAgreement($this->context->name, $this->name, $this->license, $agree);
 	}
 
-    }
+}
 
 ?>

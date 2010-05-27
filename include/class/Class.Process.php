@@ -98,12 +98,6 @@ class Process
 
         $wiff = WIFF::getInstance();
 
-	switch( $this->name ) {
-	case 'unregister-module':
-	  return $this->internal_unregisterModule();
-	  break;
-	}
-
         putenv("WIFF_CONTEXT_NAME=".$this->phase->module->context->name);
         putenv("WIFF_CONTEXT_ROOT=".$this->phase->module->context->root);
 
@@ -141,38 +135,6 @@ class Process
             return $this->attributes[$attrName];
         }
         return "";
-    }
-
-    public function internal_unregisterModule() {
-      $moduleName = $this->attributes['module'];
-      $ret = $this->phase->module->context->removeModule($moduleName);
-      if( $ret === false ) {
-	return array(
-		     'ret' => false,
-		     'output' => sprintf("Error unregistering module '%s': %s", $moduleName, $this->phase->module->context->errorMessage)
-		     );
-      }
-      
-      $ret = $this->phase->module->context->deleteFilesFromModule($moduleName);
-      if( $ret === false ) {
-	return array(
-		     'ret' => false,
-		     'output' => sprintf("Error deleting files for module '%s': %s", $moduleName, $this->phase->module->context->errorMessage)
-		     );
-      }
-
-      $ret = $this->phase->module->context->deleteManifestForModule($moduleName);
-      if( $ret === false ) {
-	return array(
-		     'ret' => false,
-		     'output' => sprintf("Error deleting manifest file for module '%s': %s", $moduleName, $this->phase->module->context->errorMessage)
-		     );
-      }
-
-      return array(
-		   'ret' => true,
-		   'output' => sprintf("Unregistered module '%s'.", $moduleName)
-		   );
     }
 
 }

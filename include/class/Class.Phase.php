@@ -40,27 +40,23 @@ class Phase
         'pre-install', 'pre-upgrade', 'pre-remove',
         'unpack', 'remove', 'param',
         'post-install', 'post-upgrade', 'post-remove', 'post-param',
-	'unregister-module'
+	'unregister-module',
+	'purge-unreferenced-parameters-value'
         )
         ))
         {
             return $plist;
         }
 
-	// Special internal phase for 'replaced' modules
+	// Special internal hard coded phase
 	if( $this->name == 'unregister-module' ) {
-	  $moduleName = $this->xmlNode->getAttribute('name');
-	  if( $moduleName == '' ) {
-	    return $plist;
-	  }
-	  $labelMsg = sprintf("Unregistering module '%s'", $moduleName);
-	  $unregisterProcessXML = sprintf('<unregister-module module="%s"><label lang="en">%s</label><help>%s</help></unregister-module>',
-					  $moduleName, $labelMsg, $helpMsg);
-	  array_push($plist, new Process($unregisterProcessXML, $this));
-
+	  return $plist;
+	}
+	if( $this->name == 'purge-unreferenced-parameters-value' ) {
 	  return $plist;
 	}
 
+	// Get processes for the phase from module's info.xml
         $phaseNodeList = $this->xmlNode->getElementsByTagName($this->name);
         if ($phaseNodeList->length <= 0)
         {

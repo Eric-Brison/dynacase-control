@@ -1261,15 +1261,26 @@ public function deleteFilesFromModule($moduleName) {
   foreach( $manifestEntries as $mentry ) {
     $fpath = sprintf("%s/%s", $this->root, $mentry['name']);
 
-    $ret = false;
+    if( ! file_exists($fpath) ) {
+      continue;
+    }
+
     $stat = lstat($fpath);
-    if( $mentry['type'] == 'd' ) {
-      if( $stat['nlink'] <= 2 ) {
-	$ret = @rmdir($fpath);
-      } else {
-	error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Keeping directory '%s' from module '%s' as it contains files.", $fpath, $moduleName));
+    if( $stat === false ) {
+      error_log(__CLASS__."::".__FUNCTION__." ".sprintf("stat('%s') from module '%s' returned with error.", $fpath, $moduleName));
+      continue;
+    }
+
+    $ret = false;
+    if( ! is_link($fpath) && is_dir($fpath) ) {
+      if( $mentry['type'] != 'd' ) {
+	error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Type mismatch for file '%s' from module '%s': type is 'd' while manifest says '%s'.", $fpath, $moduleName, $mentry['type']));
 	continue;
       }
+      if( $stat['nlink'] > 2 ) {
+	continue;
+      }
+      $ret = @rmdir($fpath);
     } else {
       $ret = @unlink($fpath);
     }
@@ -1323,6 +1334,54 @@ public function getManifestEntriesForModule($moduleName) {
   }
   
   return $manifestEntries;
+}
+
+/**
+ * Purge/remove parameters value that are associated
+ * with a module that is no more present in the context.
+ */
+public function purgeUnreferencedParametersValue() {
+  require_once ('class/Class.WIFF.php');
+
+  $wiff = WIFF::getInstance();
+
+  $xml = new DOMDocument();
+  $xml->preserveWhiteSpace = false;
+  $xml->formatOutput = true;
+  $ret = $xml->load($wiff->contexts_filepath);
+  if( $ret === false ) {
+    $this->errorMessage = sprintf("Error opening XML file '%s'.", $wiff->contexts_filepath);
+    return false;
+  }
+
+  $xpath = new DOMXPath($xml);
+
+  $parametersValueNodeList = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param", $this->name));
+  if( $parametersValueNodeList->length <= 0 ) {
+    return true;
+  }
+
+  $purgeNodeList = array();
+  for( $i = 0; $i < $parametersValueNodeList->length; $i++ ) {
+    $pv = $parametersValueNodeList->item($i);
+    $moduleName = $pv->getAttribute('modulename');
+    $module = $this->getModule($moduleName);
+    if( $module === false ) {
+      array_push($purgeNodeList, $pv);
+    }
+  }
+
+  foreach( $purgeNodeList as $node ) {
+    $node->parentNode->removeChild($node);
+  }
+
+  $ret = $xml->save($wiff->contexts_filepath);
+  if( $ret === false ) {
+    $this->errorMessage = sprintf("Error saving contexts.xml '%s'.", $wiff->contexts_filepath);
+    return false;
+  }
+
+  return true;
 }
 
 }
