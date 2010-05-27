@@ -4,8 +4,8 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>Web Installer for Freedom</title>
         <link rel="stylesheet" type="text/css" href="javascript/lib/ext/resources/css/ext-all.css" />
-        <link rel="stylesheet" href="javascript/lib/ext-add/GroupTabs.css" />
-        <link rel="stylesheet" href="javascript/lib/ext-add/RowActions.css" />
+        <link rel="stylesheet" type="text/css" href="javascript/lib/ext-add/GroupTabs.css" />
+        <link rel="stylesheet" type="text/css" href="javascript/lib/ext-add/RowActions.css" />
         <script src="javascript/lib/ext/adapter/ext/ext-base.js">
         </script>
         <script src="javascript/lib/ext/ext-all-debug.js">
@@ -20,17 +20,28 @@
 		</script>
 		<script src="javascript/lib/ext-add/FileUploadField.js">
 		</script>
+		<script src="javascript/archive.js">
+		</script>
         <script src="javascript/wiff.js">
         </script>
         <style>
             .x-icon-create {
                 background-image: url('images/icons/book_add.png') !important;
             }
+			.x-icon-create-archive {
+				background-image: url('images/icons/package_add.png') !important;
+			}
+			.x-icon-delete-archive {
+				background-image: url('images/icons/package_delete.png') !important;
+			}
 			.x-icon-setup {
                 background-image: url('images/icons/cog.png') !important;
             } 
 			.x-icon-context {
                 background-image: url('images/icons/book.png') !important;
+            }
+			.x-icon-archive {
+                background-image: url('images/icons/package.png') !important;
             } 
 			.x-icon-install {
                 background-image: url('images/icons/add.png') !important;
@@ -47,9 +58,6 @@
 			.x-icon-help {
                 background-image: url('images/icons/help.png') !important;
             }
-			.x-icon-install {
-                background-image: url('images/icons/add.png') !important;
-            } 
 			.x-icon-ok {
                 background-image: url('images/icons/accept.png') !important;
             } 

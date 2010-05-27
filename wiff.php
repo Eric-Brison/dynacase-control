@@ -374,6 +374,17 @@ if (get_magic_quotes_gpc())
         }
         answer($contextList);
     }
+    
+    // Request to get archived context list
+    if (isset ($REQUEST['getArchivedContextList']))
+    {
+    	$archivedContextList = $wiff->getArchivedContextList();
+    	if ($archivedContextList === false)
+    	{
+    		answer(null, $wiff->errorMessage);
+    	}
+    	answer($archivedContextList);
+    }
 
     // Request to create new context
     if ( isset ($_REQUEST['createContext']))
@@ -443,6 +454,73 @@ if (get_magic_quotes_gpc())
         {
             answer(null, $wiff->errorMessage);
         }
+    }
+    
+    // Request to archive an existing context
+    if ( isset ($_REQUEST['archiveContext']))
+    {
+        $context = $wiff->getContext($_REQUEST['name']);
+
+        if (!$wiff->errorMessage)
+        {        	
+			$archiveId = $context->archiveContext();
+			
+            if($archiveId === false){
+            	answer(null, $context->errorMessage);
+            } else {
+            	answer($archiveId);
+            }
+
+        } else
+        {
+            answer(null, $wiff->errorMessage);
+        }
+    }
+    
+    // Request to create a context from an archived context
+    if ( isset ($_REQUEST['createContextFromArchive']))
+    {
+    
+    	$archiveId = $_REQUEST['archiveId'];
+    	$contextName = $_REQUEST['name'];
+    	
+    
+    	$context = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
+    	if($context === false){
+    		answer(null, $wiff->errorMessage);
+    	} else
+    	{
+    		answer($context);
+    	}
+    
+    }
+    
+    if ( isset ($_REQUEST['deleteArchive']))
+    {
+    
+    	$archiveId = $_REQUEST['archiveId'];
+    	
+    	$result = $wiff->deleteArchive($archiveId);
+    	if($result === false){
+    		answer(null, $wiff->errorMessage);
+    	} else
+    	{
+    		answer($result);
+    	}
+    
+    }
+    
+    if( isset ($REQUEST['downloadArchive']))
+    {
+    
+        if ($wiff->downloadArchive($_REQUEST['name']))
+        {
+            answer(true);
+        } else
+        {
+            answer(null, $wiff->errorMessage);
+        }
+    
     }
 
     // Request to get dependency module list for a module

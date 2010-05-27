@@ -641,6 +641,34 @@ require valid-user
         return $contextList;
 
     }
+    
+    public function getArchivedContextList()
+    {
+    	// ...
+    
+    	return $archivedContextList;
+    
+    }
+    
+    public function createContextFromArchive($archiveId, $name, $root, $desc, $url)
+    {
+    
+    }
+    
+    public function deleteArchive($archiveId)
+    {
+    
+    	// ...
+    
+    	return true ;
+    
+    }
+    
+    public function downloadArchive($archiveId){
+    
+    	// ...
+    
+    }
 
     /**
      * Get Context by name

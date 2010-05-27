@@ -1105,6 +1105,15 @@ public function removeModuleDownloaded($moduleName) {
   return $this->removeModule($moduleName, 'downloaded');
 }
 
+public function archiveContext() {
+
+	// ...
+	
+	$this->errorMessage= 'function archiveContext() not yet implemented.';
+	return false ;
+
+}
+
 }
 
 ?>
