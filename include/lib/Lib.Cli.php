@@ -460,7 +460,7 @@ function wiff_context_module_install_remote(&$context, &$options, &$modName, &$a
       } else if( $module->needphase == 'replaced' ) {
 	$op = '(r)';
       }
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, $op);
     }
     $ret = param_ask("Proceed with installation", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
