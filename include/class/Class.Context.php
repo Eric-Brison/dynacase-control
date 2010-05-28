@@ -523,10 +523,42 @@ public function cmpVersionReleaseAsc($v1, $r1, $v2, $r2)
     $ver2 = preg_split('/\./', $v2, 3);
     $rel2 = $r2;
 
-    $str1 = sprintf("%03d%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2], $rel1);
-    $str2 = sprintf("%03d%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2], $rel2);
+    $str1 = sprintf("%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2]);
+    $str2 = sprintf("%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2]);
 
-    return strcmp($str1, $str2);
+    $cmp_ver = strcmp($str1, $str2);
+
+    /* Version is different, so we do not
+     * need to test the release
+     */
+    if( $cmp_ver != 0 ) {
+      return $cmp_ver;
+    }
+
+    /* Version is equal, so we need to
+     * test the release:
+     *   num vs. num => numeric comparison
+     *   str vs. str => string comparison
+     *   num vs. str => string is < to num
+     */
+    $cmp_rel = 0;
+    if( is_numeric($rel1) && is_numeric($rel2) ) {
+      /* standard numeric comparison */
+      $cmp_rel = $rel1-$rel2;
+    } else if( is_numeric($rel1) && is_string($rel2) ) {
+      /* number is > to string */
+      $cmp_rel = 1;
+    } else if( is_string($rel1) && is_numeric($rel2) ) {
+      /* string is < to number */
+      $cmp_rel = -1;
+    } else if( is_string($rel1) && is_string($rel2) ) {
+      /* standard string comparison */
+      $cmp_rel = strcmp($rel1, $rel2);
+    } else {
+      $cmp_rel = 0;
+    }
+
+    return $cmp_rel;
 }
 
 /**
