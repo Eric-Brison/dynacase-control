@@ -6,11 +6,25 @@
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  */
 
+function curPageURL()
+{
+    $pageURL = 'http';
+    if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+    $pageURL .= "://";
+    if ($_SERVER["SERVER_PORT"] != "80") {
+        $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+    } else {
+        $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+    }
+    return $pageURL;
+}
+
 class WIFF
 {
 
     const contexts_filepath = 'conf/contexts.xml';
     const params_filepath = 'conf/params.xml';
+    const archive_filepath = 'archived-contexts/';
 
     public $available_host;
     public $available_url;
@@ -644,33 +658,303 @@ require valid-user
     
     public function getArchivedContextList()
     {
-    	// ...
+    
+    	$archivedContextList = array();
+    	
+	    $wiff_root = getenv('WIFF_ROOT');
+	    if ($wiff_root !== false)
+	    {
+	        $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+	    }
+	    
+	    $archived_root = $wiff_root.WIFF::archive_filepath;
+	    
+	    if ($handle = opendir($archived_root)) {
+	    
+		    while (false !== ($file = readdir($handle))){
+		    
+		    	if(preg_match('/^.+\.fcz$/',$file)){
+		    			    	
+		    		$zip = zip_open($archived_root.DIRECTORY_SEPARATOR.$file);
+		    		
+		    		if(is_int($zip)){
+		    			$this->errorMessage = "Error when opening archive.";
+		    			return false;
+		    		}
+		    		
+		    		do {
+		    			$info = zip_read($zip);
+		    		} while ($info && zip_entry_name($info) != "info.xml");
+		    		
+		    		if(zip_entry_name($info) == "info.xml"){
+		    		
+			    		zip_entry_open($zip, $info, "r");
+		
+			    		$info_content = zip_entry_read($info, zip_entry_filesize($info));
+			    					    		
+			    		$xml = new DOMDocument();
+						$xml->loadXML($info_content);
+						if ($xml === false)
+						{
+							$this->errorMessage = sprintf("Error loading XML file '%s'.", $info);
+							return false;
+						}
+								
+						$xpath = new DOMXpath($xml);
+						$archived_contexts = $xpath->query("/info/archive");
+							
+						if ($archived_contexts->length > 0)
+		       			{		       				
+		            		foreach ($archived_contexts as $context){ // Should be only one context
+		            			$archiveContext = array();
+		            			$archiveContext['name'] = $context->getAttribute('name');
+		            			$archiveContext['description'] = $context->getAttribute('description');
+		            			$archiveContext['id'] = $context->getAttribute('id');
+		            			$archiveContext['datetime'] = $context->getAttribute('datetime');
+		            			
+			            		$moduleList = array();
+			       			
+					    		$moduleDom = $xpath->query("/info/context[@name='".$context->getAttribute('name')."']/modules/module");
+			
+							    foreach ($moduleDom as $module)
+							    {
+							        $mod = new Module($this, null, $module, true);
+							        if ($mod->status == 'installed')
+							        {
+							            $moduleList[] = $mod;
+							        }
+							    }
+		            			
+							    $archiveContext['moduleList'] = $moduleList;
+		            			
+		            			$archivedContextList[] = $archiveContext ;
+		            		}            			
+		       			}
+					
+	       			
+		    		} else {
+		    			$this->errorMessage = "info.xml not found in archive";
+		    		}
+	       			
+		    	}
+		    }
+	    
+	    }
     
     	return $archivedContextList;
     
     }
     
-    public function createContextFromArchive($archiveId, $name, $root, $desc, $url)
+    public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root)
     {
+    
+    	//error_log('--- Create Context From Archive --- '.$archiveId.' --- '.$root);
+    
+    	// --- Create or reuse directory --- //
+        if (is_dir($root))
+        {
+            if (!is_writable($root))
+            {
+                $this->errorMessage = sprintf("Directory '%s' is not writable.", $root);
+                return false;
+            }
+            $dirListing = @scandir($root);
+            if ($dirListing === false)
+            {
+                $this->errorMessage = sprintf("Error scanning directory '%s'.", $root);
+                return false;
+            }
+            $dirListingCount = count($dirListing);
+            if ($dirListingCount > 2)
+            {
+                $this->errorMessage = sprintf("Directory '%s' is not empty.", $root);
+                return false;
+            }
+        } else
+        {
+            if (@mkdir($root) === false)
+            {
+                $this->errorMessage = sprintf("Error creating directory '%s'.", $root);
+                return false;
+            }
+        }
+        
+		// If Context already exists, method fails.
+        if ($this->getContext($name) !== false)
+        {
+            $this->errorMessage = sprintf("Context '%s' already exists.", $name);
+            return false;
+        }
+
+        // Get absolute pathname if directory is not already in absolute form
+        if (!preg_match('|^/|', $root))
+        {
+            $abs_root = realpath($root);
+            if ($abs_root === false)
+            {
+                $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $root);
+                return false;
+            }
+            $root = $abs_root;
+        }
+    	
+    	$wiff_root = getenv('WIFF_ROOT');
+        if ($wiff_root !== false)
+        {
+            $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+        }
+
+        $archived_root = $wiff_root.WIFF::archive_filepath;
+        
+    	if ($handle = opendir($archived_root))
+    	{
+	    
+		    while (false !== ($file = readdir($handle)))
+		    {
+		    
+		    	if($file == $archiveId.'.fcz')
+		    	{
+		    	
+		    		$temporary_extract_root = $archived_root.'archive-temporary-extract';
+
+		    		$zip = new ZipArchive();
+		    		$res = $zip->open($archived_root.DIRECTORY_SEPARATOR.$file);
+					if ($res === TRUE) {
+					    $zip->extractTo($temporary_extract_root);
+					    $zip->close();
+					} else {
+					    $this->errorMessage = "Error when opening archive.";
+					    return false;
+					}
+		    				    		
+		    		// --- Extract context tar gz --- //
+
+					$context_tar = $temporary_extract_root.DIRECTORY_SEPARATOR."context.tar.gz";
+
+					$script = sprintf("tar -zxf %s -C %s", escapeshellarg($context_tar), escapeshellarg($root));
+					
+			        $result = exec($script,$output,$retval);
+			            
+			        if($retval != 0){
+			         	$this->errorMessage = "Error when extracting context.tar.gz to $root";
+			         	return false;
+			        }
+			        
+			        // --- Restore database --- //
+			        
+//			        $dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
+//			        
+//			        $basename = '';
+//    	
+//			        $script = "PGSERVICE=\"$pgservice_core\" pg_restore $dump --dbname=$basename --no-owner";
+//					$result = system($script,$retval);
+			        
+    				// --- Extract vault tar gz --- //
+    				
+			        if ($handle = opendir($temporary_extract_root))
+			    	{
+				    
+					    while (false !== ($file = readdir($handle)))
+					    {
+					    					    
+					    	if(substr($file, 0, 5) == 'vault')
+					    	{
+					    		$id_fs = substr($file,6,-7);
+					    		
+					    		$vault_tar = $temporary_extract_root.DIRECTORY_SEPARATOR.$file ;
+					    		$vault_subdir = $vault_root.DIRECTORY_SEPARATOR.$id_fs.DIRECTORY_SEPARATOR ;
+
+							    $script = sprintf("tar -zxf %s -C %s", escapeshellarg($vault_tar), escapeshellarg($vault_subdir));
+							
+							    $result = exec($script,$output,$retval);
+							            
+							    if($retval != 0){
+							      	$this->errorMessage = "Error when extracting vault to $vault_root";
+							       	return false;
+							    }
+					    		
+					    	}
+					    	
+					    }
+					    
+			    	}
+	       			
+		    	}
+		    }
+	    
+	    }
+    	
+        // Write contexts XML
+//        $xml = new DOMDocument();
+//        $xml->preserveWhiteSpace = false;
+//        $xml->load($this->contexts_filepath);
+//        $xml->formatOutput = true;
+//
+//        $node = $xml->createElement('context');
+//        $context = $xml->getElementsByTagName('contexts')->item(0)->appendChild($node);
+//
+//        $context->setAttribute('name', $name);
+//
+//        $context->setAttribute('root', $root);
+//		
+//		$context->setAttribute('url', $url);
+//
+//        $descriptionNode = $xml->createElement('description', $desc);
+//
+//        $context->appendChild($descriptionNode);
+//
+//        $moduleNode = $xml->createElement('modules');
+//        $context->appendChild($moduleNode);
+//
+//        // Save XML to file
+//        $ret = $xml->save($this->contexts_filepath);
+//        if ($ret === false)
+//        {
+//            $this->errorMessage = sprintf("Error writing file '%s'.", $this->contexts_filepath);
+//            return false;
+//        }
+        
+	    return true ;
+
+        //return $this->getContext($name);
     
     }
     
+    /**
+     * Delete an archived context.
+     * @return boolean method success
+     * @param integer $archiveId 
+     */
     public function deleteArchive($archiveId)
     {
     
-    	// ...
+    	$wiff_root = getenv('WIFF_ROOT');
+	    if ($wiff_root !== false)
+	    {
+	        $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+	    }
+	    
+	    $archived_root = $wiff_root.WIFF::archive_filepath;
+	    
+	    if(unlink($archived_root.$archiveId.'.fcz'))
+	    {
+	    	return true ;
+	    }
     
-    	$this->errorMessage = 'deleteArchive() not yet implemented.';
     	return false ;
     
     }
     
+    /**
+     * Get an url to download an archived context.
+     * @return string Archive url
+     * @param integer $archivedId
+     */
     public function downloadArchive($archiveId){
     
-    	// ...
-    	
-    	$this->errorMessage = 'downloadArchive() not yet implemented.';
-    	return false ;
+    	$archived_url = curPageURL().wiff::archive_filepath ;
+	    
+	    return $archived_url.DIRECTORY_SEPARATOR.$archiveId.'fcz';
     
     }
 

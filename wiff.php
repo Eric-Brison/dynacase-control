@@ -376,14 +376,14 @@ if (get_magic_quotes_gpc())
     }
     
     // Request to get archived context list
-    if (isset ($REQUEST['getArchivedContextList']))
+    if (isset ($_REQUEST['getArchivedContextList']))
     {
     	$archivedContextList = $wiff->getArchivedContextList();
     	if ($archivedContextList === false)
     	{
     		answer(null, $wiff->errorMessage);
     	}
-    	answer($archivedContextList);
+    	answer($archivedContextList, $wiff->errorMessage);
     }
 
     // Request to create new context
@@ -482,11 +482,10 @@ if (get_magic_quotes_gpc())
     {
     
     	$archiveId = $_REQUEST['archiveId'];
-    	$contextName = $_REQUEST['name'];
-    	
+    	$contextName = $_REQUEST['name'];    	
     
-    	$context = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
-    	if($context === false){
+    	$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root']);
+    	if($result === false){
     		answer(null, $wiff->errorMessage);
     	} else
     	{
@@ -513,9 +512,9 @@ if (get_magic_quotes_gpc())
     if( isset ($_REQUEST['downloadArchive']))
     {
     
-        if ($wiff->downloadArchive($_REQUEST['archiveId']))
+        if ($url = $wiff->downloadArchive($_REQUEST['archiveId']))
         {
-            answer(true);
+            answer($url);
         } else
         {
             answer(null, $wiff->errorMessage);

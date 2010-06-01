@@ -14,7 +14,7 @@ function updateArchiveList(select){
   	Ext.Ajax.request({
    		url: 'wiff.php',
    		params: {
-   			getContextList: true,
+   			getArchivedContextList: true,
    			authInfo: Ext.encode(authInfo)
    		},
    		success: function(responseObject){
@@ -41,7 +41,7 @@ function updateArchiveList_success(responseObject, select){
 	    var data = response.data;
 	    
 	    archiveList = data;
-	    
+	    	    
 	    var panel = Ext.getCmp('archive-list');
 	    
 	    panel.items.each(function(item, index, len){
@@ -53,7 +53,7 @@ function updateArchiveList_success(responseObject, select){
 	    for (var i = 0; i < data.length; i++) {
 	    
 	        panel.add({
-	            title: data[i].name,
+	            title: data[i].name + ' (' + data[i].datetime.substr(0,10) + ')',
 	            iconCls: 'x-icon-archive',
 	            tabTip: data[i].description,
 	            style: 'padding:10px;',
@@ -67,12 +67,13 @@ function updateArchiveList_success(responseObject, select){
 	            items: [{
 	                xtype: 'panel',
 	                title: data[i].name,
+	                archive: data[i],
 	                iconCls: 'x-icon-archive',
 	                id: 'archive-'+data[i].name,
 	                bodyStyle: 'overflow-y:auto;',
 	                items: [{
 	                    layout: 'anchor',
-	                    title: 'Context Information',
+	                    title: 'Archive Information',
 	                    style: 'padding:10px;font-size:small;',
 	                    bodyStyle: 'padding:5px;',
 	                    xtype: 'panel',
@@ -86,7 +87,7 @@ function updateArchiveList_success(responseObject, select){
 	                        handler: function(button){
 	                            
 	                        	var win = new Ext.Window({
-	                                title: 'Create Context',
+	                                title: 'Create Context from Archive',
 	                                iconCls: 'x-icon-create',
 	                                layout: 'fit',
 	                                border: false,
@@ -106,11 +107,10 @@ function updateArchiveList_success(responseObject, select){
 	                                        anchor: '-15',
 	                                        value: button.archive.name
 	                                    }, {
-	                                        xtype: 'displayfield',
+	                                        xtype: 'textfield',
 	                                        fieldLabel: 'Root',
 	                                        name: 'root',
-	                                        anchor: '-15',
-	                                        value: button.archive.root
+	                                        anchor: '-15'
 	                                    }, {
 	                                        xtype: 'textarea',
 	                                        fieldLabel: 'Description',
@@ -121,8 +121,12 @@ function updateArchiveList_success(responseObject, select){
 	                                        xtype: 'textfield',
 	                                        fieldLabel: 'Url',
 	                                        name: 'url',
-	                                        anchor: '-15',
-	                                        value: button.archive.url
+	                                        anchor: '-15'
+	                                    }, {
+	                                        xtype: 'textfield',
+	                                        fieldLabel: 'Vault Root',
+	                                        name: 'vault_root',
+	                                        anchor: '-15'
 	                                    }],
 	                                    
 	                                    buttons: [{
@@ -133,7 +137,7 @@ function updateArchiveList_success(responseObject, select){
 	                                                success: function(form, action){
 	                                                    updateContextList('select-last');
 	                                                    form.reset();
-	                                                    var panel = Ext.getCmp('create-context-form');
+	                                                    var panel = Ext.getCmp('create-archive-form');
 	                                                    panel.fireEvent('render', panel);
 	                                                    win.close();
 	                                                    win.destroy();
@@ -143,71 +147,15 @@ function updateArchiveList_success(responseObject, select){
 	                                                    if (action && action.result) {
 	                                                        Ext.Msg.alert('Failure', action.result.error);
 	                                                    }
-	                                                    else {
-	                                                        Ext.Msg.alert('Failure', 'Select at least one repository.');
-	                                                    }
 	                                                },
 	                                                params: {
-	                                                    saveContext: true,
-	                                                    root: button.archive.root
+	                                                    createContextFromArchive: true,
+	                                                    archiveId: button.archive.id
 	                                                },
-	                                                waitMsg: 'Saving Context...'
+	                                                waitMsg: 'Creating Context from Archive...'
 	                                            })
 	                                        }
-	                                    }],
-	                                    listeners: {
-	                                        render: function(panel){
-	                                        
-	                                            repoStore = new Ext.data.JsonStore({
-	                                                url: 'wiff.php',
-	                                                baseParams: {
-	                                                    getRepoList: true
-	                                                },
-	                                                root: 'data',
-	                                                fields: ['name', 'baseurl', 'description', 'protocol', 'host', 'path', 'url', 'authentified', 'login', 'password', 'displayUrl'],
-	                                                autoLoad: true
-	                                            });
-	                                            
-	                                            repoBoxList = new Array();
-	                                            
-	                                            repoStore.on('load', function(){
-	                                            
-	                                                repoStore.each(function(record){
-	                                                
-	                                                    var checked = false;
-	                                                    
-	                                                    for (var j = 0; j < button.archive.repo.length; j++) {
-	                                                        if (button.archive.repo[j].name == record.get('name')) {
-	                                                            checked = true;
-	                                                        }
-	                                                    }
-	                                                    
-	                                                    repoBoxList.push({
-	                                                        boxLabel: record.get('description') + ' <i>(' + record.get('displayUrl') + ')</i>' + ')</i>',
-	                                                        name: 'repo-' + record.get('name'),
-	                                                        checked: checked
-	                                                    });
-	                                                    
-	                                                });
-	                                                
-	                                                panel.remove(panel.checkBoxGroup);
-	                                                
-	                                                panel.checkBoxGroup = new Ext.form.CheckboxGroup({
-	                                                    fieldLabel: 'Repositories',
-	                                                    allowBlank: false,
-	                                                    blankText: "You must select at least one repository.",
-	                                                    columns: 1,
-	                                                    items: repoBoxList
-	                                                });
-	                                                
-	                                                panel.checkBoxGroup = panel.add(panel.checkBoxGroup);
-	                                                panel.doLayout();
-	                                                
-	                                            });
-	                                            
-	                                            
-	                                        }
-	                                    }
+	                                    }]
 	                                }]
 	                            });
 	                            
@@ -225,7 +173,7 @@ function updateArchiveList_success(responseObject, select){
 							        url: 'wiff.php',
 							        params: {
 							        	downloadArchive: true,
-							            archiveId: button.archive.name
+							            archiveId: button.archive.id
 							        },
 							        success: function(responseObject){						        	
 							            downloadArchive_success(responseObject);
@@ -242,12 +190,12 @@ function updateArchiveList_success(responseObject, select){
 	                        iconCls: 'x-icon-delete-archive',
 	                        archive: data[i],
 	                        handler: function(button){
-	                            
+	                        		                            
 	                        	Ext.Ajax.request({
 							        url: 'wiff.php',
 							        params: {
 							        	deleteArchive: true,
-							            archiveId: button.archive.name
+							            archiveId: button.archive.id
 							        },
 							        success: function(responseObject){						        	
 							            deleteArchive_success(responseObject);
@@ -261,7 +209,7 @@ function updateArchiveList_success(responseObject, select){
 						}],
 	                    refresh: function(){
 	                        
-	                        var contextInfoHtml = '<ul><li class="x-form-item"><b>Archive Date :</b> ' + '</li><li class="x-form-item"><b>Root :</b> ' + this.archive.root + '</li><li class="x-form-item"><b>Description :</b> ' + this.archive.description + '</li><li class="x-form-item"><b>Url :</b>' + (this.archive.url ? '<a href=' + this.archive.url + ' target="_blank" > ' + this.archive.url + '</a>' : '<i> no url</i>') + '</ul><p>';
+	                        var contextInfoHtml = '<ul><li class="x-form-item"><b>Archive Datetime :</b> ' + this.archive.datetime + '</li><li class="x-form-item"><b>Description :</b> ' + this.archive.description + '</li></ul><p>';
 	                        
 	                        this.body.update(contextInfoHtml);
 	                        
@@ -282,48 +230,18 @@ function updateArchiveList_success(responseObject, select){
 	                    listeners: {
 	                        afterrender: function(panel){
 	                            
-	                            currentArchive = panel.ownerCt.title;
-	                            
+	                            currentArchive = panel.archive.id;
+	                            	                            
 	                            archiveStore[currentArchive] = new Ext.data.JsonStore({
-	                                url: 'wiff.php',
-	                                baseParams: {
-	                                    context: this.ownerCt.id,
-	                                    getInstalledModuleList: true,
-	                                    authInfo: Ext.encode(authInfo)
-	                                },
-	                                root: 'data',
+	                            	data: panel.archive.moduleList,	                                
 	                                fields: ['name', 'versionrelease', 'availableversionrelease', 'description', 'infopath', 'errorstatus'],
-	                                //autoLoad: true,
 	                                sortInfo: {
 	                                    field: 'name',
 	                                    direction: "ASC"
-	                                },
-	                                listeners: { //                                        beforeload: function(store, options){
-	                                    //                                            //return false;
-	                                    //                                            Ext.Msg.alert('Freedom Web Installer', 'Here I could ask for repository login/password', function(){
-	                                    //                                                return false;
-	                                    //                                            });
-	                                    //                                        },
-	                                    //                                        load: function(){
-	                                    //                                            console.log('LOAD');
-	                                    //                                        },
-	                                    //                                        exception: function(){
-	                                    //                                            console.log('Exception on load');
-	                                    //                                        }
 	                                }
 	                            });
 	                            
-	                            var selModel = new Ext.grid.CheckboxSelectionModel({
-	                                //header: '',
-	                                listeners: {
-	                                    // prevent selection of records
-	                                    beforerowselect: function(selModel, rowIndex, keepExisting, record){
-	                                        if ((record.get('canUpdate') != true)) {
-	                                            return false;
-	                                        }
-	                                    }
-	                                }
-	                            });
+	                            var selModel = new Ext.grid.RowSelectionModel();
 	                            
 	                            var grid = new Ext.grid.GridPanel({
 	                                selModel: selModel,
@@ -331,7 +249,7 @@ function updateArchiveList_success(responseObject, select){
 	                                border: false,
 	                                store: archiveStore[currentArchive],
 	                                stripeRows: true,
-	                                columns: [selModel, {
+	                                columns: [ {
 	                                    id: 'name',
 	                                    header: 'Module',
 	                                    dataIndex: 'name',
@@ -392,10 +310,14 @@ function updateArchiveList_success(responseObject, select){
 
 function archive_success(responseObject){
 	
-	 var response = eval('(' + responseObject.responseText + ')');
-	 if (response.error) {
-	     Ext.Msg.alert('Server Error', response.error);
-	 }
+	var response = eval('(' + responseObject.responseText + ')');
+	if (response.error) {
+	    Ext.Msg.alert('Server Error', response.error);
+	} else {
+		Ext.Msg.alert('WIFF', 'Archive created.',function(){
+			updateArchiveList();
+		});
+	}
 
 }
 
@@ -405,10 +327,12 @@ function archive_failure(responseObject){
 
 function downloadArchive_success(responseObject){
 	
-	 var response = eval('(' + responseObject.responseText + ')');
-	 if (response.error) {
-	     Ext.Msg.alert('Server Error', response.error);
-	 }
+	var response = eval('(' + responseObject.responseText + ')');
+	if (response.error) {
+		Ext.Msg.alert('Server Error', response.error);
+	}
+	
+	console.log('Download Archive', response);
 
 }
 
@@ -417,15 +341,19 @@ function downloadArchive_failure(responseObject){
 }
 
 function deleteArchive_success(responseObject){
-	
-	 var response = eval('(' + responseObject.responseText + ')');
-	 if (response.error) {
-	     Ext.Msg.alert('Server Error', response.error);
-	 }
+
+	var response = eval('(' + responseObject.responseText + ')');
+	if (response.error) {
+	    Ext.Msg.alert('Server Error', response.error);
+	} else {
+		Ext.Msg.alert('WIFF', 'Archive deleted.',function(){
+			updateArchiveList();
+		});
+	}
 
 }
 
-function deleterchive_failure(responseObject){
+function deleteArchive_failure(responseObject){
 	console.log('Archive Failure');
 }
 

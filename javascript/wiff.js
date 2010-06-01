@@ -986,16 +986,24 @@ function updateContextList_success(responseObject, select){
                         context: data[i],
                         handler: function(button){
                         	
+                        	mask = new Ext.LoadMask(Ext.getBody(), {
+					            msg: 'Making archive'
+					        });
+					        
+					        mask.show();
+                        	
                         	Ext.Ajax.request({
 						        url: 'wiff.php',
 						        params: {
 						        	archiveContext: true,
 						            name: button.context.name
 						        },
-						        success: function(responseObject){						        	
+						        success: function(responseObject){
+						        	mask.hide();
 						            archive_success(responseObject);
 						        },
 						        failure: function(responseObject){
+						        	mask.hide();
 						            archive_failure(responseObject);
 						        }
 						    });

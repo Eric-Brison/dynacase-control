@@ -1105,11 +1105,147 @@ public function removeModuleDownloaded($moduleName) {
   return $this->removeModule($moduleName, 'downloaded');
 }
 
-public function archiveContext() {
+public function archiveContext($comment = '') {
 
-	// ...
+	$zip = new ZipArchive();
 	
-	$this->errorMessage= 'function archiveContext() not yet implemented.';
+	$wiff_root = getenv('WIFF_ROOT');
+    if ($wiff_root !== false)
+    {
+        $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+    }
+    $archived_root = $wiff_root.WIFF::archive_filepath;
+    
+    // --- Generate archive id --- //
+	$datetime = new DateTime();
+	$archiveId = sha1($this->name.$datetime->format('Y-m-d H:i:s'));
+    	
+	if($zip->open($archived_root."/$archiveId.fcz", ZipArchive::CREATE) == TRUE)	{
+	
+		// --- Generate info.xml --- //
+		$doc = new DOMDocument();
+		$doc->formatOutput = true;
+		
+		$root = $doc->createElement('info');
+		$root = $doc->appendChild($root);
+		
+		// --- Write archive information --- //
+		$archive = $doc->createElement('archive');
+		$archive->setAttribute('id',$archiveId);
+		$archive->setAttribute('name',$this->name);		
+		$archive->setAttribute('datetime',$datetime->format('Y-m-d H:i:s'));
+		$archive->setAttribute('description',$comment);
+		$archive = $root->appendChild($archive);
+		
+		// --- Copy context information --- //
+		$wiff_root = getenv('WIFF_ROOT');
+        if ($wiff_root !== false)
+        {
+            $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+        }
+
+        $contexts_filepath = $wiff_root.WIFF::contexts_filepath;
+		
+		$contextsXml = new DOMDocument();
+        $contextsXml->load($contexts_filepath);
+
+        $contextsXPath = new DOMXPath($contextsXml);
+
+        // Get this context
+        $contextList = $contextsXPath->query("/contexts/context[@name='".$this->name."']");
+        if ($contextList->length != 1)
+        {
+            // If more than one context with name
+            $this->errorMessage = "Duplicate contexts with same name";
+            return false;
+        }
+        
+        $context = $doc->importNode($contextList->item(0), true); // Node must be imported from contexts document.
+		$context = $root->appendChild($context);
+		
+		$xml = $doc->saveXML();
+			
+		$zip->addFromString('info.xml',$xml);
+		
+		// --- Generate context tar.gz --- //   
+		$script = sprintf("tar -C %s -czf context.tar.gz .", escapeshellarg($this->root));
+		$result = system($script,$retval);
+		if($retval != 0){
+			$this->errorMessage = "Error when making context tar.";
+			return false;
+		}
+		$zip->addFile('context.tar.gz');
+// Check why this delete also $zip ?
+//		unlink('context.tar.gz');
+		
+		// --- Generate database dump --- //
+		include_once($this->root.'/WHAT/Lib.Common.php');
+		//include_once('include/lib/Lib.System.php');
+		$pgservice_core = getServiceCore();
+		
+//		$dump = tempnam(null, 'core_db.pg_dump.gz');
+//		if( $dump === false ) {
+//		    error_log(__FUNCTION__." ".sprintf("Error creating temp file for pg_dump output.\n"));
+//		    return false;
+//		}
+		
+		$dump = 'core_db.pg_dump.gz';
+		
+//		$pg_dump_cmd = WiffLibSystem::getCommandPath('pg_dump');
+//		if( $pg_dump_cmd === false ) {
+//			error_log(__FUNCTION__." ".sprintf("Could not find pg_dump command in PATH.\n"));
+//		    return false;
+//		}
+//						  
+//		$ret = WiffLibSystem::ssystem(array($pg_dump_cmd, '-f', $dump, '--compress=9'),
+//			array(
+//				'closestdin' => true,
+//				'closestdout' => true,
+//				'envs' => array(
+//					'PGSERVICE' => $pgservice_core
+//				)
+//			)
+//		);
+//				
+//		if( $ret != 0 ) {
+//			error_log(__FUNCTION__." ".sprintf("Dump to '%s' returned with exitcode %s\n", $dump, $ret));
+//			$this->errorMessage = "Error when making database dump.";
+//			return false;
+//		}
+
+		$script = "PGSERVICE=\"$pgservice_core\" pg_dump > $dump --compress=9 --no-owner";
+		$result = system($script,$retval);
+		
+		if( $retval != 0 ){
+			$this->errorMessage = "Error when making database dump.";
+			return false;
+		}
+		
+		$zip->addFile($dump);
+//		unlink('core_db.pg_dump.gz');		
+		
+		// --- Generate vaults tar.gz files --- //
+		pg_connect("service=$pgservice_core");
+		$result = pg_query("SELECT id_fs, r_path FROM vaultdiskfsstorage ;");
+		while ($row = pg_fetch_row($result)) {
+			$id_fs = $row[0];
+			$r_path = $row[1];
+			$script = sprintf("tar -C %s -czf vault_$id_fs.tar.gz .", escapeshellarg($r_path));
+			$res = system($script,$retval);
+			if($retval != 0){
+				$this->errorMessage = "Error when making vault tar.";
+				return false;
+			}
+			$zip->addFile("vault_$id_fs.tar.gz");
+		}		
+		
+		// --- Save zip --- //
+		$zip->close();
+	
+	} else {	
+		$this->errorMessage = 'Can not create archive.';
+	}
+	
 	return false ;
 
 }
