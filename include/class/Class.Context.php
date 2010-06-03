@@ -1357,6 +1357,8 @@ public function archiveContext($comment = '') {
 	}
 	
 	return false ;
+	
+}
 
 
 /**

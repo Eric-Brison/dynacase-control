@@ -167,29 +167,31 @@ function updateArchiveList_success(responseObject, select){
 	                            win.show();
 	                        	
 	                        }
-						},{
-	                        text: 'Download',
-	                        tooltip: 'Download',
-	                        iconCls: 'x-icon-archive',
-	                        archive: data[i],
-	                        handler: function(button){
-	                            
-	                        	Ext.Ajax.request({
-							        url: 'wiff.php',
-							        params: {
-							        	downloadArchive: true,
-							            archiveId: button.archive.id
-							        },
-							        success: function(responseObject){						        	
-							            downloadArchive_success(responseObject);
-							        },
-							        failure: function(responseObject){
-							            downloadArchive_failure(responseObject);
-							        }
-							    });
-	                        	
-	                        }
-						},{
+						},
+//							{
+//	                        text: 'Download',
+//	                        tooltip: 'Download',
+//	                        iconCls: 'x-icon-archive',
+//	                        archive: data[i],
+//	                        handler: function(button){
+//	                            
+//	                        	Ext.Ajax.request({
+//							        url: 'wiff.php',
+//							        params: {
+//							        	downloadArchive: true,
+//							            archiveId: button.archive.id
+//							        },
+//							        success: function(responseObject){						        	
+//							            downloadArchive_success(responseObject);
+//							        },
+//							        failure: function(responseObject){
+//							            downloadArchive_failure(responseObject);
+//							        }
+//							    });
+//	                        	
+//	                        }
+//						},
+							{
 	                        text: 'Delete',
 	                        tooltip: 'Delete',
 	                        iconCls: 'x-icon-delete-archive',
