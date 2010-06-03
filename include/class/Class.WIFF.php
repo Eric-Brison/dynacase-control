@@ -745,11 +745,9 @@ require valid-user
     
     }
     
-    public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root)
+    public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root, $pgservice)
     {
-    
-    	//error_log('--- Create Context From Archive --- '.$archiveId.' --- '.$root);
-    
+        
     	// --- Create or reuse directory --- //
         if (is_dir($root))
         {
@@ -779,6 +777,34 @@ require valid-user
             }
         }
         
+    	if (is_dir($vault_root))
+        {
+            if (!is_writable($vault_root))
+            {
+                $this->errorMessage = sprintf("Directory '%s' is not writable.", $vault_root);
+                return false;
+            }
+            $dirListing = @scandir($vault_root);
+            if ($dirListing === false)
+            {
+                $this->errorMessage = sprintf("Error scanning directory '%s'.", $vault_root);
+                return false;
+            }
+            $dirListingCount = count($dirListing);
+            if ($dirListingCount > 2)
+            {
+                $this->errorMessage = sprintf("Directory '%s' is not empty.", $vault_root);
+                return false;
+            }
+        } else
+        {
+            if (@mkdir($vault_root) === false)
+            {
+                $this->errorMessage = sprintf("Error creating directory '%s'.", $vault_root);
+                return false;
+            }
+        }
+        
 		// If Context already exists, method fails.
         if ($this->getContext($name) !== false)
         {
@@ -797,6 +823,18 @@ require valid-user
             }
             $root = $abs_root;
         }
+        
+    	if (!preg_match('|^/|', $vault_root))
+        {
+            $abs_vault_root = realpath($vault_root);
+            if ($abs_vault_root === false)
+            {
+                $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $vault_root);
+                return false;
+            }
+            $vault_root = $abs_vault_root;
+        }
+        
     	
     	$wiff_root = getenv('WIFF_ROOT');
         if ($wiff_root !== false)
@@ -842,13 +880,16 @@ require valid-user
 			        
 			        // --- Restore database --- //
 			        
-//			        $dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
-//			        
-//			        $basename = '';
-//    	
-//			        $script = "PGSERVICE=\"$pgservice_core\" pg_restore $dump --dbname=$basename --no-owner";
-//					$result = system($script,$retval);
+			        $dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
+			            	
+			        $script = "gzip -dc $dump | PGSERVICE=$pgservice psql";
+					$result = exec($script,$output,$retval);
 			        
+		    		if($retval != 0){
+			         	$this->errorMessage = "Error when restoring core_db.pg_dump.gz";
+			         	return false;
+			        }
+					
     				// --- Extract vault tar gz --- //
     				
 			        if ($handle = opendir($temporary_extract_root))
@@ -863,6 +904,12 @@ require valid-user
 					    		
 					    		$vault_tar = $temporary_extract_root.DIRECTORY_SEPARATOR.$file ;
 					    		$vault_subdir = $vault_root.DIRECTORY_SEPARATOR.$id_fs.DIRECTORY_SEPARATOR ;
+					    		
+						    	if (@mkdir($vault_subdir) === false)
+					            {
+					                $this->errorMessage = sprintf("Error creating directory '%s'.", $vault_subdir);
+					                return false;
+					            }
 
 							    $script = sprintf("tar -zxf %s -C %s", escapeshellarg($vault_tar), escapeshellarg($vault_subdir));
 							
@@ -885,38 +932,102 @@ require valid-user
 	    }
     	
         // Write contexts XML
-//        $xml = new DOMDocument();
-//        $xml->preserveWhiteSpace = false;
-//        $xml->load($this->contexts_filepath);
-//        $xml->formatOutput = true;
-//
-//        $node = $xml->createElement('context');
-//        $context = $xml->getElementsByTagName('contexts')->item(0)->appendChild($node);
-//
-//        $context->setAttribute('name', $name);
-//
-//        $context->setAttribute('root', $root);
-//		
-//		$context->setAttribute('url', $url);
-//
-//        $descriptionNode = $xml->createElement('description', $desc);
-//
-//        $context->appendChild($descriptionNode);
-//
-//        $moduleNode = $xml->createElement('modules');
-//        $context->appendChild($moduleNode);
-//
-//        // Save XML to file
-//        $ret = $xml->save($this->contexts_filepath);
-//        if ($ret === false)
-//        {
-//            $this->errorMessage = sprintf("Error writing file '%s'.", $this->contexts_filepath);
-//            return false;
-//        }
+        $xml = new DOMDocument();
+        $xml->preserveWhiteSpace = false;
+        $xml->load($this->contexts_filepath);
+        $xml->formatOutput = true;
+        
+        $infoFile = $temporary_extract_root.DIRECTORY_SEPARATOR."info.xml";
+        
+        $archiveXml = new DOMDocument();
+        $archiveXml->load($infoFile);
+        
+        
+        $xmlXPath = new DOMXPath($xml);
+    	$contextList = $xmlXPath->query("/contexts/context[@name='".$name."']");
+        if ($contextList->length != 0)
+        {
+            // If more than one context with name
+            $this->errorMessage = "Context with same name already exists.";
+            return false;
+        }
+        
+        $contextList = $xmlXPath->query("/contexts");
+        
+        $archiveXPath = new DOMXPath($archiveXml);
+
+        // Get this context
+        $archiveList = $archiveXPath->query("/info/context");
+        if ($archiveList->length != 1)
+        {
+            // If more than one context found
+            $this->errorMessage = "More than one context in archive";
+            return false;
+        }
+        
+        $context = $xml->importNode($archiveList->item(0), true); // Node must be imported from archive document.
+		$context = $contextList->item(0)->appendChild($context);
+		
+		// Modify root on xml
+		$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']");
+        if ($paramList->length != 1)
+        {
+            $this->errorMessage = "Parameter core_db does not exist.";
+            return false;
+        }
+        
+        $paramList->item(0)->setAttribute('root',$root);		
+		
+		// Modify core_db in xml
+		$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='core_db']");
+        if ($paramList->length != 1)
+        {
+            $this->errorMessage = "Parameter core_db does not exist.";
+            return false;
+        }
+        
+        $paramList->item(0)->setAttribute('value',$pgservice);
+        
+        // Modify or add vault_root in xml
+    	$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='vault_root']");
+        if ($paramList->length != 1)
+        {
+			$paramValueList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value");
+			$paramVaultRoot = $xml->createElement('param');
+			$paramVaultRoot->setAttribute('name','vault_root');
+			$paramVaultRoot->setAttribute('value',$vault_root);
+			$paramVaultRoot = $paramValueList->item(0)->appendChild($paramVaultRoot);
+        }
+
+        // Save XML to file
+        $ret = $xml->save($this->contexts_filepath);
+        if ($ret === false)
+        {
+            $this->errorMessage = sprintf("Error writing file '%s'.", $this->contexts_filepath);
+            return false;
+        }
+        
+        $this->reconfigure($name);
         
 	    return true ;
 
         //return $this->getContext($name);
+    
+    }
+    
+    
+    public function reconfigure($name)
+    {
+
+    	$context = $this->getContext($name);
+    	$installedModuleList = $context->getInstalledModuleList();
+    	foreach($installedModuleList as $module){
+    		$phase = $module->getPhase('reconfigure');
+    		$processList = $phase->getProcessList();
+    		foreach($processList as $process){
+    			$process->execute();
+    		}
+    	}    
     
     }
     

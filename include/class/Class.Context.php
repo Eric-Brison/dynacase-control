@@ -6,6 +6,21 @@
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
  */
 
+// Util functions using php DOMDocument
+function deleteNode($node) {
+    deleteChildren($node);
+    $parent = $node->parentNode;
+    $oldnode = $parent->removeChild($node);
+}
+
+function deleteChildren($node) {
+    while (isset($node->firstChild)) {
+        deleteChildren($node->firstChild);
+        $node->removeChild($node->firstChild);
+    }
+}
+
+
 class Context
 {
 
@@ -1162,6 +1177,9 @@ public function archiveContext($comment = '') {
         
         $context = $doc->importNode($contextList->item(0), true); // Node must be imported from contexts document.
 		$context = $root->appendChild($context);
+		
+		$repositories = $context->getElementsByTagName('repositories')->item(0);
+		deleteNode($repositories);
 		
 		$xml = $doc->saveXML();
 			

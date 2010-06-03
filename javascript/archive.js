@@ -123,6 +123,11 @@ function updateArchiveList_success(responseObject, select){
 	                                        name: 'url',
 	                                        anchor: '-15'
 	                                    }, {
+	                                    	xtype: 'textfield',
+	                                        fieldLabel: 'Core Database Service',
+	                                        name: 'core_pgservice',
+	                                        anchor: '-15'
+	                                    }, {
 	                                        xtype: 'textfield',
 	                                        fieldLabel: 'Vault Root',
 	                                        name: 'vault_root',

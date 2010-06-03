@@ -39,7 +39,8 @@ class Phase
         if (!in_array($this->name, array (
         'pre-install', 'pre-upgrade', 'pre-remove',
         'unpack', 'remove', 'param',
-        'post-install', 'post-upgrade', 'post-remove', 'post-param'
+        'post-install', 'post-upgrade', 'post-remove', 'post-param',
+        'reconfigure'
         )
         ))
         {

@@ -484,12 +484,12 @@ if (get_magic_quotes_gpc())
     	$archiveId = $_REQUEST['archiveId'];
     	$contextName = $_REQUEST['name'];    	
     
-    	$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root']);
+    	$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice']);
     	if($result === false){
     		answer(null, $wiff->errorMessage);
     	} else
     	{
-    		answer($context);
+    		answer(true);
     	}
     
     }
