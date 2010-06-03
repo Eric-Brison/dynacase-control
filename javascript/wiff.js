@@ -2430,21 +2430,21 @@ function executePhaseList(operation){
 		case 'unregister-module':
 
 		    Ext.Ajax.request({
-				url: 'wiff.php',
-				params: {
-				    context: currentContext,
-				    module: module.name,
-				    unregisterModule: true
-				},
-				success: function(responseObject) {
-				    var response = eval('(' + responseObject.responseText + ')');
-				    if( response.error ) {
-					Ext.Msg.alert('Server Error', response.error);
-				    }
-				    var data = response.data;
-				    currentPhaseIndex++;
-				    executePhaseList(operation);
-				}
+			url: 'wiff.php',
+			params: {
+			    context: currentContext,
+			    module: module.name,
+			    unregisterModule: true
+			},
+			success: function(responseObject) {
+			    var response = eval('(' + responseObject.responseText + ')');
+			    if( response.error ) {
+				Ext.Msg.alert('Server Error', response.error);
+			    }
+			    var data = response.data;
+			    currentPhaseIndex++;
+			    executePhaseList(operation);
+			}
 		    });
 		    break;
 		    

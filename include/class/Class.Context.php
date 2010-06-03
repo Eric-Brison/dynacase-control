@@ -538,10 +538,42 @@ public function cmpVersionReleaseAsc($v1, $r1, $v2, $r2)
     $ver2 = preg_split('/\./', $v2, 3);
     $rel2 = $r2;
 
-    $str1 = sprintf("%03d%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2], $rel1);
-    $str2 = sprintf("%03d%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2], $rel2);
+    $str1 = sprintf("%03d%03d%03d", $ver1[0], $ver1[1], $ver1[2]);
+    $str2 = sprintf("%03d%03d%03d", $ver2[0], $ver2[1], $ver2[2]);
 
-    return strcmp($str1, $str2);
+    $cmp_ver = strcmp($str1, $str2);
+
+    /* Version is different, so we do not
+     * need to test the release
+     */
+    if( $cmp_ver != 0 ) {
+      return $cmp_ver;
+    }
+
+    /* Version is equal, so we need to
+     * test the release:
+     *   num vs. num => numeric comparison
+     *   str vs. str => string comparison
+     *   num vs. str => string is < to num
+     */
+    $cmp_rel = 0;
+    if( is_numeric($rel1) && is_numeric($rel2) ) {
+      /* standard numeric comparison */
+      $cmp_rel = $rel1-$rel2;
+    } else if( is_numeric($rel1) && is_string($rel2) ) {
+      /* number is > to string */
+      $cmp_rel = 1;
+    } else if( is_string($rel1) && is_numeric($rel2) ) {
+      /* string is < to number */
+      $cmp_rel = -1;
+    } else if( is_string($rel1) && is_string($rel2) ) {
+      /* standard string comparison */
+      $cmp_rel = strcmp($rel1, $rel2);
+    } else {
+      $cmp_rel = 0;
+    }
+
+    return $cmp_rel;
 }
 
 /**
@@ -804,6 +836,26 @@ public function getModuleDependencies($namelist, $local = false)
     		
     	}
     }    
+
+    // Check for and add replaced modules to the dep list
+    // and mark them with needPhase='replaced'
+
+    $removeList = array();
+    foreach( $orderList as $mod ) {
+      foreach( $mod->replaces as $replace ) {
+	$replacedModule = $this->getModuleInstalled($replace['name']);
+	if( $replacedModule !== false ) {
+	  // This module is installed, so mark it for removal
+	  array_push($removeList, $replacedModule);
+	}
+      }
+    }
+    foreach( $removeList as $mod ) {
+      if( ! listContains($orderList, $mod->name) ) {
+	$mod->needphase = 'replaced';
+	array_unshift($orderList, $mod);
+      }
+    }
 
     return $orderList;
 }
@@ -1123,7 +1175,12 @@ public function removeModule($moduleName, $status = '') {
 }
 
 public function removeModuleInstalled($moduleName) {
-  return $this->removeModule($moduleName, 'installed');
+  $ret = $this->removeModule($moduleName, 'installed');
+  if( $ret === false ) {
+    return false;
+  }
+
+  return true;
 }
 
 public function removeModuleDownloaded($moduleName) {
@@ -1300,6 +1357,260 @@ public function archiveContext($comment = '') {
 	}
 	
 	return false ;
+
+
+/**
+ * Store the manifest of a downloaded module
+ */
+public function storeManifestForModule($module) {
+  if( ! is_object($module) ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."not an object");
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $manifest = $module->getManifest();
+  if( $manifest == '' ) {
+    $err = sprinf(__CLASS__."::".__FUNCTION__." "."empty manifest for '%s'", $module->name);
+    $this->errorMessage = $err;
+    return $manifest;
+  }
+
+  $manifestDir = sprintf("%s/", $this->root);
+  $manifestFile = sprintf("%s.manifest", $module->name);
+
+  $tmpfile = tempnam($manifestDir, $manifestFile);
+  if( $tmpfile === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error creating temp file in '%s'", $manifestDir);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $fout = fopen($tmpfile, 'w');
+  if( $fout === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error opening output file '%s' for writing.", $tmpfile);
+    $this->errorMessage = $err;
+    unlink($tmpfile);
+    return false;
+  }
+
+  $ret = fwrite($fout, $manifest);
+  if( $ret === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error writing manifest to '%s'.", $tmpfile);
+    $this->errorMessage = $err;
+    unlink($tmpfile);
+    return false;
+  }
+
+  fclose($fout);
+
+  $ret = rename($tmpfile, sprintf("%s/%s", $manifestDir, $manifestFile));
+  if( $ret === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error moving '%s' to '%s'", $tmpfile, sprintf("%s/%s", $manifestDir, $manifestFile));
+    $this->errorMessage = $err;
+    unlink($tmpfile);
+    return false;
+  }
+
+  return $manifest;
+}
+
+/**
+ * get the manifest of a module name
+ */
+public function getManifestForModule($moduleName) {
+  if( is_object($moduleName) ) {
+    $moduleName = $module->name;
+  }
+
+  $manifestFile = sprintf("%s/%s.manifest", $this->root, $moduleName);
+  if( ! is_file($manifestFile) ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Manifest file '%s' does not exists.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $manifest = file_get_contents($manifestFile);
+  if( $manifest === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error getting content from manifest file '%s'.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  return $manifest;
+}
+
+/**
+ * Delete the manifest file of a module name
+ */
+public function deleteManifestForModule($moduleName) {
+  if( is_object($moduleName) ) {
+    $moduleName = $module->name;
+  }
+
+  $manifestFile = sprintf("%s/%s.manifest", $this->root, $moduleName);
+  if( ! file_exists($manifestFile) ) {
+    return $manifestFile;
+  }
+  if( ! is_file($manifestFile) ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."'%s' is not a file.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  $ret = unlink($manifestFile);
+  if( $ret === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error unlinking manifest file '%s'.", $manifestFile);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  return $manifestfile;
+}
+
+/**
+ * Delete files from the given module name
+ */
+public function deleteFilesFromModule($moduleName) {
+  if( is_object($moduleName) ) {
+    $moduleName = $module->name;
+  }
+
+  $manifestEntries = $this->getManifestEntriesForModule($moduleName);
+  if( $manifestEntries === false ) {
+    $err = sprintf(__CLASS__."::".__FUNCTION__." "."Error getting manifest entries for module '%s': %s", $moduleName, $this->errorMessage);
+    $this->errorMessage = $err;
+    return false;
+  }
+
+  // Sort files in reverse order in order to be able to processs
+  // removal of directories after their contained files
+  usort($manifestEntries, array($this, "sortManifestEntriesByNameReverse"));
+
+  foreach( $manifestEntries as $mentry ) {
+    $fpath = sprintf("%s/%s", $this->root, $mentry['name']);
+
+    if( ! file_exists($fpath) ) {
+      continue;
+    }
+
+    $stat = lstat($fpath);
+    if( $stat === false ) {
+      error_log(__CLASS__."::".__FUNCTION__." ".sprintf("stat('%s') from module '%s' returned with error.", $fpath, $moduleName));
+      continue;
+    }
+
+    $ret = false;
+    if( ! is_link($fpath) && is_dir($fpath) ) {
+      if( $mentry['type'] != 'd' ) {
+	error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Type mismatch for file '%s' from module '%s': type is 'd' while manifest says '%s'.", $fpath, $moduleName, $mentry['type']));
+	continue;
+      }
+      if( $stat['nlink'] > 2 ) {
+	continue;
+      }
+      $ret = @rmdir($fpath);
+    } else {
+      $ret = @unlink($fpath);
+    }
+
+    if( $ret === false ) {
+      error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Error removing '%s' (%s) from module '%s'.", $fpath, $mentry['type'], $moduleName));
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Sort helper function for manifest entries
+ */
+private function sortManifestEntriesByNameReverse($a, $b) {
+  return strcmp($b['name'], $a['name']);
+}
+
+/**
+ * Parse the manifest str into a structure
+ *
+ * Returns array(
+ *               0 => array(
+ *                          'type' => 'l',
+ *                          'mode' => 'rwxr-xr-x',
+ *                          'uid' => 'foo',
+ *                          'gid' => 'bar',
+ *                          'size' => '1234',
+ *                          'date' => '1970-01-01 10:11:12',
+ *                          'name' => 'Symlink Example.txt',
+ *                          'link' => ' -> Symlink Target.txt'
+ *                          ),
+ *               N => array(
+ *                          ...
+ *                          ),
+ *               ...
+ *               );
+ */ 
+public function getManifestEntriesForModule($moduleName) {
+  $manifest = $this->getManifestForModule($moduleName);
+  $manifestLines = preg_split("/\n/", $manifest);
+  $manifestEntries = array();
+
+  foreach( $manifestLines as $line ) {
+    $minfo = array();
+    if( ! preg_match("|^(?P<type>.)(?P<mode>.........)\s+(?P<uid>.*?)/(?P<gid>.*?)\s+(?P<size>\d+)\s+(?P<date>\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d:\d\d)\s+(?P<name>.*?)(?P<link>\s+->\s+.*?)?$|", $line, $minfo) ) {
+      continue;
+    }
+    array_push($manifestEntries, $minfo);
+  }
+  
+  return $manifestEntries;
+}
+
+/**
+ * Purge/remove parameters value that are associated
+ * with a module that is no more present in the context.
+ */
+public function purgeUnreferencedParametersValue() {
+  require_once ('class/Class.WIFF.php');
+
+  $wiff = WIFF::getInstance();
+
+  $xml = new DOMDocument();
+  $xml->preserveWhiteSpace = false;
+  $xml->formatOutput = true;
+  $ret = $xml->load($wiff->contexts_filepath);
+  if( $ret === false ) {
+    $this->errorMessage = sprintf("Error opening XML file '%s'.", $wiff->contexts_filepath);
+    return false;
+  }
+
+  $xpath = new DOMXPath($xml);
+
+  $parametersValueNodeList = $xpath->query(sprintf("/contexts/context[@name='%s']/parameters-value/param", $this->name));
+  if( $parametersValueNodeList->length <= 0 ) {
+    return true;
+  }
+
+  $purgeNodeList = array();
+  for( $i = 0; $i < $parametersValueNodeList->length; $i++ ) {
+    $pv = $parametersValueNodeList->item($i);
+    $moduleName = $pv->getAttribute('modulename');
+    $module = $this->getModule($moduleName);
+    if( $module === false ) {
+      array_push($purgeNodeList, $pv);
+    }
+  }
+
+  foreach( $purgeNodeList as $node ) {
+    $node->parentNode->removeChild($node);
+  }
+
+  $ret = $xml->save($wiff->contexts_filepath);
+  if( $ret === false ) {
+    $this->errorMessage = sprintf("Error saving contexts.xml '%s'.", $wiff->contexts_filepath);
+    return false;
+  }
+
+  return true;
 
 }
 

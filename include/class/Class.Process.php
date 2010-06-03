@@ -56,7 +56,6 @@ class Process
 	}
 
         return;
-
     }
 
     private function computeLabel() {

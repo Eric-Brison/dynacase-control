@@ -39,6 +39,9 @@ function wcontrol_eval_process($process)
     } else if ($process->getName() == "download")
     {
         return wcontrol_download($process);
+    } else if ($process->getName() == "unregister-module")
+    {
+	return wcontrol_unregister_module($process);
     }
 
     return array (

@@ -408,12 +408,18 @@ function wiff_context_module_install_local(&$context, &$options, &$pkgName, &$ar
   }
 
   if( count($depList) > 1 ) {
-    echo sprintf("Will (i)nstall, or (u)pgrade, the following packages:\n");
+    echo sprintf("Will (i)nstall, (u)pgrade or (r)eplace the following packages:\n");
     foreach( $depList as $module ) {
       if( $module->needphase == '' ) {
 	$module->needphase = 'install';
       }
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
+      $op = '(i)';
+      if( $module->needphase == 'upgrade' ) {
+	$op = '(u)';
+      } else if( $module->needphase == 'replaced' ) {
+	$op = '(r)';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, $op);
     }
     $ret = param_ask("Proceed with installation", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
@@ -443,12 +449,18 @@ function wiff_context_module_install_remote(&$context, &$options, &$modName, &$a
   }
 
   if( count($depList) > 1 ) {
-    echo sprintf("Will (i)nstall, or (u)pgrade, the following packages:\n");
+    echo sprintf("Will (i)nstall, (u)pgrade, or (r)eplace the following packages:\n");
     foreach( $depList as $module ) {
       if( $module->needphase == '' ) {
 	$module->needphase = 'install';
       }
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
+      $op = '(i)';
+      if( $module->needphase == 'upgrade' ) {
+	$op = '(u)';
+      } else if( $module->needphase == 'replaced' ) {
+	$op = '(r)';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, $op);
     }
     $ret = param_ask("Proceed with installation", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
@@ -463,10 +475,42 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
   $downloaded = array();
   foreach( $depList as $module ) {
     if( $module->needphase != '' ) {
-      $type = $module->needphase;
+      if( $module->needphase == 'replaced' ) {
+	$type = 'unregister';
+      } else {
+	$type = $module->needphase;
+      }
     }
 
-    echo sprintf("\nProcessing required module '%s' (%s-%s) for %s.\n", $module->name, $module->version, $module->release, $type);
+    echo sprintf("\nProcessing module '%s' (%s-%s) for %s.\n", $module->name, $module->version, $module->release, $type);
+
+    if( $module->needphase == 'replaced' ) {
+      /**
+       * Unregister module
+       */
+      $mod = $context->getModuleInstalled($module->name);
+      if( $mod === false ) {
+	continue;
+      }
+      echo sprintf("Unregistering module '%s'.\n", $module->name);
+      $ret = $context->removeModule($module->name);
+      if( $ret === false ) {
+	error_log(sprintf("Error: could not unregister module '%s' from context: %s\n", $module->name, $context->errorMessage));
+	return 1;
+      }
+      $ret = $context->deleteFilesFromModule($module->name);
+      if( $ret === false ) {
+	error_log(sprintf("Error: could not delete files for module '%s': %s\n", $module->name, $context->errorMessage));
+	return 1;
+      }
+      $ret = $context->deleteManifestForModule($module->name);
+      if( $ret === false ) {
+	error_log(sprintf("Error: could not delete manifest file for module '%s': %s\n", $module->name, $context->errorMessage));
+	return 1;
+      }
+
+      continue;
+    }
 
     if( $module->status == 'downloaded' && is_file($module->tmpfile) ) {
       echo sprintf("Module '%s-%s-%s' is already downloaded in '%s'.\n", $module->name, $module->version, $module->release, $module->tmpfile);
@@ -576,7 +620,17 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
     foreach( $phaseList as $phaseName ) {
       echo sprintf("Doing '%s' of module '%s'.\n", $phaseName, $module->name);
       
-      if( $phaseName == 'unpack' ) {
+      switch( $phaseName ) {
+      case 'clean-unpack':
+	echo sprintf("Removing old files from module '%s'.\n", $module->name);
+	$ret = $context->deleteFilesFromModule($module->name);
+	if( $ret === false ) {
+	  error_log(sprintf("Error: could not delete old files for module '%s' in '%s': %s", $module->name, $context->root, $context->errorMessage));
+	  return 1;
+	}
+	echo sprintf("[%sOK%s]\n", fg_green(), color_reset());
+	// Chain with 'unpack'
+      case 'unpack':
 	echo sprintf("Unpacking module '%s'... ", $module->name);
 	$ret = $module->unpack($context->root);
 	if( $ret === false ) {
@@ -584,7 +638,36 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 	  return 1;
 	}
 	echo sprintf("[%sOK%s]\n", fg_green(), color_reset());
-      } else {
+	break;
+      case 'unregister-module':
+	echo sprintf("Unregistering module '%s'... ", $module->name);
+	$ret = $context->removeModule($module->name);
+	if( $ret === false ) {
+	  error_log(sprintf("Error: could not remove module '%s' in '%s': %s", $module->name, $context->root, $context->errorMessage));
+	  return 1;
+	}
+	$ret = $context->deleteFilesFromModule($module->name);
+	if( $ret === false ) {
+	  error_log(sprintf("Error: could not delete files for module '%s' in '%s': %s", $module->name, $context->root, $context->errorMessage));
+	  return 1;
+	}
+	$ret = $context->deleteManifestForModule($module->name);
+	if( $ret === false ) {
+	  error_log(sprintf("Error: could not delete manifest for module '%s' in '%s': %s", $module->name, $context->root, $context->errorMessage));
+	  return 1;
+	}
+	echo sprintf("[%sOK%s]\n", fg_green(), color_reset());
+	break;
+      case 'purge-unreferenced-parameters-value':
+	echo sprintf("Purging unreferenced parameters value...");
+	$ret = $context->purgeUnreferencedParametersValue();
+	if( $ret === false ) {
+	  error_log(sprintf("Error: could not purge unreferenced parameters value in '%s': %s", $context->root, $context->errorMessage));
+	  return 1;
+	}
+	echo sprintf("[%sOK%s]\n", fg_green(), color_reset());
+	break;
+      default:
 	$phase = $module->getPhase($phaseName);
 	$processList = $phase->getProcessList();
 	
@@ -612,6 +695,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 	    }
 	  }
 	}
+	break;
       }
     }
     
@@ -708,12 +792,18 @@ function wiff_context_module_upgrade_local(&$context, &$options, &$pkgName, &$ar
   }
 
   if( count($depList) > 1 ) {
-    echo sprintf("Will (u)pgrade, or (i)nstall, the following packages:\n");
+    echo sprintf("Will (i)nstall, (u)pgrade or (r)eplace the following packages:\n");
     foreach( $depList as $module ) {
       if( $module->needphase == '' ) {
 	$module->needphase = 'upgrade';
       }
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
+      $op = '(i)';
+      if( $module->needphase == 'upgrade' ) {
+	$op = '(u)';
+      } else if( $module->needphase == 'replaced' ) {
+	$op = '(r)';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, $op);
     }
     $ret = param_ask("Proceed with upgrade", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {
@@ -753,12 +843,18 @@ function wiff_context_module_upgrade_remote(&$context, &$options, &$modName, &$a
   }
 
   if( count($depList) > 1 ) {
-    echo sprintf("Will upgrade (or install) the following packages:\n");
+    echo sprintf("Will (i)nstall, (u)pgrade or (r)eplace the following packages:\n");
     foreach( $depList as $module ) {
       if( $module->needphase == '' ) {
 	$module->needphase = 'upgrade';
       }
-      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, ($module->needphase=='upgrade'?'(u)':'(i)'));
+      $op = '(i)';
+      if( $module->needphase == 'upgrade' ) {
+	$op = '(u)';
+      } else if( $module->needphase == 'replaced' ) {
+	$op = '(r)';
+      }
+      echo sprintf("- %s-%s-%s %s\n", $module->name, $module->version, $module->release, $op);
     }
     $ret = param_ask("Proceed with upgrade", "Y/n", "Y");
     if( !preg_match('/^(y|yes|)$/i', $ret) ) {

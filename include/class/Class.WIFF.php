@@ -1511,7 +1511,7 @@ require valid-user
         if ($fout === false)
         {
             unlink($tmpfile);
-            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error opening output file '%s' for writing.");
+            $this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error opening output file '%s' for writing.", $tmpfile);
             return false;
         }
 
@@ -1884,6 +1884,17 @@ require valid-user
       }
 
       return array('valid' => true, 'label' => $repo->label);
+    }
+
+    /**
+     * Get WIFF root path
+     */
+    public function getWiffRoot() {
+      $wiff_root = getenv('WIFF_ROOT');
+      if( $wiff_root !== false ) {
+	$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+      }
+      return $wiff_root;
     }
 
 }

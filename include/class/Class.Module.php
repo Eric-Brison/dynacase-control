@@ -39,6 +39,8 @@ class Module
 
     public $requires;
 
+    public $replaces;
+
     public $xmlNode;
 
     public $needphase = '';
@@ -150,6 +152,17 @@ class Module
                 );
             }
         }
+
+	// Load xmlNode <replaces> elements
+	$this->replaces = array();
+	$replacesNodeList = $xmlNode->getElementsByTagName('replaces');
+	if( $replacesNodeList->length > 0 ) {
+	  $replacesNode = $replacesNodeList->item(0);
+	  $moduleNodeList = $replacesNode->getElementsByTagName('module');
+	  foreach( $moduleNodeList as $moduleNode ) {
+	    array_push($this->replaces, array('name' => $moduleNode->getAttribute('name')));
+	  }
+	}
 
         return $xmlNode;
     }
@@ -414,27 +427,34 @@ class Module
      */
     public function unpack($destDir = '')
     {
-        include_once ('lib/Lib.System.php');
-
-        if (!is_file($this->tmpfile))
+      include_once ('lib/Lib.System.php');
+      
+      if (!is_file($this->tmpfile))
         {
-            $this->errorMessage = sprintf("Temporary file of downloaded module does not exists.");
-            return false;
+	  $this->errorMessage = sprintf("Temporary file of downloaded module does not exists.");
+	  return false;
         }
 
-        $cmd = 'tar -zxOf '.escapeshellarg($this->tmpfile).' content.tar.gz | tar '.(($destDir != '')?'-C '.escapeshellarg($destDir):
-            '').' -zxf -';
-
-            $ret = null;
-            system($cmd, $ret);
-            if ($ret != 0)
-            {
-                $this->errorMessage = sprintf("Error executing command [%s]", $cmd);
-                return false;
-            }
-
-            return $destDir;
-        }
+      // Store BOM/manifest
+      $ret = $this->context->storeManifestForModule($this);
+      if( $ret === false ) {
+	$this->errorMessage = sprintf("Error getting manifest for '%s': %s", $this->name, $this->context->errorMessage);
+	return false;
+      }
+      
+      // Unpack archive
+      $cmd = 'tar -zxOf '.escapeshellarg($this->tmpfile).' content.tar.gz | tar '.(($destDir != '')?'-C '.escapeshellarg($destDir):'').' -zxf -';
+      
+      $ret = null;
+      system($cmd, $ret);
+      if ($ret != 0)
+	{
+	  $this->errorMessage = sprintf("Error executing command [%s]", $cmd);
+	  return false;
+	}
+      
+      return $destDir;
+    }
 
         /**
          * Delete module folder
@@ -508,7 +528,7 @@ class Module
                 $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$p->name."' and @modulename='".$this->name."']");
                 if ($storedParamValue->length <= 0)
                 {
-                    $p->value = "";
+		    $p->value = $this->getParameterValueFromReplacedModules($contextsXpath, $p->name);
                 } else
                 {
                     $p->value = $storedParamValue->item(0)->getAttribute('value');
@@ -519,6 +539,23 @@ class Module
 
             return $plist;
         }
+
+	/**
+	 * Try to get parameter value from replaced modules
+	 */
+	public function getParameterValueFromReplacedModules(&$contextsXpath, $paramName) {
+	  $value = '';
+	  foreach( $this->replaces as $replaced ) {
+	    $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$paramName."' and @modulename='".$replaced['name']."']");
+	    if( $storedParamValue->length <= 0 ) {
+	      continue;
+	    }
+	    $value = $storedParamValue->item(0)->getAttribute('value');
+	    break;
+	  }
+
+	  return $value;
+	}
 
         /**
          * Get Module parameter by name
@@ -632,13 +669,21 @@ class Module
                     return array ('pre-install', 'unpack', 'post-install');
                     break;
                 case 'upgrade':
-                    return array ('pre-upgrade', 'unpack', 'post-upgrade');
+		    if( count($this->replaces) <= 0 ) {
+		      return array ('pre-upgrade', 'clean-unpack', 'post-upgrade');
+		    } else {
+		      return array ('pre-upgrade', 'clean-unpack', 'post-upgrade', 'purge-unreferenced-parameters-value');
+		    }
                     break;
                 case 'uninstall':
                     return array ('pre-remove', 'remove', 'post-remove');
                     break;
                 case 'parameter':
                     return array ('param', 'post-param');
+		    break;
+	        case 'replaced':
+		    return array('unregister-module');
+		    break;
                 default:
             }
             return array ();
@@ -694,6 +739,14 @@ class Module
             $modules = $this->requires['modules'];
             return $modules;
         }
+
+	/**
+	 * Return modules replaced by this module
+	 * @return array( array('name' => $name), [...] )
+	 */
+	public function getReplacesModules() {
+	  return $this->replaces;
+	}
 
         /**
          * Set the status of a module
@@ -802,6 +855,6 @@ class Module
 	  return $wiff->storeLicenseAgreement($this->context->name, $this->name, $this->license, $agree);
 	}
 
-    }
+}
 
 ?>

@@ -40,13 +40,24 @@ class Phase
         'pre-install', 'pre-upgrade', 'pre-remove',
         'unpack', 'remove', 'param',
         'post-install', 'post-upgrade', 'post-remove', 'post-param',
-        'reconfigure'
+        'reconfigure',
+		'unregister-module',
+		'purge-unreferenced-parameters-value'
         )
         ))
         {
             return $plist;
         }
 
+	// Special internal hard coded phase
+	if( $this->name == 'unregister-module' ) {
+	  return $plist;
+	}
+	if( $this->name == 'purge-unreferenced-parameters-value' ) {
+	  return $plist;
+	}
+
+	// Get processes for the phase from module's info.xml
         $phaseNodeList = $this->xmlNode->getElementsByTagName($this->name);
         if ($phaseNodeList->length <= 0)
         {
