@@ -986,11 +986,72 @@ function updateContextList_success(responseObject, select){
                         context: data[i],
                         handler: function(button){
                         	
+                        	var win = new Ext.Window({
+	                                title: 'Create Archive',
+	                                iconCls: 'x-icon-create',
+	                                layout: 'fit',
+	                                border: false,
+	                                modal: true,
+	                                width: 600,
+	                                items: [{
+	                                    xtype: 'form',
+	                                    id: 'create-archive-form',
+	                                    columnWidth: 1,
+	                                    bodyStyle: 'padding:10px',
+	                                    frame: true,
+	                                    autoHeight: true,
+	                                    items: [{
+	                                        xtype: 'textfield',
+	                                        fieldLabel: 'Archive Name',
+	                                        name: 'name',
+	                                        anchor: '-15',
+	                                        value: button.archive.name
+	                                    }, {
+	                                        xtype: 'textfield',
+	                                        fieldLabel: 'Root',
+	                                        name: 'root',
+	                                        anchor: '-15'
+	                                    }],
+	                                    
+	                                    buttons: [{
+	                                        text: 'Save',
+	                                        handler: function(){
+	                                            Ext.getCmp('create-archive-form').getForm().submit({
+	                                                url: 'wiff.php',
+	                                                success: function(form, action){
+	                                                    updateContextList('select-last');
+	                                                    form.reset();
+	                                                    var panel = Ext.getCmp('create-archive-form');
+	                                                    panel.fireEvent('render', panel);
+	                                                    win.close();
+	                                                    win.destroy();
+	                                                },
+	                                                failure: function(form, action){
+	                                                    updateContextList('select-last');
+	                                                    if (action && action.result) {
+	                                                        Ext.Msg.alert('Failure', action.result.error);
+	                                                    }
+	                                                },
+	                                                params: {
+	                                                    createContextFromArchive: true,
+	                                                    archiveId: button.archive.id
+	                                                },
+	                                                waitMsg: 'Creating Context from Archive...'
+	                                            })
+	                                        }
+	                                    }]
+	                                }]
+	                            });
+	                            
+	                            win.show();
+                        	
                         	mask = new Ext.LoadMask(Ext.getBody(), {
 					            msg: 'Making archive'
 					        });
 					        
 					        mask.show();
+					        
+					        
                         	
                         	Ext.Ajax.request({
 						        url: 'wiff.php',

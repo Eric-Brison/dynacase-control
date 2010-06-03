@@ -794,6 +794,16 @@ public function getModuleDependencies($namelist, $local = false)
     $orderList = array ();
 
     recursiveOrdering($depsList, $orderList);
+    
+    // Put toolbox always at the beginning of the list
+    foreach($orderList as $key=>$value){
+    	if($value->name == 'freedom-toolbox'){   
+    		
+    		unset($orderList[$key]);    		
+    		array_unshift($orderList,$value);
+    		
+    	}
+    }    
 
     return $orderList;
 }
@@ -1122,6 +1132,32 @@ public function removeModuleDownloaded($moduleName) {
 
 public function archiveContext($comment = '') {
 
+	$libcommon = $this->root.'/WHAT/Lib.Common.php';
+
+	if( (include_once $libcommon) === false){
+		$this->errorMessage = "Cannot archive a context without an installed freedom-toolbox module.";
+		return false ;
+	}
+	
+	$tmp = 'archived-tmp';
+	
+	// --- Create or reuse directory --- //
+    if (is_dir($tmp))
+    {
+        if (!is_writable($tmp))
+        {
+            $this->errorMessage = sprintf("Directory '%s' is not writable.", $tmp);
+            return false;
+        }
+    } else
+    {
+        if (@mkdir($tmp) === false)
+        {
+            $this->errorMessage = sprintf("Error creating directory '%s'.", $tmp);
+            return false;
+        }
+    }
+
 	$zip = new ZipArchive();
 	
 	$wiff_root = getenv('WIFF_ROOT');
@@ -1186,18 +1222,17 @@ public function archiveContext($comment = '') {
 		$zip->addFromString('info.xml',$xml);
 		
 		// --- Generate context tar.gz --- //   
-		$script = sprintf("tar -C %s -czf context.tar.gz .", escapeshellarg($this->root));
+		$script = sprintf("tar -C %s -czf $tmp/context.tar.gz .", escapeshellarg($this->root));
 		$result = system($script,$retval);
 		if($retval != 0){
 			$this->errorMessage = "Error when making context tar.";
 			return false;
 		}
-		$zip->addFile('context.tar.gz');
+		$zip->addFile("$tmp/context.tar.gz","context.tar.gz");
 // Check why this delete also $zip ?
 //		unlink('context.tar.gz');
 		
-		// --- Generate database dump --- //
-		include_once($this->root.'/WHAT/Lib.Common.php');
+		// --- Generate database dump --- //		
 		//include_once('include/lib/Lib.System.php');
 		$pgservice_core = getServiceCore();
 		
@@ -1207,7 +1242,7 @@ public function archiveContext($comment = '') {
 //		    return false;
 //		}
 		
-		$dump = 'core_db.pg_dump.gz';
+		$dump = $tmp.DIRECTORY_SEPARATOR.'core_db.pg_dump.gz';
 		
 //		$pg_dump_cmd = WiffLibSystem::getCommandPath('pg_dump');
 //		if( $pg_dump_cmd === false ) {
@@ -1239,7 +1274,7 @@ public function archiveContext($comment = '') {
 			return false;
 		}
 		
-		$zip->addFile($dump);
+		$zip->addFile($dump,'core_db.pg_dump.gz');
 //		unlink('core_db.pg_dump.gz');		
 		
 		// --- Generate vaults tar.gz files --- //
@@ -1248,13 +1283,13 @@ public function archiveContext($comment = '') {
 		while ($row = pg_fetch_row($result)) {
 			$id_fs = $row[0];
 			$r_path = $row[1];
-			$script = sprintf("tar -C %s -czf vault_$id_fs.tar.gz .", escapeshellarg($r_path));
+			$script = sprintf("tar -C %s -czf %s/vault_$id_fs.tar.gz .", escapeshellarg($r_path), $tmp);
 			$res = system($script,$retval);
 			if($retval != 0){
 				$this->errorMessage = "Error when making vault tar.";
 				return false;
 			}
-			$zip->addFile("vault_$id_fs.tar.gz");
+			$zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
 		}		
 		
 		// --- Save zip --- //

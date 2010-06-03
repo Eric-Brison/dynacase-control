@@ -11,7 +11,7 @@ class Process
     /**
      * @var string process description xml
      */
-    private $xmlStr;
+    public $xmlStr;
     public $name;
     public $attributes;
     public $label;

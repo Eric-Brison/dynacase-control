@@ -117,7 +117,7 @@ function updateArchiveList_success(responseObject, select){
 	                                        name: 'desc',
 	                                        anchor: '-15',
 	                                        value: button.archive.description
-	                                    }, {
+	                                    },{
 	                                        xtype: 'textfield',
 	                                        fieldLabel: 'Url',
 	                                        name: 'url',

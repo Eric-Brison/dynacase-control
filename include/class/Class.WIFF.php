@@ -853,7 +853,7 @@ require valid-user
 		    	if($file == $archiveId.'.fcz')
 		    	{
 		    	
-		    		$temporary_extract_root = $archived_root.'archive-temporary-extract';
+		    		$temporary_extract_root = $archived_root.'archived-tmp';
 
 		    		$zip = new ZipArchive();
 		    		$res = $zip->open($archived_root.DIRECTORY_SEPARATOR.$file);
@@ -966,17 +966,9 @@ require valid-user
         }
         
         $context = $xml->importNode($archiveList->item(0), true); // Node must be imported from archive document.
+        $context->setAttribute('name',$name);
+        $context->setAttribute('root',$root);
 		$context = $contextList->item(0)->appendChild($context);
-		
-		// Modify root on xml
-		$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']");
-        if ($paramList->length != 1)
-        {
-            $this->errorMessage = "Parameter core_db does not exist.";
-            return false;
-        }
-        
-        $paramList->item(0)->setAttribute('root',$root);		
 		
 		// Modify core_db in xml
 		$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='core_db']");
@@ -987,6 +979,16 @@ require valid-user
         }
         
         $paramList->item(0)->setAttribute('value',$pgservice);
+        
+        // Modify client_name in xml by context name
+		$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='client_name']");
+        if ($paramList->length != 1)
+        {
+            $this->errorMessage = "Parameter client_name does not exist.";
+            return false;
+        }
+        
+        $paramList->item(0)->setAttribute('value',$name);
         
         // Modify or add vault_root in xml
     	$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='vault_root']");

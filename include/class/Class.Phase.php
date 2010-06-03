@@ -50,6 +50,7 @@ class Phase
         $phaseNodeList = $this->xmlNode->getElementsByTagName($this->name);
         if ($phaseNodeList->length <= 0)
         {
+  			error_log('Phase node list empty');
             return $plist;
         }
         $phaseNode = $phaseNodeList->item(0);
