@@ -669,6 +669,22 @@ require valid-user
 	    
 	    $archived_root = $wiff_root.WIFF::archive_filepath;
 	    
+	    if (is_dir($archived_root))
+	    {
+	        if (!is_writable($archived_root))
+	        {
+	            $this->errorMessage = sprintf("Directory '%s' is not writable.", $archived_root);
+	            return false;
+	        }
+	    } else
+	    {
+	        if (@mkdir($archived_root) === false)
+	        {
+	            $this->errorMessage = sprintf("Error creating directory '%s'.", $archived_root);
+	            return false;
+	        }
+	    }
+	    
 	    if ($handle = opendir($archived_root)) {
 	    
 		    while (false !== ($file = readdir($handle))){
