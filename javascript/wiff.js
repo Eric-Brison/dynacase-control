@@ -1570,53 +1570,26 @@ function upgrade(modulelist){
 function upgrade_success(responseObject){
 
     mask.hide();
-    
+        
     var response = eval('(' + responseObject.responseText + ')');
     if (response.error) {
         Ext.Msg.alert('Server Error', response.error);
     }
-    
+        
     var data = response.data;
-    
+        
     toDownload = data;
     toInstall = data.slice();
-    
-    removeList = new Array();
-	installList = new Array();
-
-	for( var i =0; i < toDownload.length; i++ ) {
-	    if( toDownload[i].needphase == 'replaced' ) {
-		removeList.push(toDownload[i]);
-	    } else {
-		installList.push(toDownload[i]);
-	    }
-	}
-
-	htmlModuleList = '';
-	
-	if( removeList.length > 0 ) {
-	    htmlModuleList = htmlModuleList + 'Installer will remove the following module(s):<br/><br/>';
-	    htmlModuleList = htmlModuleList + '<ul>';
-	    for( var i = 0; i < removeList.length; i++ ) {
-		htmlModuleList = htmlModuleList + '<li><b>' + removeList[i].name + '</b> <i>(' + removeList[i].versionrelease + ')</i></li>';
-	    }
-	    htmlModuleList = htmlModuleList + '</ul>';
-	    htmlModuleList = htmlModuleList + '<br/><br/>';
-	}
-	
-	if( installList.length > 0 ) {
-	    htmlModuleList = htmlModuleList + 'Installer will install the following module(s):<br/><br/>';
-	    htmlModuleList = htmlModuleList + '<ul>';
-	    for( var i = 0; i < installList.length; i++ ) {
-		htmlModuleList = htmlModuleList + '<li><b>' + installList[i].name + '</b> <i>(' + installList[i].versionrelease + ')</i></li>';
-	    }
-	    htmlModuleList = htmlModuleList + '</ul>';
-	    htmlModuleList = htmlModuleList + '<br/><br/>';
-	}
-    
+        
+    htmlModuleList = '<ul>';
+    for (var i = 0; i < toDownload.length; i++) {
+        htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(' + toDownload[i].versionrelease + ')</i> </li>';
+    }
+    htmlModuleList = htmlModuleList + '</ul>';
+        
     Ext.Msg.show({
         title: 'Freedom Web Installer',
-        msg: htmlModuleList,
+        msg: 'Installer will install following module(s) : <br/>' + htmlModuleList,
         buttons: {
             ok: true,
             cancel: true
@@ -1767,27 +1740,52 @@ function install(modulelist){
 function install_success(responseObject){
 
     mask.hide();
-    
+        
     var response = eval('(' + responseObject.responseText + ')');
     if (response.error) {
         Ext.Msg.alert('Server Error', response.error);
         return;
     }
-    
+        
     var data = response.data;
-    
+        
     toDownload = data;
     toInstall = data.slice();
-    
-    htmlModuleList = '<ul>';
-    for (var i = 0; i < toDownload.length; i++) {
-        htmlModuleList = htmlModuleList + '<li><b>' + toDownload[i].name + '</b> <i>(' + toDownload[i].versionrelease + ')</i></li>';
+        
+    removeList = new Array();
+    installList = new Array();
+
+    for( var i =0; i < toDownload.length; i++ ) {
+        if( toDownload[i].needphase == 'replaced' ) {
+	    removeList.push(toDownload[i]);
+	} else {
+	    installList.push(toDownload[i]);
+	}
     }
-    htmlModuleList = htmlModuleList + '</ul>';
-    
+
+    htmlModuleList = '';
+    if( removeList.length > 0 ) {
+        htmlModuleList = htmlModuleList + 'Installer will remove the following module(s):<br/><br/>';
+	htmlModuleList = htmlModuleList + '<ul>';
+	for( var i = 0; i < removeList.length; i++ ) {
+	    htmlModuleList = htmlModuleList + '<li><b>' + removeList[i].name + '</b> <i>(' + removeList[i].versionrelease + ')</i></li>';
+	}
+	htmlModuleList = htmlModuleList + '</ul>';
+	htmlModuleList = htmlModuleList + '<br/><br/>';
+    }
+    if( installList.length > 0 ) {
+	htmlModuleList = htmlModuleList + 'Installer will install the following module(s):<br/><br/>';
+	htmlModuleList = htmlModuleList + '<ul>';
+	for( var i = 0; i < installList.length; i++ ) {
+	    htmlModuleList = htmlModuleList + '<li><b>' + installList[i].name + '</b> <i>(' + installList[i].versionrelease + ')</i></li>';
+	}
+	htmlModuleList = htmlModuleList + '</ul>';
+	htmlModuleList = htmlModuleList + '<br/><br/>';
+    }
+
     Ext.Msg.show({
         title: 'Freedom Web Installer',
-        msg: 'Installer will install following module(s) : <br/><br/>' + htmlModuleList,
+        msg: htmlModuleList,
         buttons: {
             ok: true,
             cancel: true
@@ -1807,6 +1805,7 @@ function install_success(responseObject){
             }
         }
     });
+    
 }
 
 function install_failure(responseObject){
