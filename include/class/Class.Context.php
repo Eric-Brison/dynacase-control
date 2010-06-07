@@ -719,6 +719,14 @@ public function getModuleDependencies($namelist, $local = false)
             }
             array_push($depsList, $module);
         }
+        
+//        if($module->getRequiredInstaller()){
+//        	$requiredInstaller = $module->getRequiredInstaller();
+//        	$wiff = WIFF::getInstance();
+//        	$currentInstaller = $wiff->getVersion();
+//        	error_log('Must compare ---'.(print_r($requiredInstaller)).' --- '.$currentInstaller);
+//        }
+        
     }
 
 
@@ -1192,7 +1200,7 @@ public function removeModuleDownloaded($moduleName) {
   return $this->removeModule($moduleName, 'downloaded');
 }
 
-public function archiveContext($archiveName,$archiveDesc = '') { ttt
+public function archiveContext($archiveName,$archiveDesc = '') {
 
 	$libcommon = $this->root.'/WHAT/Lib.Common.php';
 

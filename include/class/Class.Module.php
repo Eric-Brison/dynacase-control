@@ -717,7 +717,7 @@ class Module
          */
         public function getRequiredInstaller()
         {
-            if (!array_key_exists($this->requires, 'installer'))
+            if (!array_key_exists('installer', $this->requires))
             {
                 return false;
             }
