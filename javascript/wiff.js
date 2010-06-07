@@ -817,10 +817,11 @@ function updateContextList_success(responseObject, select){
     
         panel.add({
             title: data[i].name,
-            iconCls: 'x-icon-context',
+            iconCls: (!data[i].inProgress) ? 'x-icon-context' : 'x-icon-loading',
             tabTip: data[i].description,
             style: 'padding:10px;',
             layout: 'fit',
+            disabled: data[i].inProgress,
             listeners: {
                 activate: function(panel){
                     currentContext = panel.title;
@@ -830,7 +831,7 @@ function updateContextList_success(responseObject, select){
             items: [{
                 xtype: 'panel',
                 title: data[i].name,
-                iconCls: 'x-icon-context',
+                iconCls: (!data[i].inProgress) ? 'x-icon-context' : 'x-icon-loading',
                 id: data[i].name,
                 bodyStyle: 'overflow-y:auto;',
                 items: [{
@@ -1017,22 +1018,28 @@ function updateContextList_success(responseObject, select){
                                         text: 'Create Archive',
                                         context: data[i],
                                         handler: function(){
+                                        	
                                             Ext.getCmp('create-archive-form').getForm().submit({
                                                 url: 'wiff.php',
                                                 success: function(form, action){
                                                 	win.hide();
-                                                	archive_success(action.response);
+                                                	//archive_success(action.response);
                                                 },
                                                 failure: function(form, action){
-                                                	win.close();
-                                                    archive_failure(action.response);
+                                                	win.hide();
+                                                    //archive_failure(action.response);
                                                 },
                                                 params: {
                                                     archiveContext: true,
                                                     name: button.context.name
-                                                },
-                                                waitMsg: 'Making Archive...'
-                                            })
+                                                }//,
+                                                //waitMsg: 'Making Archive...'
+                                            });
+                                            
+                                            win.hide();
+                                            (function(){
+                                            	updateArchiveList();
+                                            }).defer(1000);
                                         }
                                     },{
                                     	text: 'Cancel',

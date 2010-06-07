@@ -651,6 +651,42 @@ require valid-user
             }
 
         }
+        
+        $archived_root = $wiff_root.WIFF::archive_filepath;
+	    
+	    if (is_dir($archived_root))
+	    {
+	        if (!is_writable($archived_root))
+	        {
+	            $this->errorMessage = sprintf("Directory '%s' is not writable.", $archived_root);
+	            return false;
+	        }
+	    } else
+	    {
+	        if (@mkdir($archived_root) === false)
+	        {
+	            $this->errorMessage = sprintf("Error creating directory '%s'.", $archived_root);
+	            return false;
+	        }
+	    }
+	    
+	    if ($handle = opendir($archived_root)) {
+	    
+		    while (false !== ($file = readdir($handle))){
+	    
+		    	if(preg_match('/^.+\.ctx$/',$file)){
+				   	
+					$status_handle = fopen($archived_root.DIRECTORY_SEPARATOR.$file,'r');
+				    $context = array();
+				    $context['name'] = fread($status_handle,filesize($archived_root.DIRECTORY_SEPARATOR.$file));
+				    $context['inProgress'] = true ;
+				    $contextList[] = $context ;
+				    
+				}
+        
+		    }
+		    
+	    }
 
         return $contextList;
 
@@ -763,6 +799,18 @@ require valid-user
 		    		}
 	       			
 		    	}
+		    	
+		    	if(preg_match('/^.+\.sts$/',$file)){
+		    	
+		    		error_log('STATUS FILE --- '.$file);
+		    	
+		    		$status_handle = fopen($archived_root.DIRECTORY_SEPARATOR.$file,'r');
+		    		$archiveContext = array();
+		    		$archiveContext['name'] = fread($status_handle,filesize($archived_root.DIRECTORY_SEPARATOR.$file));
+		    		$archiveContext['inProgress'] = true ;
+		    		$archivedContextList[] = $archiveContext ;
+		    	
+		    	}
 		    }
 	    
 	    }
@@ -773,6 +821,19 @@ require valid-user
     
     public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root, $pgservice, $remove_profiles, $user_login, $user_password)
     {
+    
+    	$wiff_root = getenv('WIFF_ROOT');
+	    if ($wiff_root !== false)
+	    {
+	        $wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
+	    }
+	    
+	    $archived_root = $wiff_root.WIFF::archive_filepath;
+    
+    	// --- Create status file for context --- //
+		$status_file = $archived_root.DIRECTORY_SEPARATOR.$archiveId.'.ctx';
+		$status_handle = fopen($status_file, "w");
+		fwrite($status_handle,$name);
         
     	// --- Create or reuse directory --- //
         if (is_dir($root))
@@ -780,18 +841,24 @@ require valid-user
             if (!is_writable($root))
             {
                 $this->errorMessage = sprintf("Directory '%s' is not writable.", $root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
             $dirListing = @scandir($root);
             if ($dirListing === false)
             {
                 $this->errorMessage = sprintf("Error scanning directory '%s'.", $root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
             $dirListingCount = count($dirListing);
             if ($dirListingCount > 2)
             {
                 $this->errorMessage = sprintf("Directory '%s' is not empty.", $root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
         } else
@@ -799,6 +866,8 @@ require valid-user
             if (@mkdir($root) === false)
             {
                 $this->errorMessage = sprintf("Error creating directory '%s'.", $root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
         }
@@ -808,18 +877,24 @@ require valid-user
             if (!is_writable($vault_root))
             {
                 $this->errorMessage = sprintf("Directory '%s' is not writable.", $vault_root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
             $dirListing = @scandir($vault_root);
             if ($dirListing === false)
             {
                 $this->errorMessage = sprintf("Error scanning directory '%s'.", $vault_root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
             $dirListingCount = count($dirListing);
             if ($dirListingCount > 2)
             {
                 $this->errorMessage = sprintf("Directory '%s' is not empty.", $vault_root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
         } else
@@ -827,6 +902,8 @@ require valid-user
             if (@mkdir($vault_root) === false)
             {
                 $this->errorMessage = sprintf("Error creating directory '%s'.", $vault_root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
         }
@@ -835,6 +912,8 @@ require valid-user
         if ($this->getContext($name) !== false)
         {
             $this->errorMessage = sprintf("Context '%s' already exists.", $name);
+            // --- Delete status file --- //
+				unlink($status_file);
             return false;
         }
 
@@ -845,6 +924,8 @@ require valid-user
             if ($abs_root === false)
             {
                 $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
             $root = $abs_root;
@@ -856,6 +937,8 @@ require valid-user
             if ($abs_vault_root === false)
             {
                 $this->errorMessage = sprintf("Error getting absolute pathname for '%s'.", $vault_root);
+                // --- Delete status file --- //
+				unlink($status_file);
                 return false;
             }
             $vault_root = $abs_vault_root;
@@ -888,6 +971,8 @@ require valid-user
 					    $zip->close();
 					} else {
 					    $this->errorMessage = "Error when opening archive.";
+					    // --- Delete status file --- //
+						unlink($status_file);
 					    return false;
 					}
 		    				    		
@@ -901,8 +986,12 @@ require valid-user
 			            
 			        if($retval != 0){
 			         	$this->errorMessage = "Error when extracting context.tar.gz to $root";
+			         	// --- Delete status file --- //
+						unlink($status_file);
 			         	return false;
 			        }
+			        
+			        error_log('Context tar gz extracted');
 			        
 			        // --- Restore database --- //
 			        
@@ -913,9 +1002,13 @@ require valid-user
 			        
 		    		if($retval != 0){
 			         	$this->errorMessage = "Error when restoring core_db.pg_dump.gz";
+			         	// --- Delete status file --- //
+						unlink($status_file);
 			         	return false;
 			        }
 					
+			        error_log('Database restored');
+			        
     				// --- Extract vault tar gz --- //
     				
 			        if ($handle = opendir($temporary_extract_root))
@@ -934,6 +1027,8 @@ require valid-user
 						    	if (@mkdir($vault_subdir) === false)
 					            {
 					                $this->errorMessage = sprintf("Error creating directory '%s'.", $vault_subdir);
+					                // --- Delete status file --- //
+									unlink($status_file);
 					                return false;
 					            }
 
@@ -943,6 +1038,8 @@ require valid-user
 							            
 							    if($retval != 0){
 							      	$this->errorMessage = "Error when extracting vault to $vault_root";
+							      	// --- Delete status file --- //
+									unlink($status_file);
 							       	return false;
 							    }
 					    		
@@ -951,6 +1048,8 @@ require valid-user
 					    }
 					    
 			    	}
+			    	
+			    	error_log('Vault tar gz extracted');
 	       			
 		    	}
 		    }
@@ -975,6 +1074,8 @@ require valid-user
         {
             // If more than one context with name
             $this->errorMessage = "Context with same name already exists.";
+            // --- Delete status file --- //
+			unlink($status_file);
             return false;
         }
         
@@ -988,6 +1089,8 @@ require valid-user
         {
             // If more than one context found
             $this->errorMessage = "More than one context in archive";
+            // --- Delete status file --- //
+			unlink($status_file);
             return false;
         }
         
@@ -1001,6 +1104,8 @@ require valid-user
         if ($paramList->length != 1)
         {
             $this->errorMessage = "Parameter core_db does not exist.";
+            // --- Delete status file --- //
+			unlink($status_file);
             return false;
         }
         
@@ -1011,6 +1116,8 @@ require valid-user
         if ($paramList->length != 1)
         {
             $this->errorMessage = "Parameter client_name does not exist.";
+            // --- Delete status file --- //
+			unlink($status_file);
             return false;
         }
         
@@ -1058,10 +1165,15 @@ require valid-user
         if ($ret === false)
         {
             $this->errorMessage = sprintf("Error writing file '%s'.", $this->contexts_filepath);
+            // --- Delete status file --- //
+			unlink($status_file);
             return false;
         }
         
         $this->reconfigure($name);
+        
+        // --- Delete status file --- //
+		unlink($status_file);
         
 	    return true ;
 
@@ -1072,6 +1184,8 @@ require valid-user
     
     public function reconfigure($name)
     {
+    
+    	error_log('Call to reconfigure');
 
     	$context = $this->getContext($name);
     	$installedModuleList = $context->getInstalledModuleList();

@@ -10,7 +10,7 @@ archiveStore = {};
  * Update archive list
  */
 function updateArchiveList(select){
-    
+	
   	Ext.Ajax.request({
    		url: 'wiff.php',
    		params: {
@@ -53,11 +53,12 @@ function updateArchiveList_success(responseObject, select){
 	    for (var i = 0; i < data.length; i++) {
 	    
 	        panel.add({
-	            title: data[i].name + ' (' + data[i].datetime.substr(0,10) + ')',
-	            iconCls: 'x-icon-archive',
-	            tabTip: data[i].description,
+	            title: data[i].name + (data[i].datetime ? ' (' + data[i].datetime.substr(0,10) + ')' : '' ),
+	            iconCls: (!data[i].inProgress) ? 'x-icon-archive' : 'x-icon-loading',
+	            tabTip: data[i].description ? data[i].description : '',
 	            style: 'padding:10px;',
 	            layout: 'fit',
+	            disabled: data[i].inProgress,
 	            listeners: {
 	                activate: function(panel){
 	                    currentArchive = panel.title;
@@ -68,7 +69,7 @@ function updateArchiveList_success(responseObject, select){
 	                xtype: 'panel',
 	                title: data[i].name,
 	                archive: data[i],
-	                iconCls: 'x-icon-archive',
+	                iconCls: (!data[i].inProgress) ? 'x-icon-archive' : 'x-icon-loading',
 	                id: 'archive-'+data[i].name,
 	                bodyStyle: 'overflow-y:auto;',
 	                items: [{
@@ -208,7 +209,7 @@ function updateArchiveList_success(responseObject, select){
 	                                            Ext.getCmp('create-archive-form').getForm().submit({
 	                                                url: 'wiff.php',
 	                                                success: function(form, action){
-	                                                    updateContextList('select-last');
+	                                                    //updateContextList('select-last');
 	                                                    form.reset();
 	                                                    var panel = Ext.getCmp('create-archive-form');
 	                                                    panel.fireEvent('render', panel);
@@ -224,9 +225,15 @@ function updateArchiveList_success(responseObject, select){
 	                                                params: {
 	                                                    createContextFromArchive: true,
 	                                                    archiveId: button.archive.id
-	                                                },
-	                                                waitMsg: 'Creating Context from Archive...'
-	                                            })
+	                                                }//,
+	                                                //waitMsg: 'Creating Context from Archive...'
+	                                            });
+	                                            
+	                                            win.hide();
+	                                            (function(){
+	                                            	updateContextList();
+	                                            }).defer(1000);
+	                                            
 	                                        }
 	                                    }]
 	                                }]
@@ -397,7 +404,8 @@ function archive_success(responseObject){
 }
 
 function archive_failure(responseObject){
-	console.log('Archive Failure');
+	updateArchiveList();
+	//console.log('Archive Failure');
 }
 
 function downloadArchive_success(responseObject){

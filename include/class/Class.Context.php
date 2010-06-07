@@ -722,9 +722,10 @@ public function getModuleDependencies($namelist, $local = false)
         
 //        if($module->getRequiredInstaller()){
 //        	$requiredInstaller = $module->getRequiredInstaller();
+//        	$requiredInstallerVersion = $requiredInstaller['version'];
 //        	$wiff = WIFF::getInstance();
-//        	$currentInstaller = $wiff->getVersion();
-//        	error_log('Must compare ---'.(print_r($requiredInstaller)).' --- '.$currentInstaller);
+//        	$currentInstallerVersion = $wiff->getVersion();
+//        	error_log('Must compare ---'.$requiredInstallerVersion.' --- '.$currentInstallerVersion);
 //        }
         
     }
@@ -1240,6 +1241,11 @@ public function archiveContext($archiveName,$archiveDesc = '') {
     // --- Generate archive id --- //
 	$datetime = new DateTime();
 	$archiveId = sha1($this->name.$datetime->format('Y-m-d H:i:s'));
+	
+	// --- Create status file for archive --- //
+	$status_file = $archived_root.DIRECTORY_SEPARATOR.$archiveId.'.sts';
+	$status_handle = fopen($status_file, "w");
+	fwrite($status_handle,$archiveName);
     	
 	if($zip->open($archived_root."/$archiveId.fcz", ZipArchive::CREATE) == TRUE)	{
 	
@@ -1301,6 +1307,7 @@ public function archiveContext($archiveName,$archiveDesc = '') {
 		$zip->addFile("$tmp/context.tar.gz","context.tar.gz");
 // Check why this delete also $zip ?
 //		unlink('context.tar.gz');
+		error_log('Generated context.tar.gz');
 		
 		// --- Generate database dump --- //		
 		//include_once('include/lib/Lib.System.php');
@@ -1345,7 +1352,9 @@ public function archiveContext($archiveName,$archiveDesc = '') {
 		}
 		
 		$zip->addFile($dump,'core_db.pg_dump.gz');
-//		unlink('core_db.pg_dump.gz');		
+//		unlink('core_db.pg_dump.gz');
+
+		error_log('Generated core_db.pg_dump.gz');
 		
 		// --- Generate vaults tar.gz files --- //
 		pg_connect("service=$pgservice_core");
@@ -1362,13 +1371,20 @@ public function archiveContext($archiveName,$archiveDesc = '') {
 			$zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
 		}		
 		
+		error_log('Generated vault tar gz');
+		
 		// --- Save zip --- //
 		$zip->close();
+		
+		// --- Delete status file --- //
+		unlink($status_file);
 		
 		return $archiveId ;
 	
 	} else {	
 		$this->errorMessage = 'Can not create archive.';
+		// --- Delete status file --- //
+		unlink($status_file);
 	}
 	
 	return false ;
