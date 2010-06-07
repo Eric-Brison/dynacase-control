@@ -841,15 +841,20 @@ public function getModuleDependencies($namelist, $local = false)
     // and mark them with needPhase='replaced'
 
     $removeList = array();
-    foreach( $orderList as $mod ) {
+    foreach( $orderList as &$mod ) {
       foreach( $mod->replaces as $replace ) {
 	$replacedModule = $this->getModuleInstalled($replace['name']);
 	if( $replacedModule !== false ) {
 	  // This module is installed, so mark it for removal
 	  array_push($removeList, $replacedModule);
+	  // and mark the main module for 'upgrade'
+	  $mod->needphase = 'upgrade';
 	}
       }
     }
+    
+    unset($mod);
+    
     foreach( $removeList as $mod ) {
       if( ! listContains($orderList, $mod->name) ) {
 	$mod->needphase = 'replaced';
@@ -1187,7 +1192,7 @@ public function removeModuleDownloaded($moduleName) {
   return $this->removeModule($moduleName, 'downloaded');
 }
 
-public function archiveContext($comment = '') {
+public function archiveContext($archiveName,$archiveDesc = '') { ttt
 
 	$libcommon = $this->root.'/WHAT/Lib.Common.php';
 
@@ -1240,9 +1245,9 @@ public function archiveContext($comment = '') {
 		// --- Write archive information --- //
 		$archive = $doc->createElement('archive');
 		$archive->setAttribute('id',$archiveId);
-		$archive->setAttribute('name',$this->name);		
+		$archive->setAttribute('name',$archiveName);		
 		$archive->setAttribute('datetime',$datetime->format('Y-m-d H:i:s'));
-		$archive->setAttribute('description',$comment);
+		$archive->setAttribute('description',$archiveDesc);
 		$archive = $root->appendChild($archive);
 		
 		// --- Copy context information --- //
@@ -1351,6 +1356,8 @@ public function archiveContext($comment = '') {
 		
 		// --- Save zip --- //
 		$zip->close();
+		
+		return $archiveId ;
 	
 	} else {	
 		$this->errorMessage = 'Can not create archive.';

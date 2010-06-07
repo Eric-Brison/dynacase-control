@@ -986,27 +986,64 @@ function updateContextList_success(responseObject, select){
                         context: data[i],
                         handler: function(button){
                         	
-                        	mask = new Ext.LoadMask(Ext.getBody(), {
-					            msg: 'Making archive'
-					        });
-					        
-					        mask.show();
-					        
-                        	Ext.Ajax.request({
-						        url: 'wiff.php',
-						        params: {
-						        	archiveContext: true,
-						            name: button.context.name
-						        },
-						        success: function(responseObject){
-						        	mask.hide();
-						            archive_success(responseObject);
-						        },
-						        failure: function(responseObject){
-						        	mask.hide();
-						            archive_failure(responseObject);
-						        }
-						    });
+                        	var win = new Ext.Window({
+                                title: 'Create Archive',
+                                iconCls: 'x-icon-setup',
+                                layout: 'fit',
+                                border: false,
+                                modal: true,
+                                width: 600,
+                                items: [{
+                                    xtype: 'form',
+                                    id: 'create-archive-form',
+                                    columnWidth: 1,
+                                    bodyStyle: 'padding:10px',
+                                    frame: true,
+                                    autoHeight: true,
+                                    items: [{
+                                        xtype: 'textfield',
+                                        fieldLabel: 'Name',
+                                        name: 'archiveName',
+                                        anchor: '-15',
+                                        value: button.context.name
+                                    }, {
+                                        xtype: 'textarea',
+                                        fieldLabel: 'Description',
+                                        name: 'archiveDesc',
+                                        anchor: '-15',
+                                        value: button.context.description
+                                    }],                                    
+                                    buttons: [{
+                                        text: 'Create Archive',
+                                        context: data[i],
+                                        handler: function(){
+                                            Ext.getCmp('create-archive-form').getForm().submit({
+                                                url: 'wiff.php',
+                                                success: function(form, action){
+                                                	win.hide();
+                                                	archive_success(action.response);
+                                                },
+                                                failure: function(form, action){
+                                                	win.close();
+                                                    archive_failure(action.response);
+                                                },
+                                                params: {
+                                                    archiveContext: true,
+                                                    name: button.context.name
+                                                },
+                                                waitMsg: 'Making Archive...'
+                                            })
+                                        }
+                                    },{
+                                    	text: 'Cancel',
+                                    	handler: function(){
+                                    		win.close();
+                                    	}
+                                    }]
+                                }]
+                            });
+                            
+                            win.show();
                         	
                         }
                     }],
@@ -2242,7 +2279,7 @@ function getPhaseList(module, operation){
     currentModule = module;
 
 	localOperation = operation;
-	if( currentModule.replaces.length > 0 ) {
+	if( currentModule.needphase == 'upgrade' ) {
 	    // This module replaces other modules
 	    // so, we force the operation to 'upgrade'
 	    localOperation = 'upgrade';

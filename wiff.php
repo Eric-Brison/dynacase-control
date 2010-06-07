@@ -463,7 +463,7 @@ if (get_magic_quotes_gpc())
 
         if (!$wiff->errorMessage)
         {        	
-			$archiveId = $context->archiveContext();
+			$archiveId = $context->archiveContext($_REQUEST['archiveName'],$_REQUEST['archiveDesc']);
 			
             if($archiveId === false){
             	answer(null, $context->errorMessage);
@@ -482,9 +482,13 @@ if (get_magic_quotes_gpc())
     {
     
     	$archiveId = $_REQUEST['archiveId'];
-    	$contextName = $_REQUEST['name'];    	
+    	$contextName = $_REQUEST['name'];
+
+    	$remove_profiles = isset($_REQUEST['remove_profiles']);
+    	$user_login = $_REQUEST['user_login'];
+    	$user_password = $_REQUEST['user_password'];
     
-    	$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice']);
+    	$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice'], $remove_profiles, $user_login, $user_password);
     	if($result === false){
     		answer(null, $wiff->errorMessage);
     	} else

@@ -132,11 +132,79 @@ function updateArchiveList_success(responseObject, select){
 	                                        fieldLabel: 'Vault Root',
 	                                        name: 'vault_root',
 	                                        anchor: '-15'
+	                                    },{
+	                                    	xtype: 'checkbox',
+	                                    	fieldLabel: 'Remove Profiles',
+	                                    	name: 'remove_profiles',
+	                                    	listeners: {
+	                                    		check: function(checkbox, checked){
+									                if (checked == true) {
+									                	
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_login').show();
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_login').enable();
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_password').show();
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_password').enable();
+
+									                }
+									                else {
+									                	
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_login').hide();
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_login').disable();
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_password').hide();
+									                	Ext.getCmp('create-archive-form').getForm().findField('user_password').disable();
+									                	
+									                }
+									            }
+	                                    	}
+	                                    },{
+	                                    	xtype: 'textfield',
+	                                        fieldLabel: 'User Login',
+	                                        name: 'user_login',
+	                                        anchor: '-15',
+	                                        hidden: true
+	                                    },{
+	                                    	xtype: 'textfield',
+	                                        fieldLabel: 'User Password',
+	                                        name: 'user_password',
+	                                        anchor: '-15',
+	                                        hidden: true
 	                                    }],
 	                                    
 	                                    buttons: [{
 	                                        text: 'Save',
 	                                        handler: function(){
+	                                        	
+	                                        	if(!Ext.getCmp('create-archive-form').getForm().findField('name').getValue()){
+	                                        		Ext.Msg.alert('Web Installer','A name must be provided.');
+	                                        		return ;
+	                                        	};
+	                                        	
+	                                        	if(!Ext.getCmp('create-archive-form').getForm().findField('root').getValue()){
+	                                        		Ext.Msg.alert('Web Installer','A root must be provided.');
+	                                        		return ;
+	                                        	};
+	                                        	
+	                                        	if(!Ext.getCmp('create-archive-form').getForm().findField('vault_root').getValue()){
+	                                        		Ext.Msg.alert('Web Installer','A root must be provided.');
+	                                        		return ;
+	                                        	};
+	                                        	
+	                                        	if(!Ext.getCmp('create-archive-form').getForm().findField('core_pgservice').getValue()){
+	                                        		Ext.Msg.alert('Web Installer','A database service must be provided.');
+	                                        		return ;
+	                                        	};
+	                                        	
+	                                        	if(Ext.getCmp('create-archive-form').getForm().findField('remove_profiles').getValue()){
+	                                        		if(!Ext.getCmp('create-archive-form').getForm().findField('user_login').getValue()){
+		                                        		Ext.Msg.alert('Web Installer','If you remove profiles, you must specify a user login.');
+		                                        		return ;
+		                                        	};
+		                                        	if(!Ext.getCmp('create-archive-form').getForm().findField('user_password').getValue()){
+		                                        		Ext.Msg.alert('Web Installer','If you remove profiles, you must specify a user password.');
+		                                        		return ;
+		                                        	};
+	                                        	};
+	                                        	
 	                                            Ext.getCmp('create-archive-form').getForm().submit({
 	                                                url: 'wiff.php',
 	                                                success: function(form, action){

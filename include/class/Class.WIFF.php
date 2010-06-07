@@ -701,6 +701,16 @@ require valid-user
 						}
 								
 						$xpath = new DOMXpath($xml);
+						
+						$contexts = $xpath->query("/info/context");
+						
+						if ($contexts->length > 0)
+		       			{		       				
+		            		foreach ($contexts as $context){ // Should be only one context
+		            			$contextName = $context->getAttribute('name');
+		            		}
+		       			}
+						
 						$archived_contexts = $xpath->query("/info/archive");
 							
 						if ($archived_contexts->length > 0)
@@ -714,7 +724,7 @@ require valid-user
 		            			
 			            		$moduleList = array();
 			       			
-					    		$moduleDom = $xpath->query("/info/context[@name='".$context->getAttribute('name')."']/modules/module");
+					    		$moduleDom = $xpath->query("/info/context[@name='".$contextName."']/modules/module");
 			
 							    foreach ($moduleDom as $module)
 							    {
@@ -745,7 +755,7 @@ require valid-user
     
     }
     
-    public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root, $pgservice)
+    public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root, $pgservice, $remove_profiles, $user_login, $user_password)
     {
         
     	// --- Create or reuse directory --- //
@@ -999,6 +1009,32 @@ require valid-user
 			$paramVaultRoot->setAttribute('name','vault_root');
 			$paramVaultRoot->setAttribute('value',$vault_root);
 			$paramVaultRoot = $paramValueList->item(0)->appendChild($paramVaultRoot);
+        }
+        
+        if(isset($remove_profiles) && $remove_profiles == true){
+	    	// Modify or add remove_profiles in xml
+	    	$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='remove_profiles']");
+	        if ($paramList->length != 1)
+	        {
+	        
+				$paramValueList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value");
+				
+				$paramRemoveProfiles = $xml->createElement('param');
+				$paramRemoveProfiles->setAttribute('name','remove_profiles');
+				$paramRemoveProfiles->setAttribute('value',true);
+				$paramRemoveProfiles = $paramValueList->item(0)->appendChild($paramVaultRoot);
+				
+				$paramUserLogin = $xml->createElement('param');
+				$paramUserLogin->setAttribute('name','user_login');
+				$paramUserLogin->setAttribute('value',$user_login);
+				$paramUserLogin = $paramValueList->item(0)->appendChild($paramUserLogin);
+				
+				$paramUserPassword = $xml->createElement('param');
+				$paramUserPassword->setAttribute('name','user_password');
+				$paramUserPassword->setAttribute('value',$user_password);
+				$paramUserPassword = $paramValueList->item(0)->appendChild($paramUserPassword);
+				
+	        }
         }
 
         // Save XML to file
