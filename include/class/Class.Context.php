@@ -1291,7 +1291,7 @@ public function archiveContext($archiveName,$archiveDesc = '') {
 		$context = $root->appendChild($context);
 		
 		$repositories = $context->getElementsByTagName('repositories')->item(0);
-		deleteNode($repositories);
+		if ($repositories) deleteNode($repositories);
 		
 		$xml = $doc->saveXML();
 			
