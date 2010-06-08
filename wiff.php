@@ -58,7 +58,8 @@ if (get_magic_quotes_gpc())
 
         // Check for required classes
         foreach ( array (
-        'DOMDocument'
+			 'DOMDocument',
+			 'ZipArchive'
         ) as $class)
         {
 	  if (!class_exists($class, false))
