@@ -649,12 +649,46 @@ public function getModule($name, $status = false)
     return new Module($this, null, $moduleDom->item(0), true);
 }
 
+public function getModuleReplaced($name, $status = false) {
+    require_once ('class/Class.WIFF.php');
+    require_once ('class/Class.Module.php');
+
+    $wiff = WIFF::getInstance();
+
+    $xml = new DOMDocument();
+    $xml->load($wiff->contexts_filepath);
+
+    $xpath = new DOMXPath($xml);
+
+    $query = null;
+    if( $status == 'installed' ) {
+      $query = sprintf("/contexts/context[@name='%s']/modules/module[@status='installed']/replaces/module[@name='%s']/../..", $this->name, $name);
+    } else if( $status == 'downloaded' ) {
+      $query = sprintf("/contexts/context[@name='%s']/modules/module[@status='downloaded']/replaces/module[@name='%s']/../..", $this->name, $name);
+    } else {
+      $query = sprintf("/contexts/context[@name='%s']/modules/module/replaces/module[@name='%s']/../..", $this->name, $name);
+    }
+    $moduleDom = $xpath->query($query);
+
+    if ($moduleDom->length <= 0)
+    {
+        $this->errorMessage = sprintf("Could not find a module providing '%s' in context '%s'.", $name, $this->name);
+        return false;
+    }
+
+    return new Module($this, null, $moduleDom->item(0), true);
+}
+
 public function getModuleDownloaded($name) {
   return $this->getModule($name, 'downloaded');
 }
 
 public function getModuleInstalled($name) {
   return $this->getModule($name, 'installed');
+}
+
+public function getModuleInstalledReplaced($name) {
+  return $this->getModuleReplaced($name, 'installed');
 }
 
 public function getModuleAvail($name)
@@ -677,6 +711,23 @@ public function getModuleAvail($name)
 
     $this->errorMessage = sprintf("Could not find module '%s' in context '%s'.", $name, $this->name);
     return false;
+}
+
+public function getModuleAvailReplaced($name) {
+  $modAvails = $this->getAvailableModuleList();
+  if( $modAvails === false ) {
+    return false;
+  }
+  foreach( $modAvails as $mod ) {
+    foreach( $mod->replaces as $replace ) {
+      if( $replace['name'] == $name ) {
+	return $mod;
+      }
+    }
+  }
+
+  $this->errorMessage = sprintf("Could not find a module providing '%s' in context '%s'.", $name, $this->name);
+  return false;
 }
 
 /**
@@ -768,6 +819,20 @@ public function getModuleDependencies($namelist, $local = false)
 	      $reqMod = $this->getModuleAvail($reqModName);
 	      if( $reqMod !== false ) {
 		if( $this->moduleMeetsRequiredVersion($reqMod, $reqModComp, $reqModVersion) ) {
+		  $reqMod->needphase = 'install';
+		}
+	      }
+	    }
+
+	    if( $reqMod === false ) {
+	      // Search the required module in replaced modules
+	      $reqMod = $this->getModuleInstalledReplaced($reqModName);
+	      if( $reqMod !== false ) {
+		continue;
+	      } else {
+		// Look for an available module online that replaces the required module
+		$reqMod = $this->getModuleAvailReplaced($reqModName);
+		if( $reqMod !== false ) {
 		  $reqMod->needphase = 'install';
 		}
 	      }
