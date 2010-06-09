@@ -720,14 +720,6 @@ public function getModuleDependencies($namelist, $local = false)
             array_push($depsList, $module);
         }
         
-//        if($module->getRequiredInstaller()){
-//        	$requiredInstaller = $module->getRequiredInstaller();
-//        	$requiredInstallerVersion = $requiredInstaller['version'];
-//        	$wiff = WIFF::getInstance();
-//        	$currentInstallerVersion = $wiff->getVersion();
-//        	error_log('Must compare ---'.$requiredInstallerVersion.' --- '.$currentInstallerVersion);
-//        }
-        
     }
 
 
