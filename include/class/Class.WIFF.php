@@ -32,6 +32,7 @@ class WIFF
 
     public $contexts_filepath = '';
     public $params_filepath = '';
+    public $archive_filepath = '';
 
     public $errorMessage = null;
 
@@ -54,6 +55,7 @@ class WIFF
 
         $this->contexts_filepath = $wiff_root.WIFF::contexts_filepath;
         $this->params_filepath = $wiff_root.WIFF::params_filepath;
+	$this->archive_filepath = $wiff_root.WIFF::archive_filepath;
 		
 		$this->updateParam();
 
@@ -684,7 +686,8 @@ require valid-user
 
         }
         
-        $archived_root = $wiff_root.WIFF::archive_filepath;
+	
+        $archived_root = $this->archive_filepath;
 	    
 	    if (is_dir($archived_root))
 	    {
