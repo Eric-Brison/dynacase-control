@@ -7,14 +7,11 @@
 
 use strict;
 use warnings;
+use Encode;
+use Getopt::Long;
 
 select STDERR; $|=1;
 select STDOUT; $|=1;
-
-if( not open(ICONV, '-|', 'recode WINDOWS-1252..UTF-8') ) {
-  print STDERR "Error running recode: $!\n";
-  exit( 1 );
-}
 
 my @to_remove;
 while(<DATA>) {
@@ -22,22 +19,29 @@ while(<DATA>) {
   push @to_remove, $_;
 }
 
-my $mode = shift || '';
-if( $mode eq "--schema" ) {
-  $mode = "schema";
-} else {
-  $mode = "data";
+my $opt_schema_mode = 0;
+my $opt_load_subst = undef;
+my $result = GetOptions(
+			'schema' => \$opt_schema_mode,
+			'load-subst=s' => \$opt_load_subst,
+			);
+
+our %subst;
+if( defined $opt_load_subst ) {
+  require $opt_load_subst if( -r $opt_load_subst );
 }
 
-
-if( $mode eq "schema" ) {
+if( $opt_schema_mode ) {
 
   # -- Schema conversion mode --
 
   my $dump;
-  {
-    local $/;
-    $dump = <ICONV>;
+  my $line;
+  while( $line = <STDIN> ) {
+
+    $line = cp1252_to_utf8($line);
+
+    $dump .= $line;
   }
 
   $dump =~ s/client_encoding = 'LATIN1'/client_encoding = 'UTF8'/;
@@ -61,10 +65,17 @@ if( $mode eq "schema" ) {
     push @to_remove_regex, qr/^-- \Q$re\E\b/;
   }
 
-  my $line;
   my $remove = 0;
   my $done_encoding = 0;
-  while($line= <ICONV>) {
+  my $line;
+  while( $line = <STDIN> ) {
+
+    foreach (keys %subst) {
+      $line =~ s/\Q$_\E/$subst{$_}/g;
+    }
+
+    $line = cp1252_to_utf8($line);
+
     $done_encoding = 1 if( $done_encoding == 0 && $line =~ s/client_encoding = 'LATIN1'/client_encoding = 'UTF8'/ );
 
     if( $line =~ m/^-- (?:Data for)? Name: / ) {
@@ -85,6 +96,51 @@ if( $mode eq "schema" ) {
 }
 
 exit( 0 );
+
+sub cp1252_to_utf8 {
+  my $str = shift;
+
+  foreach (keys %subst) {
+    $str =~ s/\Q$_\E/$subst{$_}/g;
+  }
+
+  my ($str_dec, $str_enc, $err_pos, $err_byte, $err_msg, $xxd_before, $xxd_after);
+
+  # -- Decode from cp1252 to internal perl format
+  my $str_orig = $str;
+  my $buff = $str;
+  eval { $str_dec = Encode::decode('cp1252', $buff, Encode::FB_QUIET); };
+  if( length($buff) > 0 ) {
+    # -- log error
+    $err_pos = length($str_orig) - length($buff);
+    $err_byte = ord(substr($str_orig, $err_pos, 1));
+    $xxd_before = join('', map { sprintf("<0x%x>", ord($_)) } split("", substr($str_orig, ($err_pos>3)?($err_pos-3):0, ($err_pos>3)?3:$err_pos)));
+    $xxd_after = join('', map { sprintf("<0x%x>", ord($_)) } split("", substr($str_orig, $err_pos, 3)));
+    $err_msg = sprintf("Decode error at line %d char %d (0x%x)", $., $err_pos, $err_byte);
+    chomp($str = $str_orig);
+    $str =~ s/\t/ /g;
+    print STDERR sprintf("%s: [%s]\n", $err_msg, $str);
+    print STDERR sprintf("%s  %s^ (context %s ^ %s)\n", ' 'x(length($err_msg)), '-'x($err_pos), $xxd_before, $xxd_after);
+    # -- force decode
+    $str_dec = Encode::decode('cp1252', $str_orig);
+  }
+  $str = $str_dec;
+
+  # -- Encode from internal perl format to utf8
+  $str_orig = $str;
+  eval { $str_enc = Encode::encode('utf8', $str, Encode::FB_CROAK); };
+  if( $@ ) {
+    # -- log error
+    chomp($str = $str_orig);
+    $str =~ s/\t//g;
+    print STDERR sprintf("Encode error at line %s : [%s]\n", $., $str);
+    # -- force encode
+    $str_enc = Encode::encode('utf8', $str_orig);
+  }
+  $str = $str_enc;
+
+  return $str;
+}
 
 __DATA__
 Name: gtsq; Type: SHELL TYPE
