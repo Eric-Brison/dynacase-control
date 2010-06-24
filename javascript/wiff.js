@@ -2958,13 +2958,9 @@ Ext.onReady(function(){
 	            items: [{
 	                title: 'Freedom <br/> Web Installer',
 	                html: "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Web Installer for Freedom (WIFF)</h1>" +
-	                "<p style='margin-bottom:30px;'>If you need help, follow these links to documentation wiki. Subscriptions and contributions are much appreciated.</p>" +
+	                "<p style='margin-bottom:30px;'>If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>" +
 	                "<ul style='margin-left:30px;list-style-type: square;' >" +
-	                "<li><a href='http://www.freedom-ecm.org/freedom_3/install/freedom' target='_blank'><h2>Introduction</h2></a></li>" +
-	                "<li><a href='http://www.freedom-ecm.org/freedom_3/install/users/installation' target='_blank'><h2>How to install WIFF ?</h2></a></li>" +
-	                "<li><a href='http://www.freedom-ecm.org/freedom_3/install/users/parametrage' target='_blank'><h2>How to setup WIFF ?</h2></a></li>" +
-	                "<li><a href='http://www.freedom-ecm.org/freedom_3/install/users/createcontext' target='_blank'><h2>How to create a context ?</h2></a></li>" +
-	                "<li><a href='http://www.freedom-ecm.org/freedom_3/install/users/firstinstall' target='_blank'><h2>How to install freedom ?</h2></a></li>" +
+	                "<li><a href='http://www.freedom-ecm.org/wiff' target='_blank'><h2>Documentation</h2></a></li>" +
 	                "</ul></div>"
 	            
 	            }, {
