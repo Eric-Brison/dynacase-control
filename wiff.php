@@ -560,7 +560,7 @@ if (get_magic_quotes_gpc())
     {
         $module = $context->getModuleAvail($_REQUEST['module']);
 
-        if ($module->download())
+        if ($module->download('downloaded'))
         {
             answer(true);
         } else
@@ -698,7 +698,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     // Request to get phase list for a given operation
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getPhaseList']) && isset ($_REQUEST['operation']))
     {
-        $module = $context->getModule($_REQUEST['module']);
+        $module = $context->getModuleDownloaded($_REQUEST['module']);
 
         if (!$module) // If no module was found in installed modules by previous method, then try to get module from available modules
         {
@@ -713,7 +713,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     // Request to get process list for a given phase
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['getProcessList']))
     {
-        $module = $context->getModule($_REQUEST['module']);
+        $module = $context->getModuleDownloaded($_REQUEST['module']);
         if ($module === false)
         {
             error_log( __FUNCTION__ ." ".$context->errorMessage);
@@ -737,7 +737,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
             exit (1);
         }
 
-        $module = $context->getModule($_REQUEST['module']);
+        $module = $context->getModuleDownloaded($_REQUEST['module']);
         if ($module === false)
         {
             $answer = new JSONAnswer(null, sprintf("Could not get module '%s' in context '%s'.", $_REQUEST['module'], $_REQUEST['context']), false);
@@ -778,7 +778,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     // Request to get module parameters
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getParameterList']))
     {
-        $module = $context->getModule($_REQUEST['module']);
+        $module = $context->getModuleDownloaded($_REQUEST['module']);
         if (!$module)
         {
             $module = $context->getModuleAvail($_REQUEST['module']);
@@ -794,7 +794,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     // Request to save module parameters
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
     {
-        $module = $context->getModule($_REQUEST['module']);
+        $module = $context->getModuleDownloaded($_REQUEST['module']);
         if (!$module)
         {
             $module = $context->getModuleAvail($_REQUEST['module']);
@@ -927,7 +927,7 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
             exit (1);
         }
 
-        $module = $context->getModule($moduleName);
+        $module = $context->getModuleDownloaded($moduleName);
         if ($module === false)
         {
             $answer = new JSONAnswer(null, sprintf("Error getting module '%s' in context '%s'!", $moduleName, $contextName), true);

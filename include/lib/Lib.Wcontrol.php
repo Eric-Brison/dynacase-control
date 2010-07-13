@@ -75,6 +75,18 @@ function wcontrol_process($process)
         $cmd = sprintf("%s/%s", $ctx_root, $cmd);
     }
 
+    $current_version = false;
+    $installedModule = $process->phase->module->context->getModuleInstalled($process->phase->module->name);
+    if( $installedModule !== false ) {
+      $current_version = $installedModule->version;
+    }
+    if( $current_version !== false ) {
+      putenv(sprintf('MODULE_VERSION_FROM=%s', $current_version));
+    }
+    putenv(sprintf('MODULE_VERSION_TO=%s', $process->phase->module->version));
+
+    error_log(__CLASS__."::".__FUNCTION__." ".sprintf("FROM=%s / TO=%s", $current_version, $process->phase->module->version));
+
     /*
      $cmd = sprintf("( %s ) 2>&1 3>/dev/null; echo $? >&3", $cmd);
      $proc = proc_open($cmd,
