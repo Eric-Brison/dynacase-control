@@ -70,13 +70,18 @@ if (get_magic_quotes_gpc())
 
         // Check for required functions
         foreach ( array (
-        'json_encode',
-        'json_decode'
-        ) as $function)
+			 'json_encode' => 'json',
+			 'json_decode' => 'json',
+			 'xml_parse' => 'xml',
+			 'zip_open' => 'zip',
+			 'date' => 'date',
+			 'preg_match' => 'pcre',
+			 'pg_connect' => 'pgsql'
+			 ) as $function => $extension )
         {
             if (!function_exists($function))
             {
-                array_push($errors, sprintf("PHP function '%s' not found.", $function));
+	      array_push($errors, sprintf("PHP function '%s' not found (extension '%s').", $function, $extension));
             }
         }
 
