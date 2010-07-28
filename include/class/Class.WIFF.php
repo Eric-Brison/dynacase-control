@@ -760,7 +760,7 @@ require valid-user
 	    
 		    while (false !== ($file = readdir($handle))){
 		    
-		    	if(preg_match('/^.+\.fcz$/',$file)){
+		      if(preg_match('/^(?P<basename>.+)\.fcz$/',$file,$fmatch)){
 		    			    	
 		    		$zip = zip_open($archived_root.DIRECTORY_SEPARATOR.$file);
 		    		
@@ -806,7 +806,7 @@ require valid-user
 		            			$archiveContext = array();
 		            			$archiveContext['name'] = $context->getAttribute('name');
 		            			$archiveContext['description'] = $context->getAttribute('description');
-		            			$archiveContext['id'] = $context->getAttribute('id');
+						$archiveContext['id'] = $fmatch['basename'];
 		            			$archiveContext['datetime'] = $context->getAttribute('datetime');
 		            			
 			            		$moduleList = array();

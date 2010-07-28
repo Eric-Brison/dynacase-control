@@ -1297,7 +1297,7 @@ public function archiveContext($archiveName,$archiveDesc = '') {
     
     // --- Generate archive id --- //
 	$datetime = new DateTime();
-	$archiveId = sha1($this->name.$datetime->format('Y-m-d H:i:s'));
+	$archiveId = sprintf("%s-%s", preg_replace('/\//', '_', $archiveName), sha1($this->name.$datetime->format('Y-m-d H:i:s')));
 	
 	// --- Create status file for archive --- //
 	$status_file = $archived_root.DIRECTORY_SEPARATOR.$archiveId.'.sts';
