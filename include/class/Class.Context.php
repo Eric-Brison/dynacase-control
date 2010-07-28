@@ -1629,7 +1629,7 @@ private function sortManifestEntriesByNameReverse($a, $b) {
  *                          'uid' => 'foo',
  *                          'gid' => 'bar',
  *                          'size' => '1234',
- *                          'date' => '1970-01-01 10:11:12',
+ *                          'date' => '1970-01-01 10:11:12' || '1970-01-01 10:11',
  *                          'name' => 'Symlink Example.txt',
  *                          'link' => ' -> Symlink Target.txt'
  *                          ),
@@ -1646,7 +1646,7 @@ public function getManifestEntriesForModule($moduleName) {
 
   foreach( $manifestLines as $line ) {
     $minfo = array();
-    if( ! preg_match("|^(?P<type>.)(?P<mode>.........)\s+(?P<uid>.*?)/(?P<gid>.*?)\s+(?P<size>\d+)\s+(?P<date>\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d:\d\d)\s+(?P<name>.*?)(?P<link>\s+->\s+.*?)?$|", $line, $minfo) ) {
+    if( ! preg_match("|^(?P<type>.)(?P<mode>.........)\s+(?P<uid>.*?)/(?P<gid>.*?)\s+(?P<size>\d+)\s+(?P<date>\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d(?::\d\d)?)\s+(?P<name>.*?)(?P<link>\s+->\s+.*?)?$|", $line, $minfo) ) {
       continue;
     }
     array_push($manifestEntries, $minfo);
