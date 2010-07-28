@@ -234,6 +234,13 @@ function wiff_context_shell(&$context, &$argv) {
   $envs['pgservice_freedom'] = $envs['pgservice_core'];
   $envs['freedom_context'] = "default";
   $envs['PS1'] = sprintf("wiff(%s)\\w\\$ ", $context->name);
+  $envs['USER'] = $httpuser;
+  if( getenv('PATH') !== false ) {
+    $envs['PATH'] = getenv('PATH');
+  }
+  if( getenv('TERM') !== false ) {
+    $envs['TERM'] = getenv('TERM');
+  }
 
   if( $envs['pgservice_core'] === false || $envs['pgservice_core'] == '' ) {
     error_log(sprintf("Error: empty core_db parameter!\n"));
