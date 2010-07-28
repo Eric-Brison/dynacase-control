@@ -703,7 +703,12 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     // Request to get phase list for a given operation
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getPhaseList']) && isset ($_REQUEST['operation']))
     {
-        $module = $context->getModuleDownloaded($_REQUEST['module']);
+        $module = false;
+	if( $_REQUEST['operation'] == 'parameter' ) {
+	  $module = $context->getModuleInstalled($_REQUEST['module']);
+	} else {
+	  $module = $context->getModuleDownloaded($_REQUEST['module']);
+	}
 
         if (!$module) // If no module was found in installed modules by previous method, then try to get module from available modules
         {
@@ -716,9 +721,15 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     }
 
     // Request to get process list for a given phase
-    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['getProcessList']))
+    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['getProcessList']) && isset ($_REQUEST['operation']) )
     {
+      $module = false;
+      if( $_REQUEST['operation'] == 'parameter' ) {
+	$module = $context->getModuleInstalled($_REQUEST['module']);
+      } else {
         $module = $context->getModuleDownloaded($_REQUEST['module']);
+      }
+
         if ($module === false)
         {
             error_log( __FUNCTION__ ." ".$context->errorMessage);
@@ -732,7 +743,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     }
 
     // Request to execute process
-    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['process']) && isset ($_REQUEST['execute']))
+    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['phase']) && isset ($_REQUEST['process']) && isset ($_REQUEST['execute']) && isset($_REQUEST['operation']) )
     {
         $context = $wiff->getContext($_REQUEST['context']);
         if ($context === false)
@@ -742,7 +753,13 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
             exit (1);
         }
 
-        $module = $context->getModuleDownloaded($_REQUEST['module']);
+	$module = false;
+	if( $_REQUEST['operation'] == 'parameter' ) {
+	  $module = $context->getModuleInstalled($_REQUEST['module']);
+	} else {
+	  $module = $context->getModuleDownloaded($_REQUEST['module']);
+	}
+
         if ($module === false)
         {
             $answer = new JSONAnswer(null, sprintf("Could not get module '%s' in context '%s'.", $_REQUEST['module'], $_REQUEST['context']), false);
@@ -781,9 +798,15 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     }
 
     // Request to get module parameters
-    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getParameterList']))
+    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getParameterList']) && isset($_REQUEST['operation']) )
     {
-        $module = $context->getModuleDownloaded($_REQUEST['module']);
+        $module = false;
+	if( $_REQUEST['operation'] == 'parameter' ) {
+	  $module = $context->getModuleInstalled($_REQUEST['module']);
+	} else {
+	  $module = $context->getModuleDownloaded($_REQUEST['module']);
+	}
+
         if (!$module)
         {
             $module = $context->getModuleAvail($_REQUEST['module']);
@@ -797,9 +820,15 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     }
 
     // Request to save module parameters
-    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
+    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']) && isset($_REQUEST['operation']) )
     {
-        $module = $context->getModuleDownloaded($_REQUEST['module']);
+        $module = false;
+	if( $_REQUEST['operation'] == 'parameter' ) {
+	  $module = $context->getModuleInstalled($_REQUEST['module']);
+	} else {
+	  $module = $context->getModuleDownloaded($_REQUEST['module']);
+	}
+
         if (!$module)
         {
             $module = $context->getModuleAvail($_REQUEST['module']);
@@ -853,7 +882,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     }
 
 // Get license agreement
-if( isset($_REQUEST['getLicenseAgreement']) && isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['license']) ) {
+if( isset($_REQUEST['getLicenseAgreement']) && isset($_REQUEST['context']) && isset($_REQUEST['module']) && isset($_REQUEST['license']) && isset($_REQUEST['operation']) ) {
   $context = $wiff->getContext($_REQUEST['context']);
   if( $context === false ) {
     $answer = new JSONAnswer(null, sprintf("Error getting context '%s'!", $_REQUEST['context']), true);
@@ -918,8 +947,8 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
         $errorstatus = $_REQUEST['errorstatus'];
 	$operation = $_REQUEST['operation'];
 
-	if( $operation == 'replaced' ) {
-	  $answer = new JSONAnswer(null, sprintf("Notice: need to set status on %s operation.", $operation), true);
+	if( $operation == 'replaced' || $operation == 'parameter' ) {
+	  $answer = new JSONAnswer(null, sprintf("Notice: no need to set status on %s operation.", $operation), true);
 	  echo $answer->encode();
 	  exit(0);
 	}
@@ -960,9 +989,15 @@ if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQ
     }
 
 
-    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']))
+    if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['storeParameter']) && isset ($_REQUEST['operation']) )
     {
-        $module = $context->getModule($_REQUEST['module']);
+        $module = false;
+        if( $_REQUEST['operation'] == 'parameter' ) {
+	  $module = $context->getModuleInstalled($_REQUEST['module']);
+	} else {
+	  $module = $context->getModuleDownloaded($_REQUEST['module']);
+	}
+
         if (!$module)
         {
             $module = $context->getModuleAvail($_REQUEST['module']);

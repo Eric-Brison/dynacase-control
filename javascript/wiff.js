@@ -1986,6 +1986,7 @@ function askParameter(module, operation){
         params: {
             context: currentContext,
             module: module.name,
+	    operation: operation,
             getParameterList: true,
             authInfo: Ext.encode(authInfo)
         },
@@ -2039,6 +2040,7 @@ function askParameter_success(module, operation, responseObject){
                         params: {
                             context: currentContext,
                             module: module.name,
+			    operation: operation,
                             storeParameter: true
                         },
                         waitMsg: 'Saving Parameters...'
@@ -2146,6 +2148,7 @@ function getLicenseAgreement(module, operation) {
 			'getLicenseAgreement': true,
 			'context': currentContext,
 			'module': module.name,
+			'operation': operation,
 			'license': module.license
 		    },
 		    'success': function(responseObject) {
@@ -2277,11 +2280,6 @@ function storeLicenseAgreement_failure(module, operation, responseObject) {
  */
 function getPhaseList(module, operation){
 
-    //If parameter, make as if update for now
-    if (operation == 'parameter') {
-        operation = 'upgrade';
-    }
-    
     currentModule = module;
 
 	localOperation = operation;
@@ -2458,6 +2456,7 @@ function executePhaseList(operation){
                 params: {
                     context: currentContext,
                     module: module.name,
+		    operation: operation,
                     phase: phase,
                     getProcessList: true,
                     authInfo: Ext.encode(authInfo)
@@ -2628,6 +2627,7 @@ function executeProcessList(module, phase, operation){
             params: {
                 context: currentContext,
                 module: module.name,
+		operation: operation,
                 phase: phase,
                 process: process + '',
                 execute: true,
@@ -2831,7 +2831,7 @@ function setModuleStatusInstalled(module, operation){
             module: module.name,
             status: 'installed',
             errorstatus: '',
-	operation: operation,
+	    operation: operation,
             authInfo: Ext.encode(authInfo)
         },
         callback: function(option, success, responseObject){
