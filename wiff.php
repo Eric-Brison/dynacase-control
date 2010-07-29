@@ -593,12 +593,17 @@ if (get_magic_quotes_gpc())
 // Clean/delete previous module's files and unpack new files
 if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_REQUEST['module']) ) {
   $moduleName = $_REQUEST['module'];
+
+  $module = $context->getModuleDownloaded($moduleName);
+  if( $module === false ) {
+    answer(null, $context->errorMessage);
+  }
+
   $ret = $context->deleteFilesFromModule($moduleName);
   if( $ret === false ) {
     answer(null, $context->errorMessage);
   }
 
-  $module = $context->getModuleDownloaded($_REQUEST['module']);
   $ret = $module->unpack($context->root);
   if( $ret === false ) {
     answer(null, $module->errorMessage);
