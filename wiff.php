@@ -709,7 +709,7 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
     if ( isset ($_REQUEST['context']) && isset ($_REQUEST['module']) && isset ($_REQUEST['getPhaseList']) && isset ($_REQUEST['operation']))
     {
         $module = false;
-	if( $_REQUEST['operation'] == 'parameter' ) {
+	if( ( $_REQUEST['operation'] == 'parameter' ) || ( $_REQUEST['operation'] == 'replaced' ) ){
 	  $module = $context->getModuleInstalled($_REQUEST['module']);
 	} else {
 	  $module = $context->getModuleDownloaded($_REQUEST['module']);
@@ -719,7 +719,9 @@ if( isset($_REQUEST['cleanUnpack']) && isset($_REQUEST['context']) && isset($_RE
         {
             $module = $context->getModuleAvail($_REQUEST['module']);
         }
-
+		if(! $module)
+			answer ( null, sprintf ( _ ( "no module for %1\$s (operation: %2\$s)" ), $_REQUEST ['module'], $_REQUEST ['operation'] ) );
+		
         $phaseList = $module->getPhaseList($_REQUEST['operation']);
 
         answer($phaseList);
