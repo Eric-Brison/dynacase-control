@@ -382,9 +382,9 @@ if ( isset ($_REQUEST['getContextList']))
 }
 
 if (isset($_REQUEST['deleteContext'])) {
-	
+
 	//Insert function to delete context here
-	
+
 	error_log("Context to delete is :: ".$_REQUEST['contextToDelete']);
 	answer($_REQUEST['contextToDelete']);
 }
@@ -503,9 +503,7 @@ if ( isset ($_REQUEST['createContextFromArchive']))
 	$user_password = $_REQUEST['user_password'];
 
 	$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice'], $remove_profiles, $user_login, $user_password);
-	
-	error_log("result of create == $result :: error message == $wiff->errorMessage");
-	
+
 	if($result === false){
 		answer(null, $wiff->errorMessage);
 	} else
@@ -519,7 +517,7 @@ if ( isset ($_REQUEST['deleteArchive']))
 {
 
 	$archiveId = $_REQUEST['archiveId'];
-	 
+
 	$result = $wiff->deleteArchive($archiveId);
 	if($result === false){
 		answer(null, $wiff->errorMessage);
