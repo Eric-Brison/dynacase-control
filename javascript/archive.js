@@ -318,7 +318,7 @@ function updateArchiveList_success(responseObject, select) {
 															failure : function(
 																	form,
 																	action) {
-																//updateContextList('select-last');
+																// updateContextList('select-last');
 																console
 																		.log("Context Not created");
 																if (action
@@ -339,6 +339,11 @@ function updateArchiveList_success(responseObject, select) {
 																						})
 																								.defer(1000);
 																					});
+																} else {
+																	Ext.Msg
+																			.alert(
+																					'Warning',
+																					'Unknow error');
 																}
 															},
 															params : {

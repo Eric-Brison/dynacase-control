@@ -1188,6 +1188,8 @@ function updateContextList_success(responseObject, select) {
 																					})
 																							.defer(1000);
 																				});
+															} else {
+																Ext.Msg.alert('Warning', 'Unknow error');
 															}
 															// archive_failure(action.response);
 														},
