@@ -1278,9 +1278,6 @@ class Context
 				include($filename);
 			}
 		}
-		/*if ($pgservice_core == "") {
-		 include("dbaccess.php");
-		 }*/
 		if ($pgservice_core == "") {
 			error_log("Undefined pgservice_core in dbaccess.php");
 			exit(1);
@@ -1290,13 +1287,6 @@ class Context
 	}
 
 	public function archiveContext($archiveName,$archiveDesc = '', $vaultExclude = false) {
-
-		/*$libcommon = $this->root.'/WHAT/Lib.Common.php';
-
-		if( (include_once $libcommon) === false){
-		$this->errorMessage = "Cannot archive a context without an installed freedom-toolbox module.";
-		return false ;
-		}*/
 
 		$tmp = 'archived-tmp';
 

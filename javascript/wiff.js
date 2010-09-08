@@ -865,7 +865,7 @@ function updateContextList_success(responseObject, select) {
 						Ext.Msg.alert('Import Failed', response.error);
 					}
 				});
-				return (importButtonRes);
+		return (importButtonRes);
 	};
 
 	var onDeleteContextButton = function(button) {
