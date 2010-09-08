@@ -810,59 +810,63 @@ function updateContextList_success(responseObject, select) {
 				}
 			}, panel);
 
-	var importButton = new Ext.ux.form.FileUploadField({
-				name : 'module',
-				buttonOnly : true,
-				buttonCfg : {
-					text : 'Import Module',
-					iconCls : 'x-icon-import',
-					tooltip : 'Open a local file browser'
-				},
-				listeners : {
-					fileselected : function(button, file) {
+	var importButton = function() {
+		var importButtonRes = new Ext.ux.form.FileUploadField({
+					name : 'module',
+					buttonOnly : true,
+					buttonCfg : {
+						text : 'Import Module',
+						iconCls : 'x-icon-import',
+						tooltip : 'Open a local file browser'
+					},
+					listeners : {
+						fileselected : function(button, file) {
 
-						if (!button.importForm) {
-							var importFormEl = button.container.createChild({
-										tag : 'form',
-										style : 'display:none;'
+							if (!button.importForm) {
+								var importFormEl = button.container
+										.createChild({
+													tag : 'form',
+													style : 'display:none;'
+												});
+								button.container.importForm = new Ext.form.BasicForm(
+										importFormEl, {
+											url : 'wiff.php',
+											fileUpload : true
+										});
+							}
+
+							var inputFileEl = button.detachFileInput();
+							inputFileEl.appendTo(button.container.importForm
+									.getEl());
+
+							button.container.importForm.submit({
+										waitTitle : 'Module Import',
+										waitMsg : 'Importing...',
+										params : {
+											importArchive : true,
+											context : currentContext
+										},
+										success : button.onImportSuccess,
+										failure : button.onImportFailure
 									});
-							button.container.importForm = new Ext.form.BasicForm(
-									importFormEl, {
-										url : 'wiff.php',
-										fileUpload : true
-									});
+
 						}
-
-						var inputFileEl = button.detachFileInput();
-						inputFileEl.appendTo(button.container.importForm
-								.getEl());
-
-						button.container.importForm.submit({
-									waitTitle : 'Module Import',
-									waitMsg : 'Importing...',
-									params : {
-										importArchive : true,
-										context : currentContext
-									},
-									success : button.onImportSuccess,
-									failure : button.onImportFailure
-								});
-
+					},
+					onImportSuccess : function(form, action) {
+						var inputFileEl = form.getEl().child('input');
+						inputFileEl.remove();
+						installLocal(action.result.data);
+					},
+					onImportFailure : function(form, action) {
+						var response = eval('(' + action.response.responseText
+								+ ')');
+						var inputFileEl = form.getEl().child('input');
+						inputFileEl.remove();
+						Ext.Msg.alert('Import Failed', response.error);
 					}
-				},
-				onImportSuccess : function(form, action) {
-					var inputFileEl = form.getEl().child('input');
-					inputFileEl.remove();
-					installLocal(action.result.data);
-				},
-				onImportFailure : function(form, action) {
-					var response = eval('(' + action.response.responseText
-							+ ')');
-					var inputFileEl = form.getEl().child('input');
-					inputFileEl.remove();
-					Ext.Msg.alert('Import Failed', response.error);
-				}
-			});
+				});
+				return (importButtonRes);
+	};
 
 	var onDeleteContextButton = function(button) {
 		Ext.Msg.show({
@@ -895,6 +899,7 @@ function updateContextList_success(responseObject, select) {
 					}
 				});
 	};
+
 	for (var i = 0; i < data.length; i++) {
 
 		panel.add({
@@ -1097,7 +1102,7 @@ function updateContextList_success(responseObject, select) {
 							win.show();
 
 						}
-					}, importButton, {
+					}, importButton(), {
 						text : 'Delete context',
 						iconCls : 'x-icon-create-archive',
 						context : data[i],
