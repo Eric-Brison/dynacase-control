@@ -1344,20 +1344,7 @@ class Context
 			$root = $doc->createElement('info');
 			$root = $doc->appendChild($root);
 
-			// --- Write archive information --- //
-			$archive = $doc->createElement('archive');
-			$archive->setAttribute('id',$archiveId);
-			$archive->setAttribute('name',$archiveName);
-			$archive->setAttribute('datetime',$datetime->format('Y-m-d H:i:s'));
-			$archive->setAttribute('description',$archiveDesc);
-			
-			if ($vaultExclude == 'on') {
-				$archive->setAttribute('vault', 'No');
-			}
-			else {
-				$archive->setAttribute('vault', 'Yes');
-			}
-			$archive = $root->appendChild($archive);
+
 
 			// --- Copy context information --- //
 			$wiff_root = getenv('WIFF_ROOT');
@@ -1388,9 +1375,7 @@ class Context
 			$repositories = $context->getElementsByTagName('repositories')->item(0);
 			if ($repositories) deleteNode($repositories);
 
-			$xml = $doc->saveXML();
 
-			$zip->addFromString('info.xml',$xml);
 
 			// --- Generate context tar.gz --- //
 			$script = sprintf("tar -C %s -czf $tmp/context.tar.gz .", escapeshellarg($this->root));
@@ -1458,19 +1443,50 @@ class Context
 				while ($row = pg_fetch_row($result)) {
 					$id_fs = $row[0];
 					$r_path = $row[1];
-					$script = sprintf("tar -C %s -czf %s/vault_$id_fs.tar.gz .", escapeshellarg($r_path), $tmp);
-					$res = system($script,$retval);
-					if($retval != 0){
-						$this->errorMessage = "Error when making vault tar.";
-						return false;
+					if (is_dir($r_path)) {
+						$vaultExclude = 'off';
+						error_log("vault found :: ". $r_path);
+						$script = sprintf("tar -C %s -czf %s/vault_$id_fs.tar.gz .", escapeshellarg($r_path), $tmp);
+						$res = system($script,$retval);
+						if($retval != 0){
+							$this->errorMessage = "Error when making vault tar.";
+							return false;
+						}
+						$zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
 					}
-					$zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
+					else {
+						$vaultExclude = 'on';
+						error_log("No vault directory found");
+					}
 				}
-
-				error_log('Generated vault tar gz');
+				if ($vaultExclude != 'on') {
+					error_log('Generated vault tar gz');
+				}
 			}
+
+			// --- Write archive information --- //
+			$archive = $doc->createElement('archive');
+			$archive->setAttribute('id',$archiveId);
+			$archive->setAttribute('name',$archiveName);
+			$archive->setAttribute('datetime',$datetime->format('Y-m-d H:i:s'));
+			$archive->setAttribute('description',$archiveDesc);
+
+			if ($vaultExclude == 'on') {
+				$archive->setAttribute('vault', 'No');
+			}
+			else {
+				$archive->setAttribute('vault', 'Yes');
+			}
+			$archive = $root->appendChild($archive);
+
+			$xml = $doc->saveXML();
+
+			$zip->addFromString('info.xml',$xml);
+
 			// --- Save zip --- //
 			$zip->close();
+
+
 
 			// --- Delete status file --- //
 			unlink($status_file);

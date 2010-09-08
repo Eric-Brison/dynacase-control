@@ -755,7 +755,7 @@ return true;
 				return false;
 			}
 		}
-			
+		
 		if ($handle = opendir($archived_root)) {
 
 			while (false !== ($file = readdir($handle))){

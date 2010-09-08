@@ -864,6 +864,37 @@ function updateContextList_success(responseObject, select) {
 				}
 			});
 
+	var onDeleteContextButton = function(button) {
+		Ext.Msg.show({
+					title : 'Warning',
+					msg : 'Do you really want to delete this context?',
+					buttons : Ext.Msg.YESNO,
+					icon : Ext.Msg.WARNING,
+					fn : function(btn, text, opt) {
+						if (btn != 'yes') {
+							return false;
+						}
+						Ext.Ajax.request({
+									url : 'wiff.php',
+									params : {
+										contextToDelete : button.context.name,
+										deleteContext : true
+									},
+									success : function(response, options) {
+										var responseDecode = Ext.util.JSON
+												.decode(response.responseText);
+										if (responseDecode.success == false) {
+											Ext.Msg.alert('Warning',
+													responseDecode.errormsg);
+										} else {
+											console.log("Context deleted :: ",
+													responseDecode.data);
+										}
+									}
+								});
+					}
+				});
+	};
 	for (var i = 0; i < data.length; i++) {
 
 		panel.add({
@@ -1067,6 +1098,12 @@ function updateContextList_success(responseObject, select) {
 
 						}
 					}, importButton, {
+						text : 'Delete context',
+						iconCls : 'x-icon-create-archive',
+						context : data[i],
+						handler : onDeleteContextButton,
+						tooltip : 'Delete context'
+					}, {
 						text : 'Create Archive',
 						tooltip : 'Create Archive',
 						iconCls : 'x-icon-create-archive',

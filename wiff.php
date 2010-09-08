@@ -381,6 +381,14 @@ if ( isset ($_REQUEST['getContextList']))
 	answer($contextList);
 }
 
+if (isset($_REQUEST['deleteContext'])) {
+	
+	//Insert function to delete context here
+	
+	error_log("Context to delete is :: ".$_REQUEST['contextToDelete']);
+	answer($_REQUEST['contextToDelete']);
+}
+
 // Request to get archived context list
 if (isset ($_REQUEST['getArchivedContextList']))
 {

@@ -291,7 +291,7 @@ function updateArchiveList_success(responseObject, select){
 						}],
 	                    refresh: function(){
 	                        
-	                        var contextInfoHtml = '<ul><li class="x-form-item"><b>Archive Datetime :</b> ' + Ext.util.Format.htmlEncode(this.archive.datetime) + '</li><li class="x-form-item"><b>Description :</b> ' + Ext.util.Format.htmlEncode(this.archive.description) + '</li><li class="x-form-item"><b>Archive id :</b> ' + Ext.util.Format.htmlEncode (this.archive.id) + '<li></ul><p>'+ '</li><li class="x-form-item"><b>Vault save :</b> ' + Ext.util.Format.htmlEncode (this.archive.vault) + '<li></ul><p>';
+	                        var contextInfoHtml = '<ul><li class="x-form-item"><b>Archive Datetime :</b> ' + Ext.util.Format.htmlEncode(this.archive.datetime) + '</li><li class="x-form-item"><b>Description :</b> ' + Ext.util.Format.htmlEncode(this.archive.description) + '</li><li class="x-form-item"><b>Archive id :</b> ' + Ext.util.Format.htmlEncode (this.archive.id) + '<li></ul><p>'+ '</li><li class="x-form-item"><b>Vault saved :</b> ' + Ext.util.Format.htmlEncode (this.archive.vault) + '<li></ul><p>';
 	                        
 	                        this.body.update(contextInfoHtml);
 	                        
