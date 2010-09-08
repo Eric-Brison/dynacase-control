@@ -1149,22 +1149,48 @@ function updateContextList_success(responseObject, select) {
 											Ext.getCmp('create-archive-form')
 													.getForm().submit({
 														url : 'wiff.php',
+														timeout : 3600,
 														success : function(
 																form, action) {
 															win.hide();
+															console
+																	.log("Archive successfully archived");
+													(function() {
+																updateArchiveList();
+															}).defer(1000);
 															// archive_success(action.response);
 														},
 														failure : function(
 																form, action) {
+															console
+																	.log("Error archive not created");
 															win.hide();
+															if (action
+																	&& action.result) {
+																Ext.Msg
+																		.alert(
+																				'Failure',
+																				action.result.error);
+															} else if (action
+																	&& action.failureType == Ext.form.Action.CONNECT_FAILURE) {
+																Ext.Msg
+																		.alert(
+																				'Warning',
+																				'Timeout reach if archive not created yet please reload page later',
+																				function() {
+																					(function() {
+																						updateContextList();
+																					})
+																							.defer(1000);
+																				});
+															}
 															// archive_failure(action.response);
 														},
 														params : {
 															archiveContext : true,
 															name : button.context.name
-														}// ,
-															// waitMsg: 'Making
-															// Archive...'
+														},
+														waitMsg : 'Making Archive...'
 													});
 
 											win.hide();
@@ -1189,7 +1215,11 @@ function updateContextList_success(responseObject, select) {
 						var repositoryHtml = '<ul>';
 
 						var needRepoValidationList = new Array();
-						for (var j = 0; j < this.context.repo.length; j++) {
+						var lenghtRepo = 0;
+						if (this.context.repo) {
+							lenghtRepo = this.context.repo.length;
+						}
+						for (var j = 0; j < lenghtRepo; j++) {
 							var repoName = this.context.repo[j].name;
 							var repoIconId = 'repo-icon-' + repoName;
 							var repoLabelId = 'repo-label-' + repoName;
