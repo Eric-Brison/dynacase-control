@@ -1434,8 +1434,7 @@ class Context
 					$id_fs = $row[0];
 					$r_path = $row[1];
 					if (is_dir($r_path)) {
-						$vaultExclude = 'off';
-						error_log("vault found :: ". $r_path);
+						$vaultExclude = 'Vaultexists';
 						$script = sprintf("tar -C %s -czf %s/vault_$id_fs.tar.gz .", escapeshellarg($r_path), $tmp);
 						$res = system($script,$retval);
 						if($retval != 0){
@@ -1444,7 +1443,7 @@ class Context
 						}
 						$zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
 					}
-					else {
+					elseif ($vaultExclude != 'Vaultexists') {
 						$vaultExclude = 'on';
 						error_log("No vault directory found");
 					}

@@ -291,6 +291,12 @@ function updateArchiveList_success(responseObject, select) {
 													};
 												};
 
+												mask = new Ext.LoadMask(Ext
+															.getBody(), {
+														msg : 'Making Archive...'
+													});
+											mask.show();
+
 												Ext
 														.getCmp('create-archive-form')
 														.getForm().submit({
@@ -309,6 +315,7 @@ function updateArchiveList_success(responseObject, select) {
 																				panel);
 																win.close();
 																win.destroy();
+																mask.hide();
 																console
 																		.log("Context created");
 														(function() {
@@ -319,6 +326,7 @@ function updateArchiveList_success(responseObject, select) {
 																	form,
 																	action) {
 																// updateContextList('select-last');
+																		mask.hide();
 																console
 																		.log("Context Not created");
 																if (action
@@ -349,8 +357,8 @@ function updateArchiveList_success(responseObject, select) {
 															params : {
 																createContextFromArchive : true,
 																archiveId : button.archive.id
-															},
-															waitMsg : 'Creating Context from Archive...'
+															}//,
+															//waitMsg : 'Creating Context from Archive...'
 														});
 
 												win.hide();

@@ -1151,15 +1151,22 @@ function updateContextList_success(responseObject, select) {
 										context : data[i],
 										handler : function() {
 
+											mask = new Ext.LoadMask(Ext
+															.getBody(), {
+														msg : 'Making Archive...'
+													});
+											mask.show();
+
 											Ext.getCmp('create-archive-form')
 													.getForm().submit({
 														url : 'wiff.php',
 														timeout : 3600,
 														success : function(
 																form, action) {
-															win.hide();
+															//win.hide();
 															console
 																	.log("Archive successfully archived");
+															mask.hide();
 													(function() {
 																updateArchiveList();
 															}).defer(1000);
@@ -1169,7 +1176,8 @@ function updateContextList_success(responseObject, select) {
 																form, action) {
 															console
 																	.log("Error archive not created");
-															win.hide();
+															//win.hide();
+															mask.hide();
 															if (action
 																	&& action.result) {
 																Ext.Msg
@@ -1189,15 +1197,19 @@ function updateContextList_success(responseObject, select) {
 																							.defer(1000);
 																				});
 															} else {
-																Ext.Msg.alert('Warning', 'Unknow error');
+																Ext.Msg
+																		.alert(
+																				'Warning',
+																				'Unknow error');
 															}
 															// archive_failure(action.response);
 														},
 														params : {
 															archiveContext : true,
 															name : button.context.name
-														},
-														waitMsg : 'Making Archive...'
+														}// ,
+															// waitMsg : 'Making
+															// Archive...'
 													});
 
 											win.hide();
