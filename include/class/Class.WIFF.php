@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-);
+		);
 
-fwrite($passwordFile,
-sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-);
+		fwrite($passwordFile,
+		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+		);
 
-fclose($accessFile);
-fclose($passwordFile);
+		fclose($accessFile);
+		fclose($passwordFile);
 
-return true;
+		return true;
 
 	}
 
