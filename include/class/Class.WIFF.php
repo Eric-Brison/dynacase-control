@@ -855,7 +855,7 @@ require valid-user
 
 	}
 
-	public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root, $pgservice, $remove_profiles, $user_login, $user_password)
+	public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root, $pgservice, $remove_profiles, $user_login, $user_password, $clean_tmp_directory = false)
 	{
 
 		$wiff_root = getenv('WIFF_ROOT');
@@ -1059,7 +1059,7 @@ require valid-user
 									
 								$vault_tar = $temporary_extract_root.DIRECTORY_SEPARATOR.$file ;
 								$vault_subdir = $vault_root.DIRECTORY_SEPARATOR.$id_fs.DIRECTORY_SEPARATOR ;
-									
+
 								if (@mkdir($vault_subdir) === false)
 								{
 									$this->errorMessage = sprintf("Error creating directory '%s'.", $vault_subdir);
@@ -1078,7 +1078,11 @@ require valid-user
 									unlink($status_file);
 									return false;
 								}
-									
+
+								if ($clean_tmp_directory === 'on') {
+									// --- Delete tmp tar file --- //
+									unlink($vault_tar);
+								}
 							}
 
 						}
@@ -1208,6 +1212,12 @@ require valid-user
 
 		$this->reconfigure($name);
 
+		if ($clean_tmp_directory === 'on') {
+			// --- Delete Tmp tar file --- //
+			unlink($context_tar);
+			unlink($dump);
+			unlink($infoFile);
+		}
 		// --- Delete status file --- //
 		unlink($status_file);
 
@@ -2097,6 +2107,28 @@ require valid-user
 			$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
 		}
 		return $wiff_root;
+	}
+
+	/**
+	 * Delete a context
+	 */
+	public function deleteContext($contextName) {
+		$context = $this->getContext($contextName);
+		if( $context === false ) {
+			$this->errorMessage = sprintf("Error: could not get context '%s'.", $contextName);
+			return false;
+		}
+
+		$ret = $context->delete();
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error: could not delete context '%s': %s", $contextName, $context->errorMessage);
+			return false;
+		}
+		if ($context->errorMessage != '') {
+			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("The following errors occured : '%s'",$context->errorMessage));
+			$this->errorMessage = sprintf("The following errors occured : '%s'",$context->errorMessage);
+		}
+		return true;
 	}
 
 }

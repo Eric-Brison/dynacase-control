@@ -384,9 +384,13 @@ if ( isset ($_REQUEST['getContextList']))
 if (isset($_REQUEST['deleteContext'])) {
 
 	//Insert function to delete context here
-
-	error_log("Context to delete is :: ".$_REQUEST['contextToDelete']);
-	answer($_REQUEST['contextToDelete']);
+	$err = $wiff->deleteContext($_REQUEST['contextToDelete']);
+	if ($err === false) {
+		answer(null, $wiff->errorMessage);
+	}
+	else {
+		answer($_REQUEST['contextToDelete'], $wiff->errorMessage);
+	}
 }
 
 // Request to get archived context list
@@ -518,7 +522,7 @@ if ( isset ($_REQUEST['createContextFromArchive']))
 		$user_login = $_REQUEST['user_login'];
 		$user_password = $_REQUEST['user_password'];
 
-		$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice'], $remove_profiles, $user_login, $user_password);
+		$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice'], $remove_profiles, $user_login, $user_password, $_REQUEST['clean_tmp_directory']);
 
 		if($result === false){
 			answer(null, $wiff->errorMessage);

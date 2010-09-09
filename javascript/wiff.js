@@ -871,15 +871,20 @@ function updateContextList_success(responseObject, select) {
 	var onDeleteContextButton = function(button) {
 		Ext.Msg.show({
 					title : 'Warning',
-					msg : 'Do you really want to delete this context?',
+					msg : "Deleting context will empty database but not delete it. Do you really want to delete this context?",
 					buttons : Ext.Msg.YESNO,
 					icon : Ext.Msg.WARNING,
 					fn : function(btn, text, opt) {
 						if (btn != 'yes') {
 							return false;
 						}
+						mask = new Ext.LoadMask(Ext.getBody(), {
+									msg : 'Deleting Context...'
+								});
+						mask.show();
 						Ext.Ajax.request({
 									url : 'wiff.php',
+									timeout : 3600,
 									params : {
 										contextToDelete : button.context.name,
 										deleteContext : true
@@ -889,10 +894,39 @@ function updateContextList_success(responseObject, select) {
 												.decode(response.responseText);
 										if (responseDecode.success == false) {
 											Ext.Msg.alert('Warning',
-													responseDecode.errormsg);
+													responseDecode.error);
+											mask.hide();
+						(function			() {
+												updateContextList();
+											}).defer(1000);
 										} else {
 											console.log("Context deleted :: ",
-													responseDecode.data);
+													response.responseText);
+											mask.hide();
+											if (responseDecode.error) {
+												Ext.Msg.alert('Web Installer',
+														responseDecode.error);
+											} else {
+												Ext.Msg
+														.alert(
+																'Web Installer',
+																'Context '
+																		+ responseDecode.data
+																		+ ' deleted');
+											}
+						(function			() {
+												updateContextList();
+											}).defer(1000);
+										}
+									},
+									failure : function(response, options) {
+										mask.hide();
+										if (options.failureType) {
+											Ext.Msg.alert('Warning',
+													options.failureType);
+										} else {
+											Ext.Msg.alert('Warning',
+													'Unknow Error');
 										}
 									}
 								});
@@ -1104,7 +1138,7 @@ function updateContextList_success(responseObject, select) {
 						}
 					}, importButton(), {
 						text : 'Delete context',
-						iconCls : 'x-icon-create-archive',
+						iconCls : 'x-icon-delete-context',
 						context : data[i],
 						handler : onDeleteContextButton,
 						tooltip : 'Delete context'

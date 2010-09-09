@@ -208,6 +208,11 @@ function updateArchiveList_success(responseObject, select) {
 													name : 'user_password',
 													anchor : '-15',
 													hidden : true
+												}, {
+													xtype : 'checkbox',
+													fieldLabel : 'Clean tmp directory?',
+													name : 'clean_tmp_directory',
+													checked : true
 												}],
 
 										buttons : [{
