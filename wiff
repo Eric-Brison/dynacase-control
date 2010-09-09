@@ -56,6 +56,10 @@ case 'mkrepoidx':
   $cmd = array_shift($argv);
   $ret = wiff_mkrepoidx($argv);
   break;
+case 'delete':
+  $cmd = array_shift($argv);
+  $ret = wiff_delete($argv);
+  break;
 default:
   $ret = wiff_default($argv);
   break;

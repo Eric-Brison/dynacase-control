@@ -28,6 +28,8 @@ function wiff_help(&$argv) {
 	echo "  wiff wstop <context-name>\n";
 	echo "  wiff wstart <context-name>\n";
 	echo "\n";
+	echo "  wiff delete context <context-name>\n";
+	echo "\n";
 	return 0;
 }
 
@@ -1571,5 +1573,52 @@ function setuid_wiff($path) {
 
 	return true;
 }
+
+/**
+ * Delete context
+ */
+function wiff_delete(&$argv) {
+  $op = array_shift($argv);
+
+  switch( $op ) {
+  case 'context':
+    wiff_lock();
+    $ret = wiff_delete_context($argv);
+    wiff_unlock();
+    return $ret;
+    break;
+  default:
+    error_log(sprintf("Unknown operation '%s'!\n", $op));
+    return wiff_delete_help($argv);
+  }
+  return 0;
+}
+
+function wiff_delete_help(&$argv) {
+  echo "\n";
+  echo "Usage\n";
+  echo "-----\n";
+  echo "\n";
+  echo "  wiff delete context <context-name>\n";
+  echo "\n";
+  return 0;
+}
+
+function wiff_delete_context(&$argv) {
+  $ctx_name = array_shift($argv);
+  if( $ctx_name == "" ) {
+    return wiff_delete_help($argv);
+  }
+
+  $wiff = WIFF::getInstance();
+  $ret = $wiff->deleteContext($ctx_name);
+  if( $context === false ) {
+    error_log(sprintf("Error: cound not delete context '%s': %s\n", $ctx_name, $wiff->errorMessage));
+    return 1;
+  }
+
+  return 0;
+}
+
 
 ?>
