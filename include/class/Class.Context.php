@@ -1842,16 +1842,6 @@ class Context
 	}
 
 	public function getContextVaultPathList() {
-		/*$libcommon = sprintf("%s/WHAT/Lib.Common.php", $this->root);
-
-		if( ! file_exists($libcommon) ) {
-		$err = sprintf("Could not find Lib.Common.php '%s'.\n", $libcommon);
-		$this->errorMessage .= $err;
-		return false;
-		}
-
-		include_once($libcommon);*/
-
 		$pgservice_core = $this->getParamByName('core_db');
 		if( $pgservice_core == "" ) {
 			$err = sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
@@ -1982,15 +1972,6 @@ class Context
 	}
 
 	public function deleteContextDatabaseContent() {
-		/*$libcommon = sprintf("%s/WHAT/Lib.Common.php", $this->root);
-
-		if( ! file_exists($libcommon) ) {
-		$this->errorMessage .= sprintf("Could not find Lib.Common.php '%s'.\n", $libcommon);
-		return false;
-		}
-
-		include_once($libcommon);*/
-
 		$pgservice_core = $this->getParamByName('core_db');
 		if( $pgservice_core == "" ) {
 			$this->errorMessage .= sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
@@ -2021,33 +2002,6 @@ class Context
 
 		return true;
 	}
-
-	/*public function deleteContextCrontab() {
-		$libcommon = sprintf("%s/WHAT/Lib.Common.php", $this->root);
-		if( ! file_exists($libcommon) ) {
-		$this->errorMessage .= sprintf("Could not find Lib.Common.php '%s'.\n", $libcommon);
-		return false;
-		}
-		include_once($libcommon);
-
-		$classcrontab = sprintf("%s/WHAT/Class.Crontab.php", $this->root);
-		if( ! file_exists($classcrontab) ) {
-		$this->errorMessage .= sprintf("Could not find Class.Crontab.php '%s'.\n", $classcrontab);
-		return false;
-		}
-		include_once($classcrontab);
-
-		$cronfile = 'FREEDOM/freedom.cron';
-
-		$crontab = new Crontab($user);
-		$ret = $crontab->unregisterFile($cronfile);
-		if( $ret === false ) {
-		$this->errorMessage .= sprintf("Could not remove cron file '%s'.\n", $cronfile);
-		return false;
-		}
-
-		return true;
-		}*/
 
 }
 
