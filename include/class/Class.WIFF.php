@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-		);
+);
 
-		fwrite($passwordFile,
-		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-		);
+fwrite($passwordFile,
+sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+);
 
-		fclose($accessFile);
-		fclose($passwordFile);
+fclose($accessFile);
+fclose($passwordFile);
 
-		return true;
+return true;
 
 	}
 
@@ -1060,6 +1060,7 @@ require valid-user
 								$vault_tar = $temporary_extract_root.DIRECTORY_SEPARATOR.$file ;
 								$vault_subdir = $vault_root.DIRECTORY_SEPARATOR.$id_fs.DIRECTORY_SEPARATOR ;
 									
+								error_log("vault dir == $vault_subdir --- $id_fs --- $file ---- $vault_tar");
 								if (@mkdir($vault_subdir) === false)
 								{
 									$this->errorMessage = sprintf("Error creating directory '%s'.", $vault_subdir);

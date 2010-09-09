@@ -338,7 +338,13 @@ function updateArchiveList_success(responseObject, select) {
 																	Ext.Msg
 																			.alert(
 																					'Failure',
-																					action.result.error);
+																					action.result.error,
+																					function() {
+																						(function() {
+																							updateContextList();
+																						})
+																								.defer(1000);
+																					});
 																} else if (action
 																		&& action.failureType == Ext.form.Action.CONNECT_FAILURE) {
 																	Ext.Msg
