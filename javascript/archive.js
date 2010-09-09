@@ -246,7 +246,7 @@ function updateArchiveList_success(responseObject, select) {
 													Ext.Msg
 															.alert(
 																	'Web Installer',
-																	'A root must be provided.');
+																	'A vault root must be provided.');
 													return;
 												};
 
@@ -292,10 +292,10 @@ function updateArchiveList_success(responseObject, select) {
 												};
 
 												mask = new Ext.LoadMask(Ext
-															.getBody(), {
-														msg : 'Making Archive...'
-													});
-											mask.show();
+																.getBody(), {
+															msg : 'Making Context From Archive...'
+														});
+												mask.show();
 
 												Ext
 														.getCmp('create-archive-form')
@@ -316,8 +316,12 @@ function updateArchiveList_success(responseObject, select) {
 																win.close();
 																win.destroy();
 																mask.hide();
-																console
-																		.log("Context created");
+																Ext.Msg
+																		.alert(
+																				'Web Installer',
+																				'Context '
+																						+ action.result.data.name
+																						+ ' successfully created');
 														(function() {
 																	updateContextList();
 																}).defer(1000);
@@ -326,7 +330,7 @@ function updateArchiveList_success(responseObject, select) {
 																	form,
 																	action) {
 																// updateContextList('select-last');
-																		mask.hide();
+																mask.hide();
 																console
 																		.log("Context Not created");
 																if (action
@@ -357,8 +361,11 @@ function updateArchiveList_success(responseObject, select) {
 															params : {
 																createContextFromArchive : true,
 																archiveId : button.archive.id
-															}//,
-															//waitMsg : 'Creating Context from Archive...'
+															}// ,
+																// waitMsg :
+																// 'Creating
+																// Context from
+																// Archive...'
 														});
 
 												win.hide();

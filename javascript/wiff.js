@@ -1163,20 +1163,23 @@ function updateContextList_success(responseObject, select) {
 														timeout : 3600,
 														success : function(
 																form, action) {
-															//win.hide();
-															console
-																	.log("Archive successfully archived");
+															// win.hide();
+															Ext.Msg
+																	.alert(
+																			'Web Installer',
+																			'Context successfully archived');
 															mask.hide();
 													(function() {
 																updateArchiveList();
 															}).defer(1000);
+
 															// archive_success(action.response);
 														},
 														failure : function(
 																form, action) {
 															console
 																	.log("Error archive not created");
-															//win.hide();
+															// win.hide();
 															mask.hide();
 															if (action
 																	&& action.result) {

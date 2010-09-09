@@ -495,22 +495,38 @@ if ( isset ($_REQUEST['archiveContext']))
 if ( isset ($_REQUEST['createContextFromArchive']))
 {
 
-	$archiveId = $_REQUEST['archiveId'];
-	$contextName = $_REQUEST['name'];
+	if (!$_REQUEST['name']) {
+		answer(null, 'A name must be provided.');
+	} elseif (!$_REQUEST['root']) {
+		answer(null, 'A root must be provided.');
+	} elseif (!$_REQUEST['vault_root']) {
+		answer(null, 'A vault root must be provided.');
+	} elseif (!$_REQUEST['core_pgservice']) {
+		answer(null, 'A database service must be provided.');
+	} elseif ($_REQUEST['remove_profiles']) {
+		if (!$_REQUEST['user_login']) {
+			answer(null, 'If you remove profiles, you must specify a user login.');
+		}
+		elseif (!$_REQUEST['user_password']) {
+			answer(null, 'If you remove profiles, you must specify a user password.');
+		}
+	} else {
+		$archiveId = $_REQUEST['archiveId'];
+		$contextName = $_REQUEST['name'];
 
-	$remove_profiles = isset($_REQUEST['remove_profiles']);
-	$user_login = $_REQUEST['user_login'];
-	$user_password = $_REQUEST['user_password'];
+		$remove_profiles = isset($_REQUEST['remove_profiles']);
+		$user_login = $_REQUEST['user_login'];
+		$user_password = $_REQUEST['user_password'];
 
-	$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice'], $remove_profiles, $user_login, $user_password);
+		$result = $wiff->createContextFromArchive($archiveId, $contextName, $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url'], $_REQUEST['vault_root'], $_REQUEST['core_pgservice'], $remove_profiles, $user_login, $user_password);
 
-	if($result === false){
-		answer(null, $wiff->errorMessage);
-	} else
-	{
-		answer($wiff->getContext($contextName));
+		if($result === false){
+			answer(null, $wiff->errorMessage);
+		} else
+		{
+			answer($wiff->getContext($contextName));
+		}
 	}
-
 }
 
 if ( isset ($_REQUEST['deleteArchive']))
