@@ -870,68 +870,65 @@ function updateContextList_success(responseObject, select) {
 
 	var onDeleteContextButton = function(button) {
 		Ext.Msg.show({
-					title : 'Warning',
-					msg : "Deleting context will empty database but not delete it. Do you really want to delete this context?",
-					buttons : Ext.Msg.YESNO,
-					icon : Ext.Msg.WARNING,
-					fn : function(btn, text, opt) {
-						if (btn != 'yes') {
-							return false;
-						}
-						mask = new Ext.LoadMask(Ext.getBody(), {
-									msg : 'Deleting Context...'
-								});
-						mask.show();
-						Ext.Ajax.request({
-									url : 'wiff.php',
-									timeout : 3600,
-									params : {
-										contextToDelete : button.context.name,
-										deleteContext : true
-									},
-									success : function(response, options) {
-										var responseDecode = Ext.util.JSON
-												.decode(response.responseText);
-										if (responseDecode.success == false) {
-											Ext.Msg.alert('Warning',
-													responseDecode.error);
-											mask.hide();
-						(function			() {
-												updateContextList();
-											}).defer(1000);
-										} else {
-											console.log("Context deleted :: ",
-													response.responseText);
-											mask.hide();
-											if (responseDecode.error) {
-												Ext.Msg.alert('Web Installer',
-														responseDecode.error);
-											} else {
-												Ext.Msg
-														.alert(
-																'Web Installer',
-																'Context '
-																		+ responseDecode.data
-																		+ ' deleted');
-											}
-						(function			() {
-												updateContextList();
-											}).defer(1000);
-										}
-									},
-									failure : function(response, options) {
-										mask.hide();
-										if (options.failureType) {
-											Ext.Msg.alert('Warning',
-													options.failureType);
-										} else {
-											Ext.Msg.alert('Warning',
-													'Unknow Error');
-										}
+			title : 'Warning',
+			msg : "Deleting context will empty database but not delete it. Do you really want to delete this context?",
+			buttons : Ext.Msg.YESNO,
+			icon : Ext.Msg.WARNING,
+			fn : function(btn, text, opt) {
+				if (btn != 'yes') {
+					return false;
+				}
+				mask = new Ext.LoadMask(Ext.getBody(), {
+							msg : 'Deleting Context...'
+						});
+				mask.show();
+				Ext.Ajax.request({
+							url : 'wiff.php',
+							timeout : 3600,
+							params : {
+								contextToDelete : button.context.name,
+								deleteContext : true
+							},
+							success : function(response, options) {
+								var responseDecode = Ext.util.JSON
+										.decode(response.responseText);
+								if (responseDecode.success == false) {
+									Ext.Msg.alert('Warning',
+											responseDecode.error);
+									mask.hide();
+				(function			() {
+										updateContextList();
+									}).defer(1000);
+								} else {
+									console.log("Context deleted :: ",
+											response.responseText);
+									mask.hide();
+									if (responseDecode.error) {
+										Ext.Msg.alert('Web Installer',
+												responseDecode.error);
+									} else {
+										Ext.Msg.alert('Web Installer',
+												'Context '
+														+ responseDecode.data
+														+ ' deleted');
 									}
-								});
-					}
-				});
+				(function			() {
+										updateContextList();
+									}).defer(1000);
+								}
+							},
+							failure : function(response, options) {
+								mask.hide();
+								if (options.failureType) {
+									Ext.Msg.alert('Warning',
+											options.failureType);
+								} else {
+									Ext.Msg.alert('Warning', 'Unknow Error');
+								}
+							}
+						});
+			}
+		});
 	};
 
 	for (var i = 0; i < data.length; i++) {
@@ -2951,6 +2948,79 @@ function executeProcessList(module, phase, operation) {
 
 		}
 
+		var getLabel = function(process, rank) {
+
+			var label = '';
+
+			if (process.label) {
+				label = process.label;
+			} else if (process.name && process.name == 'check') {
+
+				label = 'Check';
+
+				if (process.attributes.type) {
+					if (process.attributes.type == 'syscommand') {
+						label += ' system command';
+					} else if (process.attributes.type == 'phpfunction') {
+						label += ' php function';
+					} else if (process.attributes.type == 'pearmodule') {
+						label += ' pear module';
+					} else if (process.attributes.type == 'apachemodule') {
+						label += ' apache module';
+					}
+
+					else {
+						label += ' ' + process.attributes.type;
+					}
+				}
+
+				if (process.attributes['function']) {
+					label += ' ' + process.attributes['function'];
+				}
+
+				if (process.attributes.command) {
+					label += ' ' + process.attributes.command;
+				}
+
+				if (process.attributes['class']) {
+					label += ' ' + process.attributes['class'];
+				}
+
+				if (process.attributes.module) {
+					label += ' ' + process.attributes.module;
+				}
+
+			} else if (process.attributes.command) {
+				label = 'Command ' + process.attributes.command;
+			} else {
+				label = 'Process ' + rank;
+			}
+			return label;
+		}
+
+		var labelBefore = getLabel(processList[process], process);
+
+		var htmlBefore = processList[process].help ? '<p class="help">'
+				+ processList[process].help + '</p>' : '';
+		
+		//Waiting component
+				
+		var panelBefore = new Ext.Panel({
+					collapsible : true,
+					collapsed : true,
+					title : labelBefore,
+					iconCls : 'x-icon-loading',
+					html : htmlBefore,
+					border : false,
+					style : 'padding:0px;'
+				});
+
+		processpanel[module.name].add(panelBefore);
+		processpanel[module.name].doLayout();
+
+		var divBefore = processpanel[module.name].body.dom;
+		divBefore.scrollTop = divBefore.scrollHeight;
+
 		Ext.Ajax.request({
 			url : 'wiff.php',
 			params : {
@@ -2995,58 +3065,45 @@ function executeProcessList(module, phase, operation) {
 						? true
 						: false;
 
-				var getLabel = function(process, rank) {
-
-					var label = '';
-
-					if (process.label) {
-						label = process.label;
-					} else if (process.name && process.name == 'check') {
-
-						label = 'Check';
-
-						if (process.attributes.type) {
-							if (process.attributes.type == 'syscommand') {
-								label += ' system command';
-							} else if (process.attributes.type == 'phpfunction') {
-								label += ' php function';
-							} else if (process.attributes.type == 'pearmodule') {
-								label += ' pear module';
-							} else if (process.attributes.type == 'apachemodule') {
-								label += ' apache module';
-							}
-
-							else {
-								label += ' ' + process.attributes.type;
-							}
-						}
-
-						if (process.attributes['function']) {
-							label += ' ' + process.attributes['function'];
-						}
-
-						if (process.attributes.command) {
-							label += ' ' + process.attributes.command;
-						}
-
-						if (process.attributes['class']) {
-							label += ' ' + process.attributes['class'];
-						}
-
-						if (process.attributes.module) {
-							label += ' ' + process.attributes.module;
-						}
-
-					} else if (process.attributes.command) {
-						label = 'Command ' + process.attributes.command;
-					} else {
-						label = 'Process ' + rank;
-					}
-
-					return label;
-				}
-
-				var label = getLabel(processList[process], process);
+				/*
+				 * var getLabel = function(process, rank) {
+				 * 
+				 * var label = '';
+				 * 
+				 * if (process.label) { label = process.label; } else if
+				 * (process.name && process.name == 'check') {
+				 * 
+				 * label = 'Check';
+				 * 
+				 * if (process.attributes.type) { if (process.attributes.type ==
+				 * 'syscommand') { label += ' system command'; } else if
+				 * (process.attributes.type == 'phpfunction') { label += ' php
+				 * function'; } else if (process.attributes.type ==
+				 * 'pearmodule') { label += ' pear module'; } else if
+				 * (process.attributes.type == 'apachemodule') { label += '
+				 * apache module'; }
+				 * 
+				 * else { label += ' ' + process.attributes.type; } }
+				 * 
+				 * if (process.attributes['function']) { label += ' ' +
+				 * process.attributes['function']; }
+				 * 
+				 * if (process.attributes.command) { label += ' ' +
+				 * process.attributes.command; }
+				 * 
+				 * if (process.attributes['class']) { label += ' ' +
+				 * process.attributes['class']; }
+				 * 
+				 * if (process.attributes.module) { label += ' ' +
+				 * process.attributes.module; } } else if
+				 * (process.attributes.command) { label = 'Command ' +
+				 * process.attributes.command; } else { label = 'Process ' +
+				 * rank; }
+				 * 
+				 * return label; }
+				 * 
+				 * var label = getLabel(processList[process], process);
+				 */
 
 				iconCls = success ? 'x-icon-ok' : optional
 						? 'x-icon-warning'
@@ -3055,12 +3112,14 @@ function executeProcessList(module, phase, operation) {
 				var panel = new Ext.Panel({
 							collapsible : help || response.error,
 							collapsed : success,
-							title : label,
+							title : labelBefore,
 							iconCls : iconCls,
 							html : html,
 							border : false,
 							style : 'padding:0px;'
 						});
+
+				processpanel[module.name].remove(panelBefore);
 
 				processpanel[module.name].add(panel);
 
