@@ -1758,53 +1758,57 @@ class Context
 
 		system(sprintf("%s", $cmd), $ret);
 		if ($ret != 0) {
-			return false;
+			return 'Error Trying to delete crontab';
 		}
-		return true;
+		return;
 	}
 
 	/**
 	 * Delete context
 	 */
-	public function delete() {
+	public function delete(&$res) {
 		$err_msg = '';
-
+		$res = true;
 		$args = array("cmd" => "unregister", 'file' => 'FREEDOM/freedom.cron');
 		$ret = $this->wsh("crontab", $args);
-		if( $ret === false ) {
-			$err_msg .= $this->errorMessage;
+		if( $ret ) {
+			$err_msg .= $ret;
 			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextCrontab returned with error: %s", $this->errorMessage));
 		}
 		$ret = $this->deleteContextVault();
-		if( $ret === false ) {
-			$err_msg .= $this->errorMessage;
+		if( $ret ) {
+			$err_msg .= $ret;
 			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextVault returned with error: %s", $this->errorMessage));
 		}
-		$ret = $this->deleteContextDatabaseContent();
-		if( $ret === false ) {
-			$err_msg .= $this->errorMessage;
+		$err = '';
+		$ret = $this->deleteContextDatabaseContent($err);
+		if( $ret ) {
+			$err_msg .= $ret;
 			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextDatabaseContent returned with error: %s", $this->errorMessage));
 		}
+		if ($err != '') {
+			$err_msg .= $$err;
+		}
 		$ret = $this->deleteContextRoot();
-		if( $ret === false ) {
-			$err_msg .= $this->errorMessage;
+		if( $ret ) {
+			$err_msg .= $ret;
 			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextRoot returned with error: %s", $this->errorMessage));
 		}
 		$ret = $this->unregisterContextFromConfig();
-		if( $ret === false ) {
-			$err_msg .= $this->errorMessage;
+		if( $ret ) {
+			$res = false;
+			$err_msg .= $ret;
 			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("unregisterContextFromConfig returned with error: %s", $this->errorMessage));
 		}
 
-		$this->errorMessage = $err_msg;
-		return $ret;
+		return $err_msg;
 	}
 
 	public function unregisterContextFromConfig() {
 		$wiff = WIFF::getInstance();
 		if( $wiff === false ) {
-			$this->errorMessage = sprintf("Could not get wiff instance.");
-			return false;
+			$this->errorMessage .= sprintf("Could not get wiff instance.");
+			return  sprintf("Could not get wiff instance.");;
 		}
 
 		$xml = new DOMDocument();
@@ -1813,20 +1817,20 @@ class Context
 
 		$ret = $xml->load($wiff->contexts_filepath);
 		if( $ret === false ) {
-			$this->errorMessage = sprintf("Could not load contexts.xml");
-			return false;
+			$this->errorMessage .= sprintf("Could not load contexts.xml");
+			return sprintf("Could not load contexts.xml");
 		}
 
 		$xpath = new DOMXpath($xml);
 
 		$contextNodeList = $xpath->query(sprintf("/contexts/context[@name='%s']", $this->name));
 		if( $contextNodeList->length <= 0 ) {
-			$this->errorMessage = sprintf("Could not find a context with name '%s'!", $this->name);
-			return false;
+			$this->errorMessage .= sprintf("Could not find a context with name '%s'!", $this->name);
+			return sprintf("Could not find a context with name '%s'!", $this->name);
 		}
 		if( $contextNodeList->length > 1 ) {
-			$this->errorMessage = sprintf("There is more than one context with name '%s'!", $this->name);
-			return false;
+			$this->errorMessage .= sprintf("There is more than one context with name '%s'!", $this->name);
+			return sprintf("There is more than one context with name '%s'!", $this->name);
 		}
 		$contextNode = $contextNodeList->item(0);
 
@@ -1834,14 +1838,14 @@ class Context
 
 		$ret = $xml->save($wiff->contexts_filepath);
 		if( $ret === false ) {
-			$this->errorMessage = sprintf("Error saving contexts.xml '%s'.", $wiff->contexts_filepath);
-			return false;
+			$this->errorMessage .= sprintf("Error saving contexts.xml '%s'.", $wiff->contexts_filepath);
+			return sprintf("Error saving contexts.xml '%s'.", $wiff->contexts_filepath);
 		}
 
-		return true;
+		return;
 	}
 
-	public function getContextVaultPathList() {
+	public function getContextVaultPathList(&$err) {
 		$pgservice_core = $this->getParamByName('core_db');
 		if( $pgservice_core == "" ) {
 			$err = sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
@@ -1883,9 +1887,10 @@ class Context
 
 		$filetype = filetype($path);
 		if( $filetype === false ) {
-			$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get type for file '%s'.", $path);
+			$this->errorMessage .= sprintf(__CLASS__."::".__FUNCTION__." "."Could not get type for file '%s'.\n", $path);
+			$err = sprintf("Could not get type for file '%s'.", $path);
 			array_push($err_list, $err);
-			error_log($err);
+			error_log($this->errorMessage);
 			return false;
 		}
 
@@ -1900,24 +1905,27 @@ class Context
 
 			$s = stat($path);
 			if( $s === false ) {
-				$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not stat dir '%s'.", $path);
+				$this->errorMessage .= sprintf(__CLASS__."::".__FUNCTION__." "."Could not stat dir '%s'.\n", $path);
+				$err = sprintf("Could not stat dir '%s'.", $path);
 				array_push($err_list, $err);
-				error_log($err);
+				error_log($this->errorMessage);
 				return false;
 			}
 
 			if( $s['nlink'] > 2 ) {
-				$err = sprintf(__CLASS__."::".__FUNCTION__." "."Won't remove dir '%s' as it contains %s files.", $path, $s['nlink']-2);
+				$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Won't remove dir '%s' as it contains %s files.\n", $path, $s['nlink']-2);
+				$err = sprintf("Won't remove dir '%s' as it contains %s files.", $path, $s['nlink']-2);
 				array_push($err_list, $err);
-				error_log($err);
+				error_log($this->errorMessage);
 				return false;
 			}
 
 			$ret = @rmdir($path);
 			if( $ret === false ) {
-				$err = sprintf(__CLASS__."::".__FUNCTION__." "."Error removing dir '%s'.", $path);
+				$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Error removing dir '%s'.\n", $path);
+				$err = sprintf("Error removing dir '%s'.", $path);
 				array_push($err_list, $err);
-				error_log($err);
+				error_log($this->errorMessage);
 				return false;
 			}
 
@@ -1926,9 +1934,10 @@ class Context
 
 		$ret = unlink($path);
 		if( $ret === false ) {
-			$err = sprintf(__CLASS__."::".__FUNCTION__." "."Error removing file '%s' (filetype=%s).", $path, $filetype);
+			$this->errorMessage = sprintf(__CLASS__."::".__FUNCTION__." "."Error removing file '%s' (filetype=%s).\n", $path, $filetype);
+			$err = sprintf("Error removing file '%s' (filetype=%s).", $path, $filetype);
 			array_push($err_list, $err);
-			error_log($err);
+			error_log($this->errorMessage);
 			return false;
 		}
 
@@ -1936,13 +1945,13 @@ class Context
 	}
 
 	public function deleteContextVault() {
-		$vaultList = $this->getContextVaultPathList();
+		$vaultList = $this->getContextVaultPathList($err);
 		if( $vaultList === false ) {
-			return false;
+			return $err;
 		}
 
 		if( count($vaultList) <= 0 ) {
-			return true;
+			return;
 		}
 
 		$ret = true;
@@ -1954,9 +1963,13 @@ class Context
 		if( $ret === false ) {
 			$this->errorMessage .= sprintf("Some errors occured while removing files from vaults:\n");
 			$this->errorMessage .= join("\n", $err_list);
+			$err = sprintf("Some errors occured while removing files from vaults:\n");
+			$err .= join("\n", $err_list);
+			return $err;
 		}
-
-		return $ret;
+		else {
+			return;
+		}
 	}
 
 	public function deleteContextRoot() {
@@ -1966,41 +1979,49 @@ class Context
 		if( $ret === false ) {
 			$this->errorMessage .= sprintf("Some errors occured while removing files from context root.\n");
 			$this->errorMessage .= join("\n", $err_list);
+			$err = sprintf("Some errors occured while removing files from context root.\n");
+			$err .= join("\n", $err_list);
+			return $err;
 		}
-
-		return $ret;
+		else {
+			return ;
+		}
 	}
 
-	public function deleteContextDatabaseContent() {
+	public function deleteContextDatabaseContent(&$err) {
 		$pgservice_core = $this->getParamByName('core_db');
+
 		if( $pgservice_core == "" ) {
 			$this->errorMessage .= sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
-			return false;
+			return sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
 		}
 
 		$conn = pg_connect(sprintf("service=%s", $pgservice_core));
 		if( $conn === false ) {
 			$this->errorMessage .= sprintf("Error connecting to 'service=%s'.\n", $pgservice_core);
-			return false;
+			return sprintf("Error connecting to 'service=%s'.\n", $pgservice_core);
 		}
 
 		$res = pg_query($conn, sprintf("DROP SCHEMA public CASCADE"));
 		if( $res === false ) {
 			$this->errorMessage .= sprintf("Error dropping schema public.\n");
+			$err .= sprintf("Error dropping schema public.\n");
 		}
 		$res = pg_query($conn, sprintf("CREATE SCHEMA public"));
 		if( $res === false ) {
 			$this->errorMessage .= sprintf("Error re-creating schema public.\n");
+			$err .= sprintf("Error dropping schema public.\n");
 		}
 
 		foreach( array("family", "dav") as $schema ) {
 			$res = pg_query($conn, sprintf("DROP SCHEMA %s CASCADE", pg_escape_string($schema)));
 			if( $res === false ) {
 				$this->errorMessage .= sprintf("Error dropping schema %s.", $schema);
+				$err .= sprintf("Error dropping schema %s.", $schema);
 			}
 		}
 
-		return true;
+		return;
 	}
 
 }

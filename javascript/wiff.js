@@ -894,7 +894,7 @@ function updateContextList_success(responseObject, select) {
 										.decode(response.responseText);
 								if (responseDecode.success == false) {
 									Ext.Msg.alert('Warning',
-											responseDecode.error);
+											responseDecode.error.toString());
 									mask.hide();
 				(function			() {
 										updateContextList();
@@ -1134,12 +1134,6 @@ function updateContextList_success(responseObject, select) {
 
 						}
 					}, importButton(), {
-						text : 'Delete context',
-						iconCls : 'x-icon-delete-context',
-						context : data[i],
-						handler : onDeleteContextButton,
-						tooltip : 'Delete context'
-					}, {
 						text : 'Create Archive',
 						tooltip : 'Create Archive',
 						iconCls : 'x-icon-create-archive',
@@ -1263,6 +1257,12 @@ function updateContextList_success(responseObject, select) {
 							win.show();
 
 						}
+					}, {
+						text : 'Delete context',
+						iconCls : 'x-icon-delete-context',
+						context : data[i],
+						handler : onDeleteContextButton,
+						tooltip : 'Delete context'
 					}],
 					refresh : function() {
 						var repositoryHtml = '<ul>';
@@ -3002,9 +3002,9 @@ function executeProcessList(module, phase, operation) {
 
 		var htmlBefore = processList[process].help ? '<p class="help">'
 				+ processList[process].help + '</p>' : '';
-		
-		//Waiting component
-				
+
+		// Waiting component
+
 		var panelBefore = new Ext.Panel({
 					collapsible : true,
 					collapsed : true,

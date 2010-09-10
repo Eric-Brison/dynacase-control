@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-		);
+);
 
-		fwrite($passwordFile,
-		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-		);
+fwrite($passwordFile,
+sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+);
 
-		fclose($accessFile);
-		fclose($passwordFile);
+fclose($accessFile);
+fclose($passwordFile);
 
-		return true;
+return true;
 
 	}
 
@@ -2130,23 +2130,27 @@ require valid-user
 	/**
 	 * Delete a context
 	 */
-	public function deleteContext($contextName) {
+	public function deleteContext($contextName, &$result) {
+		$result = true;
 		$context = $this->getContext($contextName);
 		if( $context === false ) {
+			$result = false;
 			$this->errorMessage = sprintf("Error: could not get context '%s'.", $contextName);
-			return false;
+			return $this->errorMessage;
 		}
 
-		$ret = $context->delete();
-		if( $ret === false ) {
-			$this->errorMessage = sprintf("Error: could not delete context '%s': %s", $contextName, $context->errorMessage);
-			return false;
+		$err = $context->delete($res);
+		if( $res === false ) {
+			$result = false;
+			$this->errorMessage = sprintf("Error: could not delete context '%s': %s", $contextName, implode("\n", $err));
+			return $this->errorMessage;
 		}
-		if ($context->errorMessage != '') {
+		if (!empty($err)) {
 			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("The following errors occured : '%s'",$context->errorMessage));
-			$this->errorMessage = sprintf("The following errors occured : '%s'",$context->errorMessage);
+			$this->errorMessage = sprintf("The following errors occured : '%s'",$context->errorMessage);		
+			return $err;
 		}
-		return true;
+		return ;
 	}
 
 }
