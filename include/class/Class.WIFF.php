@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-);
+		);
 
-fwrite($passwordFile,
-sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-);
+		fwrite($passwordFile,
+		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+		);
 
-fclose($accessFile);
-fclose($passwordFile);
+		fclose($accessFile);
+		fclose($passwordFile);
 
-return true;
+		return true;
 
 	}
 
@@ -1137,6 +1137,7 @@ return true;
 		$context = $xml->importNode($archiveList->item(0), true); // Node must be imported from archive document.
 		$context->setAttribute('name',$name);
 		$context->setAttribute('root',$root);
+		$context->setAttribute('url', $url);
 		$context = $contextList->item(0)->appendChild($context);
 
 		// Modify core_db in xml
@@ -2147,7 +2148,7 @@ return true;
 		}
 		if (!empty($err)) {
 			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("The following errors occured : '%s'",$context->errorMessage));
-			$this->errorMessage = sprintf("The following errors occured : '%s'",$context->errorMessage);		
+			$this->errorMessage = sprintf("The following errors occured : '%s'",$context->errorMessage);
 			return $err;
 		}
 		return ;
