@@ -106,7 +106,9 @@ class WiffLibSystem {
 				}
 			}
 		}
-		return tempnam($dir, $prefix);
+		$res = tempnam($dir, $prefix);
+		error_log("res == $res ::: dir === $dir");
+		return $res;
 	}
 
 }

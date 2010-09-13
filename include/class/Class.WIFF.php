@@ -118,11 +118,11 @@ class WIFF
 	 */
 	public function getAvailVersion()
 	{
-
 		$tmpfile = $this->downloadUrl($this->available_host.$this->available_url.'content.xml');
+
 		if ($tmpfile === false)
 		{
-			$this->errorMessage = 'Error when retrieving repository for wiff update.';
+			$this->errorMessage = $this->errorMessage ? ('Error when retrieving repository for wiff update :: '.$this->errorMessage) : 'Error when retrieving repository for wiff update.';
 			return false;
 		}
 
@@ -1653,7 +1653,8 @@ require valid-user
 		$tmpfile = WiffLibSystem::tempnam(null, 'WIFF_downloadLocalFile');
 		if ($tmpfile === false)
 		{
-			$this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
+			$this->errorMessage = sprintf("Error creating temporary file.");
+			error_log(sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file."));
 			return false;
 		}
 
@@ -1676,7 +1677,8 @@ require valid-user
 		$tmpfile = WiffLibSystem::tempnam(null, 'WIFF_downloadHttpUrlWget');
 		if ($tmpfile === false)
 		{
-			$this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
+			$this->errorMessage = sprintf("Error creating temporary file.");
+			error_log(sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file."));
 			return false;
 		}
 
@@ -1702,7 +1704,8 @@ require valid-user
 		if ($wget_path === false)
 		{
 			unlink($tmpfile);
-			$this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Command '%s' not found in PATH.", 'wget');
+			error_log(sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Command '%s' not found in PATH.", 'wget'));
+			$this->errorMessage = sprintf("Command '%s' not found in PATH.", 'wget');
 			return false;
 		}
 
@@ -1734,10 +1737,11 @@ require valid-user
 		if (($out === false) || ($ret != 0))
 		{
 			unlink($tmpfile);
-			$this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error fetching '%s' with '%s'.", $url, $cmd);
+			error_log(sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error fetching '%s' with '%s'.", $url, $cmd));
+			$this->errorMessage = sprintf("Error fetching '%s' with '%s'.", $url, $cmd);
 			return false;
 		}
-
+		
 		return $tmpfile;
 	}
 
@@ -1748,7 +1752,8 @@ require valid-user
 		$tmpfile = WiffLibSystem::tempnam(null, 'WIFF_downloadHttpUrlFopen');
 		if ($tmpfile === false)
 		{
-			$this->errorMessage = sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file.");
+			$this->errorMessage = sprintf("Error creating temporary file.");
+			error_log(sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error creating temporary file."));
 			return false;
 		}
 

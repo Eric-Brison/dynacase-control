@@ -1362,6 +1362,7 @@ class Context
 			{
 				// If more than one context with name
 				$this->errorMessage = "Duplicate contexts with same name";
+				unlink($status_file);
 				return false;
 			}
 
@@ -1378,57 +1379,37 @@ class Context
 			$result = system($script,$retval);
 			if($retval != 0){
 				$this->errorMessage = "Error when making context tar.";
+				if (file_exists("$tmp/context.tar.gz")) {
+					unlink("$tmp/context.tar.gz");
+				}
+				unlink($status_file);
 				return false;
 			}
 			$zip->addFile("$tmp/context.tar.gz","context.tar.gz");
-			// Check why this delete also $zip ?
-			//		unlink('context.tar.gz');
+
 			error_log('Generated context.tar.gz');
 
 			// --- Generate database dump --- //
-			//include_once('include/lib/Lib.System.php');
 			$pgservice_core = $this->getParamByName('core_db');
 
-			//		$dump = tempnam(null, 'core_db.pg_dump.gz');
-			//		if( $dump === false ) {
-			//		    error_log(__FUNCTION__." ".sprintf("Error creating temp file for pg_dump output.\n"));
-			//		    return false;
-			//		}
-
 			$dump = $tmp.DIRECTORY_SEPARATOR.'core_db.pg_dump.gz';
-
-			//		$pg_dump_cmd = WiffLibSystem::getCommandPath('pg_dump');
-			//		if( $pg_dump_cmd === false ) {
-			//			error_log(__FUNCTION__." ".sprintf("Could not find pg_dump command in PATH.\n"));
-			//		    return false;
-			//		}
-			//
-			//		$ret = WiffLibSystem::ssystem(array($pg_dump_cmd, '-f', $dump, '--compress=9'),
-			//			array(
-			//				'closestdin' => true,
-			//				'closestdout' => true,
-			//				'envs' => array(
-			//					'PGSERVICE' => $pgservice_core
-			//				)
-			//			)
-			//		);
-			//
-			//		if( $ret != 0 ) {
-			//			error_log(__FUNCTION__." ".sprintf("Dump to '%s' returned with exitcode %s\n", $dump, $ret));
-			//			$this->errorMessage = "Error when making database dump.";
-			//			return false;
-			//		}
 
 			$script = "PGSERVICE=\"$pgservice_core\" pg_dump > $dump --compress=9 --no-owner";
 			$result = system($script,$retval);
 
 			if( $retval != 0 ){
 				$this->errorMessage = "Error when making database dump.";
+				if (file_exists("$tmp/context.tar.gz")) {
+					unlink("$tmp/context.tar.gz");
+				}
+				if (file_exists("$dump")) {
+					unlink("$dump");
+				}
+				unlink($status_file);
 				return false;
 			}
 
 			$zip->addFile($dump,'core_db.pg_dump.gz');
-			//		unlink('core_db.pg_dump.gz');
 
 			error_log('Generated core_db.pg_dump.gz');
 
@@ -1445,6 +1426,14 @@ class Context
 						$res = system($script,$retval);
 						if($retval != 0){
 							$this->errorMessage = "Error when making vault tar.";
+							if (file_exists("$tmp/context.tar.gz")) {
+								unlink("$tmp/context.tar.gz");
+							}
+							if (file_exists("$dump")) {
+								unlink("$dump");
+							}
+							/*--- Delete vault list --- */
+							unlink($status_file);
 							return false;
 						}
 						$zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
@@ -1486,6 +1475,14 @@ class Context
 			// --- Delete status file --- //
 			unlink($status_file);
 
+			// --- Clean tmp directory --- //
+			if (file_exists("$tmp/context.tar.gz")) {
+				unlink("$tmp/context.tar.gz");
+			}
+			if (file_exists("$dump")) {
+				unlink("$dump");
+			}
+			
 			return $archiveId ;
 
 		} else {
@@ -1669,26 +1666,6 @@ class Context
 		return strcmp($b['name'], $a['name']);
 	}
 
-	/**
-	 * Parse the manifest str into a structure
-	 *
-	 * Returns array(
-	 *               0 => array(
-	 *                          'type' => 'l',
-	 *                          'mode' => 'rwxr-xr-x',
-	 *                          'uid' => 'foo',
-	 *                          'gid' => 'bar',
-	 *                          'size' => '1234',
-	 *                          'date' => '1970-01-01 10:11:12' || '1970-01-01 10:11',
-	 *                          'name' => 'Symlink Example.txt',
-	 *                          'link' => ' -> Symlink Target.txt'
-	 *                          ),
-	 *               N => array(
-	 *                          ...
-	 *                          ),
-	 *               ...
-	 *               );
-	 */
 	public function getManifestEntriesForModule($moduleName) {
 		$manifest = $this->getManifestForModule($moduleName);
 		$manifestLines = preg_split("/\n/", $manifest);

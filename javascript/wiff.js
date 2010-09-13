@@ -3077,54 +3077,15 @@ function executeProcessList(module, phase, operation) {
 						? true
 						: false;
 
-				/*
-				 * var getLabel = function(process, rank) {
-				 * 
-				 * var label = '';
-				 * 
-				 * if (process.label) { label = process.label; } else if
-				 * (process.name && process.name == 'check') {
-				 * 
-				 * label = 'Check';
-				 * 
-				 * if (process.attributes.type) { if (process.attributes.type ==
-				 * 'syscommand') { label += ' system command'; } else if
-				 * (process.attributes.type == 'phpfunction') { label += ' php
-				 * function'; } else if (process.attributes.type ==
-				 * 'pearmodule') { label += ' pear module'; } else if
-				 * (process.attributes.type == 'apachemodule') { label += '
-				 * apache module'; }
-				 * 
-				 * else { label += ' ' + process.attributes.type; } }
-				 * 
-				 * if (process.attributes['function']) { label += ' ' +
-				 * process.attributes['function']; }
-				 * 
-				 * if (process.attributes.command) { label += ' ' +
-				 * process.attributes.command; }
-				 * 
-				 * if (process.attributes['class']) { label += ' ' +
-				 * process.attributes['class']; }
-				 * 
-				 * if (process.attributes.module) { label += ' ' +
-				 * process.attributes.module; } } else if
-				 * (process.attributes.command) { label = 'Command ' +
-				 * process.attributes.command; } else { label = 'Process ' +
-				 * rank; }
-				 * 
-				 * return label; }
-				 * 
-				 * var label = getLabel(processList[process], process);
-				 */
-
 				iconCls = success ? 'x-icon-ok' : optional
 						? 'x-icon-warning'
 						: 'x-icon-ko';
-
+				var label = labelBefore ? labelBefore : getLabel(
+						processList[process], process);
 				var panel = new Ext.Panel({
 							collapsible : help || response.error,
 							collapsed : success,
-							title : labelBefore,
+							title : label,
 							iconCls : iconCls,
 							html : html,
 							border : false,
@@ -3405,8 +3366,10 @@ Ext.onReady(function() {
 											if (response.error) {
 												Ext.Msg.alert('Server Error',
 														response.error);
+												currentVersion = "Can't get current version";
+											} else {
+												currentVersion = response.data;
 											}
-											currentVersion = response.data;
 											displayInfo();
 										},
 										failure : function(responseObject) {
@@ -3427,8 +3390,10 @@ Ext.onReady(function() {
 											if (response.error) {
 												Ext.Msg.alert('Server Error',
 														response.error);
+												availableVersion = "Can't get available Version";
+											} else {
+												availableVersion = response.data;
 											}
-											availableVersion = response.data;
 											displayInfo();
 										},
 										failure : function(responseObject) {
