@@ -1033,7 +1033,7 @@ require valid-user
 
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
 
-					$script = "gzip -dc $dump | PGSERVICE=$pgservice psql";
+					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", $dump, $pgservice);
 					$result = exec($script,$output,$retval);
 
 					if($retval != 0){
@@ -1211,6 +1211,19 @@ require valid-user
 			return false;
 		}
 
+
+		// --- checking if reconfigure script exists --- //
+		$context = $this->getContext($name);
+		if (!file_exists($context->root.'/programs/toolbox_reconfigure')) {
+			$this->errorMessage = sprintf("Reconfigure script doesn't exists");
+			error_log('reconfigure script not found :: '.$context->root.'/programs/toolbox_reconfigure');
+			$result = true;
+			// --- Delete status file --- //
+			unlink($status_file);
+			$context->delete($result);
+			return false;
+		}
+
 		$this->reconfigure($name);
 
 		if ($clean_tmp_directory === 'on') {
@@ -1235,6 +1248,7 @@ require valid-user
 		error_log('Call to reconfigure');
 
 		$context = $this->getContext($name);
+
 		$installedModuleList = $context->getInstalledModuleList();
 		foreach($installedModuleList as $module){
 			$phase = $module->getPhase('reconfigure');

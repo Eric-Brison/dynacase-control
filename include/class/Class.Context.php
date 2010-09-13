@@ -1288,6 +1288,12 @@ class Context
 
 	public function archiveContext($archiveName,$archiveDesc = '', $vaultExclude = false) {
 
+		if (!file_exists($this->root.'/programs/toolbox_reconfigure')) {
+			error_log('file toolbox_reconfigure not found'); // TODO: file name directly input, must search it in xml info file
+			$this->errorMessage = sprintf("Reconfigure script is not here aborting");
+			return false;
+		}
+
 		$tmp = 'archived-tmp';
 
 		// --- Create or reuse directory --- //
@@ -1383,7 +1389,6 @@ class Context
 			//include_once('include/lib/Lib.System.php');
 			$pgservice_core = $this->getParamByName('core_db');
 
-			error_log("Pgservice core == $pgservice_core");
 			//		$dump = tempnam(null, 'core_db.pg_dump.gz');
 			//		if( $dump === false ) {
 			//		    error_log(__FUNCTION__." ".sprintf("Error creating temp file for pg_dump output.\n"));

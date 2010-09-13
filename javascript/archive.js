@@ -326,10 +326,13 @@ function updateArchiveList_success(responseObject, select) {
 																				'Web Installer',
 																				'Context '
 																						+ action.result.data.name
-																						+ ' successfully created');
-														(function() {
-																	updateContextList();
-																}).defer(1000);
+																						+ ' successfully created',
+																				function() {
+																					(function() {
+																						updateContextList();
+																					})
+																							.defer(100);
+																				});
 															},
 															failure : function(
 																	form,
@@ -337,7 +340,16 @@ function updateArchiveList_success(responseObject, select) {
 																// updateContextList('select-last');
 																mask.hide();
 																console
-																		.log("Context Not created");
+																		.log("Context Not created!!!");
+																form.reset();
+																var panel = Ext
+																		.getCmp('create-archive-form');
+																panel
+																		.fireEvent(
+																				'render',
+																				panel);
+																win.close();
+																win.destroy();
 																if (action
 																		&& action.result) {
 																	Ext.Msg
@@ -348,7 +360,7 @@ function updateArchiveList_success(responseObject, select) {
 																						(function() {
 																							updateContextList();
 																						})
-																								.defer(1000);
+																								.defer(100);
 																					});
 																} else if (action
 																		&& action.failureType == Ext.form.Action.CONNECT_FAILURE) {
@@ -360,13 +372,19 @@ function updateArchiveList_success(responseObject, select) {
 																						(function() {
 																							updateContextList();
 																						})
-																								.defer(1000);
+																								.defer(100);
 																					});
 																} else {
 																	Ext.Msg
 																			.alert(
 																					'Warning',
-																					'Unknow error');
+																					'Unknow error',
+																					function() {
+																						(function() {
+																							updateContextList();
+																						})
+																								.defer(100);
+																					});
 																}
 															},
 															params : {
