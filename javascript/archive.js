@@ -400,7 +400,7 @@ function updateArchiveList_success(responseObject, select) {
 												win.hide();
 										(function() {
 													updateContextList();
-												}).defer(1000);
+												}).defer(100);
 
 											}
 										}]

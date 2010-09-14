@@ -1362,6 +1362,7 @@ class Context
 			{
 				// If more than one context with name
 				$this->errorMessage = "Duplicate contexts with same name";
+				$zip->close();
 				unlink($status_file);
 				return false;
 			}
@@ -1378,15 +1379,24 @@ class Context
 			$script = sprintf("tar -C %s -czf $tmp/context.tar.gz .", escapeshellarg($this->root));
 			$result = system($script,$retval);
 			if($retval != 0){
-				$this->errorMessage = "Error when making context tar.";
+				$this->errorMessage = "Error when making context tar :: ".$result;
 				if (file_exists("$tmp/context.tar.gz")) {
 					unlink("$tmp/context.tar.gz");
 				}
+				$zip->close();
 				unlink($status_file);
 				return false;
 			}
-			$zip->addFile("$tmp/context.tar.gz","context.tar.gz");
-
+			$err = $zip->addFile("$tmp/context.tar.gz","context.tar.gz");
+			if ($err === false) {
+				$this->errorMessage = "Could not had file to archive";
+				if (file_exists("$tmp/context.tar.gz")) {
+					unlink("$tmp/context.tar.gz");
+				}
+				$zip->close();
+				unlink($status_file);
+				return false;
+			}
 			error_log('Generated context.tar.gz');
 
 			// --- Generate database dump --- //
@@ -1398,34 +1408,73 @@ class Context
 			$result = system($script,$retval);
 
 			if( $retval != 0 ){
-				$this->errorMessage = "Error when making database dump.";
+				$this->errorMessage = "Error when making database dump :: ".$result;
 				if (file_exists("$tmp/context.tar.gz")) {
 					unlink("$tmp/context.tar.gz");
 				}
 				if (file_exists("$dump")) {
 					unlink("$dump");
 				}
+				$zip->close();
 				unlink($status_file);
 				return false;
 			}
 
-			$zip->addFile($dump,'core_db.pg_dump.gz');
-
+			$err = $zip->addFile($dump,'core_db.pg_dump.gz');
+			if ($err === false) {
+				$this->errorMessage = "Could not add file to archive";
+				if (file_exists("$tmp/context.tar.gz")) {
+					unlink("$tmp/context.tar.gz");
+				}
+				if (file_exists("$dump")) {
+					unlink("$dump");
+				}
+				$zip->close();
+				unlink($status_file);
+				return false;
+			}
 			error_log('Generated core_db.pg_dump.gz');
 
 			if ($vaultExclude != 'on') {
 				// --- Generate vaults tar.gz files --- //
-				pg_connect("service=$pgservice_core");
+				$dbconnect = pg_connect("service=$pgservice_core");
+				if ($dbconnect === false) {
+					$this->errorMessage = "Error when trying to connect to database";
+					if (file_exists("$tmp/context.tar.gz")) {
+						unlink("$tmp/context.tar.gz");
+					}
+					if (file_exists("$dump")) {
+						unlink("$dump");
+					}
+					$zip->close();
+					unlink($status_file);
+					return false;
+				}
 				$result = pg_query("SELECT id_fs, r_path FROM vaultdiskfsstorage ;");
+				if ($result === false) {
+					$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
+					if (file_exists("$tmp/context.tar.gz")) {
+						unlink("$tmp/context.tar.gz");
+					}
+					if (file_exists("$dump")) {
+						unlink("$dump");
+					}
+					$zip->close();
+					unlink($status_file);
+					return false;
+				}
+
+				$vaultDirList = array();
 				while ($row = pg_fetch_row($result)) {
 					$id_fs = $row[0];
 					$r_path = $row[1];
 					if (is_dir($r_path)) {
+						$vaultDirList[] = array("id_fs" => $id_fs, "r_path" => $r_path);
 						$vaultExclude = 'Vaultexists';
 						$script = sprintf("tar -C %s -czf %s/vault_$id_fs.tar.gz .", escapeshellarg($r_path), $tmp);
 						$res = system($script,$retval);
 						if($retval != 0){
-							$this->errorMessage = "Error when making vault tar.";
+							$this->errorMessage = "Error when making vault tar :: ".$res;
 							if (file_exists("$tmp/context.tar.gz")) {
 								unlink("$tmp/context.tar.gz");
 							}
@@ -1433,10 +1482,38 @@ class Context
 								unlink("$dump");
 							}
 							/*--- Delete vault list --- */
+							$i = 0;
+							while ($vaultDirList[$i]) {
+								if (file_exists($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz")) {
+									unlink($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz");
+								}
+								$i++;
+							}
+							$zip->close();
 							unlink($status_file);
 							return false;
 						}
-						$zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
+						$err = $zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
+						if ($err === false) {
+							$this->errorMessage = "Error when making vault tar :: ".$res;
+							if (file_exists("$tmp/context.tar.gz")) {
+								unlink("$tmp/context.tar.gz");
+							}
+							if (file_exists("$dump")) {
+								unlink("$dump");
+							}
+							/*--- Delete vault list --- */
+							$i = 0;
+							while ($vaultDirList[$i]) {
+								if (file_exists($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz")) {
+									unlink($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz");
+								}
+								$i++;
+							}
+							$zip->close();
+							unlink($status_file);
+							return false;
+						}
 					}
 					elseif ($vaultExclude != 'Vaultexists') {
 						$vaultExclude = 'on';
@@ -1465,7 +1542,32 @@ class Context
 
 			$xml = $doc->saveXML();
 
-			$zip->addFromString('info.xml',$xml);
+			$err = $zip->addFromString('info.xml',$xml);
+			if ($err === false) {
+				$zip->close();
+				unlink($status_file);
+				if (file_exists("$tmp/context.tar.gz")) {
+					unlink("$tmp/context.tar.gz");
+				}
+				if (file_exists("$dump")) {
+					unlink("$dump");
+				}
+				if (empty($vaultDirList) === false) {
+					/*--- Delete vault list --- */
+					$i = 0;
+					while ($vaultDirList[$i]) {
+						if (file_exists($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz")) {
+							unlink($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz");
+						}
+						$i++;
+					}
+				}
+				if (file_exists($tmp."/vault_$id_fs.tar.gz")) {
+					unlink($tmp."/vault_$id_fs.tar.gz");
+				}
+				$this->errorMessage = "Can'st add file to archive";
+				return false;
+			}
 
 			// --- Save zip --- //
 			$zip->close();
@@ -1482,7 +1584,17 @@ class Context
 			if (file_exists("$dump")) {
 				unlink("$dump");
 			}
-			
+			if (empty($vaultDirList) === false) {
+				/*--- Delete vault list --- */
+				$i = 0;
+				while ($vaultDirList[$i]) {
+					if (file_exists($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz")) {
+						unlink($tmp."/vault_".$vaultDirList[$i]["id_fs"].".tar.gz");
+					}
+					$i++;
+				}
+			}
+
 			return $archiveId ;
 
 		} else {

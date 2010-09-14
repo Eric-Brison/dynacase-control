@@ -800,6 +800,9 @@ function updateContextList_success(responseObject, select) {
 	}
 	var data = response.data;
 
+	if (!data) {
+		return ;
+	}
 	contextList = data;
 
 	var panel = Ext.getCmp('context-list');
@@ -1512,23 +1515,7 @@ function updateContextList_success(responseObject, select) {
 											field : 'name',
 											direction : "ASC"
 										},
-										listeners : { // beforeload:
-										// function(store,
-										// options){
-										// //return false;
-										// Ext.Msg.alert('Freedom Web
-										// Installer',
-										// 'Here I could ask for repository
-										// login/password', function(){
-										// return false;
-										// });
-										// },
-										// load: function(){
-										// console.log('LOAD');
-										// },
-										// exception: function(){
-										// console.log('Exception on load');
-										// }
+										listeners : { 
 										}
 									});
 
@@ -1695,36 +1682,13 @@ function updateContextList_success(responseObject, select) {
 											direction : "ASC"
 										},
 										listeners : {
-											// beforeload: function(){
-											// console.log('BEFORELOAD');
-											// },
-											// load:
-											// function(store,records,options){
-											// console.log('LOAD');
-											// var data = store.reader.jsonData;
-											// if(!data.success){
-											// Ext.Msg.alert('Freedom Web
-											// Installer','Error : ' +
-											// data.error);
-											// }
-											// },
+											
 											exception : function() {
-												// Not sent ; Should be
-												// corrected in
-												// following ext releases
-												// console.log('EXCEPTION');
+												
 											},
 											loadexception : function(proxy,
 													type, action, options,
 													response, arg) {
-
-												// console.log('LOADEXCEPTION',proxy,
-												// type, action, options,
-												// response);
-												// Ext.Msg.alert('Freedom Web
-												// Installer','Error when
-												// connecting to
-												// repositories.');
 
 											}
 										}

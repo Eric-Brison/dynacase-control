@@ -1046,7 +1046,7 @@ require valid-user
 					error_log('Database restored');
 
 					// --- Extract vault tar gz --- //
-
+					$vaultfound = false;
 					if ($handle = opendir($temporary_extract_root))
 					{
 
@@ -1056,13 +1056,14 @@ require valid-user
 							if(substr($file, 0, 5) == 'vault')
 							{
 								$id_fs = substr($file,6,-7);
-									
+								$vaultfound = true;
 								$vault_tar = $temporary_extract_root.DIRECTORY_SEPARATOR.$file ;
 								$vault_subdir = $vault_root.DIRECTORY_SEPARATOR.$id_fs.DIRECTORY_SEPARATOR ;
 
-								if (@mkdir($vault_subdir) === false)
+								if (@mkdir($vault_subdir,0777, true) === false)
 								{
 									$this->errorMessage = sprintf("Error creating directory '%s'.", $vault_subdir);
+									error_log(sprintf("Error creating directory '%s'.", $vault_subdir));
 									// --- Delete status file --- //
 									unlink($status_file);
 									return false;
@@ -1166,15 +1167,27 @@ require valid-user
 
 		// Modify or add vault_root in xml
 		$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='vault_root']");
-		if ($paramList->length != 1)
-		{
-			$paramValueList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value");
-			$paramVaultRoot = $xml->createElement('param');
-			$paramVaultRoot->setAttribute('name','vault_root');
-			$paramVaultRoot->setAttribute('value',$vault_root);
+		$paramValueList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value");
+		$paramVaultRoot = $xml->createElement('param');
+		$paramVaultRoot->setAttribute('name','vault_root');
+		$paramVaultRoot->setAttribute('value',$vault_root);
+		if ($vaultfound === false) {
+			$vault_save_value = 'no';
+		}
+		else {
+			$vault_save_value = 'yes';
+		}
+		if ($paramList->length != 1){
 			$paramVaultRoot = $paramValueList->item(0)->appendChild($paramVaultRoot);
+		}  else {
+			$paramVaultRoot = $paramValueList->item(0)->replaceChild($paramVaultRoot, $paramList->item(0));
 		}
 
+		$vault_save = $xml->createElement('param');
+		$vault_save->setAttribute('name','vault_save');
+		$vault_save->setAttribute('value',$vault_save_value);
+		$paramValueList->item(0)->appendChild($vault_save);
+			
 		if(isset($remove_profiles) && $remove_profiles == true){
 			// Modify or add remove_profiles in xml
 			$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='remove_profiles']");
@@ -1741,7 +1754,7 @@ require valid-user
 			$this->errorMessage = sprintf("Error fetching '%s' with '%s'.", $url, $cmd);
 			return false;
 		}
-		
+
 		return $tmpfile;
 	}
 
