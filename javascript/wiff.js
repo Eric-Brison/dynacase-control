@@ -1095,6 +1095,9 @@ function updateContextList_success(responseObject, select) {
 																									.alert(
 																											'Warning',
 																											options.failureType);
+																						} else if (response.responseText) {
+																							console.log('error catch is :: ',response.responseText)
+																							Ext.Msg.alert('Warning', response.responseText);
 																						} else {
 																							Ext.Msg
 																									.alert(
