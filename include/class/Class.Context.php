@@ -1363,6 +1363,9 @@ class Context
 				// If more than one context with name
 				$this->errorMessage = "Duplicate contexts with same name";
 				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
 				unlink($status_file);
 				return false;
 			}
@@ -1384,6 +1387,9 @@ class Context
 					unlink("$tmp/context.tar.gz");
 				}
 				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
 				unlink($status_file);
 				return false;
 			}
@@ -1394,6 +1400,9 @@ class Context
 					unlink("$tmp/context.tar.gz");
 				}
 				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
 				unlink($status_file);
 				return false;
 			}
@@ -1416,6 +1425,9 @@ class Context
 					unlink("$dump");
 				}
 				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
 				unlink($status_file);
 				return false;
 			}
@@ -1430,6 +1442,9 @@ class Context
 					unlink("$dump");
 				}
 				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
 				unlink($status_file);
 				return false;
 			}
@@ -1447,6 +1462,9 @@ class Context
 						unlink("$dump");
 					}
 					$zip->close();
+					if (file_exists($archived_root."/$archiveId.fcz")) {
+						unlink($archived_root."/$archiveId.fcz");
+					}
 					unlink($status_file);
 					return false;
 				}
@@ -1460,6 +1478,9 @@ class Context
 						unlink("$dump");
 					}
 					$zip->close();
+					if (file_exists($archived_root."/$archiveId.fcz")) {
+						unlink($archived_root."/$archiveId.fcz");
+					}
 					unlink($status_file);
 					return false;
 				}
@@ -1490,6 +1511,9 @@ class Context
 								$i++;
 							}
 							$zip->close();
+							if (file_exists($archived_root."/$archiveId.fcz")) {
+								unlink($archived_root."/$archiveId.fcz");
+							}
 							unlink($status_file);
 							return false;
 						}
@@ -1511,6 +1535,9 @@ class Context
 								$i++;
 							}
 							$zip->close();
+							if (file_exists($archived_root."/$archiveId.fcz")) {
+								unlink($archived_root."/$archiveId.fcz");
+							}
 							unlink($status_file);
 							return false;
 						}
@@ -1545,6 +1572,9 @@ class Context
 			$err = $zip->addFromString('info.xml',$xml);
 			if ($err === false) {
 				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
 				unlink($status_file);
 				if (file_exists("$tmp/context.tar.gz")) {
 					unlink("$tmp/context.tar.gz");
@@ -1860,41 +1890,55 @@ class Context
 	/**
 	 * Delete context
 	 */
-	public function delete(&$res) {
+	public function delete(&$res, $opt = false) {
 		$err_msg = '';
 		$res = true;
-		$args = array("cmd" => "unregister", 'file' => 'FREEDOM/freedom.cron');
-		$ret = $this->wsh("crontab", $args);
-		if( $ret ) {
-			$err_msg .= $ret;
-			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextCrontab returned with error: %s", $this->errorMessage));
+		if ($opt === 'crontab' || $opt === false) {
+			$args = array("cmd" => "unregister", 'file' => 'FREEDOM/freedom.cron');
+			$ret = $this->wsh("crontab", $args);
+			if( $ret ) {
+				$err_msg .= $ret;
+				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextCrontab returned with error: %s", $this->errorMessage));
+			}
+			error_log("crontab deleted");
 		}
-		$ret = $this->deleteContextVault();
-		if( $ret ) {
-			$err_msg .= $ret;
-			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextVault returned with error: %s", $this->errorMessage));
+		if ($opt === 'vault' || $opt === false) {
+			$ret = $this->deleteContextVault();
+			if( $ret ) {
+				$err_msg .= $ret;
+				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextVault returned with error: %s", $this->errorMessage));
+			}
+			error_log("vault deleted");
 		}
-		$err = '';
-		$ret = $this->deleteContextDatabaseContent($err);
-		if( $ret ) {
-			$err_msg .= $ret;
-			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextDatabaseContent returned with error: %s", $this->errorMessage));
+		if ($opt === 'database' || $opt === false) {
+			$err = '';
+			$ret = $this->deleteContextDatabaseContent($err);
+			if( $ret ) {
+				$err_msg .= $ret;
+				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextDatabaseContent returned with error: %s", $this->errorMessage));
+			}
+			if ($err != '') {
+				$err_msg .= $$err;
+			}
+			error_log("database deleted");
 		}
-		if ($err != '') {
-			$err_msg .= $$err;
+		if ($opt === 'root' || $opt === false) {
+			$ret = $this->deleteContextRoot();
+			if( $ret ) {
+				$err_msg .= $ret;
+				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextRoot returned with error: %s", $this->errorMessage));
+			}
+			error_log("root deleted");
 		}
-		$ret = $this->deleteContextRoot();
-		if( $ret ) {
-			$err_msg .= $ret;
-			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextRoot returned with error: %s", $this->errorMessage));
+		if ($opt === 'unregister' || $opt === false) {
+			$ret = $this->unregisterContextFromConfig();
+			if( $ret ) {
+				$res = false;
+				$err_msg .= $ret;
+				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("unregisterContextFromConfig returned with error: %s", $this->errorMessage));
+			}
+			error_log("context unregister");
 		}
-		$ret = $this->unregisterContextFromConfig();
-		if( $ret ) {
-			$res = false;
-			$err_msg .= $ret;
-			error_log(__CLASS__."::".__FUNCTION__." ".sprintf("unregisterContextFromConfig returned with error: %s", $this->errorMessage));
-		}
-
 		return $err_msg;
 	}
 

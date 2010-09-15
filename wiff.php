@@ -384,7 +384,7 @@ if ( isset ($_REQUEST['getContextList']))
 // Request to delete a context
 if (isset($_REQUEST['deleteContext'])) {
 
-	$err = $wiff->deleteContext($_REQUEST['contextToDelete'], $res);
+	$err = $wiff->deleteContext($_REQUEST['contextToDelete'], $res, $_REQUEST['deleteContext']);
 	if ($res === false) {
 		answer(null, $err);
 	}
@@ -482,7 +482,6 @@ if ( isset ($_REQUEST['archiveContext']))
 	if (!$wiff->errorMessage)
 	{
 		$archiveId = $context->archiveContext($_REQUEST['archiveName'],$_REQUEST['archiveDesc'], $_REQUEST['vaultExclude']);
-			
 		if($archiveId === false){
 			answer(null, $context->errorMessage);
 		} else {

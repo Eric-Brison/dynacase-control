@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-		);
+);
 
-		fwrite($passwordFile,
-		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-		);
+fwrite($passwordFile,
+sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+);
 
-		fclose($accessFile);
-		fclose($passwordFile);
+fclose($accessFile);
+fclose($passwordFile);
 
-		return true;
+return true;
 
 	}
 
@@ -935,7 +935,7 @@ require valid-user
 			}
 		} else
 		{
-			if (@mkdir($vault_root) === false)
+			if (@mkdir($vault_root, 0777, true) === false)
 			{
 				$this->errorMessage = sprintf("Error creating directory '%s'.", $vault_root);
 				// --- Delete status file --- //
@@ -1334,7 +1334,7 @@ require valid-user
 	 * @return object Context or boolean false
 	 * @param string $name context name
 	 */
-	public function getContext($name)
+	public function getContext($name, $opt = false)
 	{
 		require_once ('class/Class.Repository.php');
 		require_once ('class/Class.Context.php');
@@ -1367,7 +1367,7 @@ require valid-user
 			$this->errorMessage = null;
 			$context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList, $context->item(0)->getAttribute('url'));
 
-			if (!$context->isWritable())
+			if (!$context->isWritable() && $opt == false)
 			{
 				$this->errorMessage = sprintf("Context '%s' configuration is not writable.", $context->name);
 				return false;
@@ -2163,18 +2163,26 @@ require valid-user
 	/**
 	 * Delete a context
 	 */
-	public function deleteContext($contextName, &$result) {
+	public function deleteContext($contextName, &$result, $opt) {
 		$result = true;
-		$context = $this->getContext($contextName);
+		if ($opt === 'unregister') {
+			$context = $this->getContext($contextName, true);
+		}
+		else {
+			$context = $this->getContext($contextName);
+
+		}
 		if( $context === false ) {
 			$result = false;
+			error_log("ContextName == $contextName ::: opt === $opt ::: error === $this->errorMessage");
 			$this->errorMessage = sprintf("Error: could not get context '%s'.", $contextName);
 			return $this->errorMessage;
 		}
 
-		$err = $context->delete($res);
+		$err = $context->delete($res, $opt);
 		if( $res === false ) {
 			$result = false;
+			error_log("ContextName == $contextName ::: opt === $opt ::: error === $this->errorMessage");
 			$this->errorMessage = sprintf("Error: could not delete context '%s': %s", $contextName, implode("\n", $err));
 			return $this->errorMessage;
 		}

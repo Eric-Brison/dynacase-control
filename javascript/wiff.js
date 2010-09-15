@@ -801,7 +801,7 @@ function updateContextList_success(responseObject, select) {
 	var data = response.data;
 
 	if (!data) {
-		return ;
+		return;
 	}
 	contextList = data;
 
@@ -871,6 +871,9 @@ function updateContextList_success(responseObject, select) {
 		return (importButtonRes);
 	};
 
+	var deleteFunction = function(opt, contextName) {
+
+	}
 	var onDeleteContextButton = function(button) {
 		Ext.Msg.show({
 			title : 'Warning',
@@ -881,55 +884,290 @@ function updateContextList_success(responseObject, select) {
 				if (btn != 'yes') {
 					return false;
 				}
+				var errMsg = '';
+				var contextName = button.context.name;
 				mask = new Ext.LoadMask(Ext.getBody(), {
-							msg : 'Deleting Context...'
+							msg : 'Deleting Crontab...'
 						});
 				mask.show();
 				Ext.Ajax.request({
-							url : 'wiff.php',
-							timeout : 3600,
-							params : {
-								contextToDelete : button.context.name,
-								deleteContext : true
-							},
-							success : function(response, options) {
-								var responseDecode = Ext.util.JSON
-										.decode(response.responseText);
-								if (responseDecode.success == false) {
-									Ext.Msg.alert('Warning',
-											responseDecode.error.toString());
-									mask.hide();
-				(function			() {
-										updateContextList();
-									}).defer(1000);
-								} else {
-									console.log("Context deleted :: ",
-											response.responseText);
-									mask.hide();
-									if (responseDecode.error) {
-										Ext.Msg.alert('Web Installer',
-												responseDecode.error);
-									} else {
-										Ext.Msg.alert('Web Installer',
-												'Context '
-														+ responseDecode.data
-														+ ' deleted');
-									}
-				(function			() {
-										updateContextList();
-									}).defer(1000);
-								}
-							},
-							failure : function(response, options) {
-								mask.hide();
-								if (options.failureType) {
-									Ext.Msg.alert('Warning',
-											options.failureType);
-								} else {
-									Ext.Msg.alert('Warning', 'Unknow Error');
-								}
+					url : 'wiff.php',
+					timeout : 3600,
+					params : {
+						contextToDelete : contextName,
+						deleteContext : 'crontab'
+					},
+					success : function(response, options) {
+						var responseDecode = Ext.util.JSON
+								.decode(response.responseText);
+						if (responseDecode.success == false) {
+							Ext.Msg.alert('Warning', responseDecode.error
+											.toString());
+							mask.hide();
+				(function	() {
+								updateContextList();
+							}).defer(1000);
+						} else {
+							console.log("Crontab deleted :: ",
+									response.responseText);
+							mask.hide();
+							mask = new Ext.LoadMask(Ext.getBody(), {
+										msg : 'Deleting vault...'
+									});
+							mask.show();
+							if (responseDecode.error) {
+								errMsg = errMsg + responseDecode.error;
 							}
-						});
+							Ext.Ajax.request({
+								url : 'wiff.php',
+								timeout : 3600,
+								params : {
+									contextToDelete : contextName,
+									deleteContext : 'vault'
+								},
+								success : function(response, options) {
+									var responseDecode = Ext.util.JSON
+											.decode(response.responseText);
+									if (responseDecode.success == false) {
+										Ext.Msg
+												.alert('Warning',
+														responseDecode.error
+																.toString());
+										mask.hide();
+							(function	() {
+											updateContextList();
+										}).defer(1000);
+									} else {
+										console.log("Vault deleted :: ",
+												response.responseText);
+										mask.hide();
+										mask = new Ext.LoadMask(Ext.getBody(),
+												{
+													msg : 'Deleting database...'
+												});
+										mask.show();
+										if (responseDecode.error) {
+											errMsg = errMsg
+													+ responseDecode.error;
+										}
+										Ext.Ajax.request({
+											url : 'wiff.php',
+											timeout : 3600,
+											params : {
+												contextToDelete : contextName,
+												deleteContext : 'database'
+											},
+											success : function(response,
+													options) {
+												var responseDecode = Ext.util.JSON
+														.decode(response.responseText);
+												if (responseDecode.success == false) {
+													Ext.Msg
+															.alert(
+																	'Warning',
+																	responseDecode.error
+																			.toString());
+													mask.hide();
+										(function	() {
+														updateContextList();
+													}).defer(1000);
+												} else {
+													console
+															.log(
+																	"Database deleted :: ",
+																	response.responseText);
+													mask.hide();
+													mask = new Ext.LoadMask(Ext
+																	.getBody(),
+															{
+																msg : "Deleting Context's root..."
+															});
+													mask.show();
+													if (responseDecode.error) {
+														errMsg = errMsg
+																+ responseDecode.error;
+													}
+													Ext.Ajax.request({
+														url : 'wiff.php',
+														timeout : 3600,
+														params : {
+															contextToDelete : contextName,
+															deleteContext : 'root'
+														},
+														success : function(
+																response,
+																options) {
+															var responseDecode = Ext.util.JSON
+																	.decode(response.responseText);
+															if (responseDecode.success == false) {
+																Ext.Msg
+																		.alert(
+																				'Warning',
+																				responseDecode.error
+																						.toString());
+																mask.hide();
+													(function	() {
+																	updateContextList();
+																}).defer(1000);
+															} else {
+																console
+																		.log(
+																				"Root deleted :: ",
+																				response.responseText);
+																mask.hide();
+																mask = new Ext.LoadMask(
+																		Ext
+																				.getBody(),
+																		{
+																			msg : 'Unregistering context...'
+																		});
+																mask.show();
+																if (responseDecode.error) {
+																	errMsg = errMsg
+																			+ responseDecode.error;
+																}
+													(function	() {
+																	Ext.Ajax
+																			.request(
+																					{
+																						url : 'wiff.php',
+																						timeout : 3600,
+																						params : {
+																							contextToDelete : contextName,
+																							deleteContext : 'unregister'
+																						},
+																						success : function(
+																								response,
+																								options) {
+																							var responseDecode = Ext.util.JSON
+																									.decode(response.responseText);
+																							if (responseDecode.success == false) {
+																								Ext.Msg
+																										.alert(
+																												'Warning',
+																												responseDecode.error
+																														.toString());
+																								mask
+																										.hide();
+																								(function() {
+																									updateContextList();
+																								})
+																										.defer(1000);
+																							} else {
+																								console
+																										.log(
+																												"Context unregister :: ",
+																												response.responseText);
+																								mask
+																										.hide();
+																								if (responseDecode.error) {
+																									errMsg = errMsg
+																											+ responseDecode.error;
+																								}
+																								if (errMsg) {
+																									Ext.Msg
+																											.alert(
+																													'Warning',
+																													errMsg,
+																													function() {
+																														(function() {
+																															updateContextList();
+																														})
+																																.defer(100);
+																													});
+																								} else {
+																									Ext.Msg
+																											.alert(
+																													'Web installer',
+																													'Context successfully delete',
+																													function() {
+																														(function() {
+																															updateContextList();
+																														})
+																																.defer(100);
+																													});
+																								}
+																							}
+																						},
+																						failure : function(
+																								response,
+																								options) {
+																							mask
+																									.hide();
+																							if (options.failureType) {
+																								Ext.Msg
+																										.alert(
+																												'Warning',
+																												options.failureType);
+																							} else {
+																								Ext.Msg
+																										.alert(
+																												'Warning',
+																												'Unknow Error');
+																							}
+																						}
+																					});
+																}).defer(100);
+															}
+														},
+														failure : function(
+																response,
+																options) {
+															mask.hide();
+															if (options.failureType) {
+																Ext.Msg
+																		.alert(
+																				'Warning',
+																				options.failureType);
+															} else {
+																Ext.Msg
+																		.alert(
+																				'Warning',
+																				'Unknow Error');
+															}
+														}
+													});
+												}
+											},
+											failure : function(response,
+													options) {
+												mask.hide();
+												if (options.failureType) {
+													Ext.Msg
+															.alert(
+																	'Warning',
+																	options.failureType);
+												} else {
+													Ext.Msg.alert('Warning',
+															'Unknow Error');
+												}
+											}
+										});
+									}
+								},
+								failure : function(response, options) {
+									mask.hide();
+									if (options.failureType) {
+										Ext.Msg.alert('Warning',
+												options.failureType);
+									} else {
+										Ext.Msg
+												.alert('Warning',
+														'Unknow Error');
+									}
+								}
+							});
+						}
+					},
+					failure : function(response, options) {
+						mask.hide();
+						if (options.failureType) {
+							Ext.Msg.alert('Warning', options.failureType);
+						} else {
+							Ext.Msg.alert('Warning', 'Unknow Error');
+						}
+					}
+				});
 			}
 		});
 	};
@@ -1515,8 +1753,7 @@ function updateContextList_success(responseObject, select) {
 											field : 'name',
 											direction : "ASC"
 										},
-										listeners : { 
-										}
+										listeners : {}
 									});
 
 							var selModel = new Ext.grid.CheckboxSelectionModel(
@@ -1682,9 +1919,9 @@ function updateContextList_success(responseObject, select) {
 											direction : "ASC"
 										},
 										listeners : {
-											
+
 											exception : function() {
-												
+
 											},
 											loadexception : function(proxy,
 													type, action, options,
