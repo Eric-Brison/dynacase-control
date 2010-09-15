@@ -384,6 +384,7 @@ if ( isset ($_REQUEST['getContextList']))
 // Request to delete a context
 if (isset($_REQUEST['deleteContext'])) {
 
+	$res = true;
 	$err = $wiff->deleteContext($_REQUEST['contextToDelete'], $res, $_REQUEST['deleteContext']);
 	if ($res === false) {
 		answer(null, $err);

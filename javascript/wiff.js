@@ -870,7 +870,7 @@ function updateContextList_success(responseObject, select) {
 				});
 		return (importButtonRes);
 	};
-	
+
 	var onDeleteContextButton = function(button) {
 		Ext.Msg.show({
 			title : 'Warning',
@@ -1023,88 +1023,86 @@ function updateContextList_success(responseObject, select) {
 																	errMsg = errMsg
 																			+ responseDecode.error;
 																}
-													(function	() {
-																	Ext.Ajax
-																			.request(
-																					{
-																						url : 'wiff.php',
-																						timeout : 3600,
-																						params : {
-																							contextToDelete : contextName,
-																							deleteContext : 'unregister'
-																						},
-																						success : function(
-																								response,
-																								options) {
-																							var responseDecode = Ext.util.JSON
-																									.decode(response.responseText);
-																							if (responseDecode.success == false) {
-																								Ext.Msg
-																										.alert(
-																												'Warning',
-																												responseDecode.error
-																														.toString());
-																								mask
-																										.hide();
-																								(function() {
-																									updateContextList();
-																								})
-																										.defer(1000);
-																							} else {
-																								console
-																										.log(
-																												"Context unregister :: ",
-																												response.responseText);
-																								mask
-																										.hide();
-																								if (responseDecode.error) {
-																									errMsg = errMsg
-																											+ responseDecode.error;
-																								}
-																								if (errMsg) {
-																									Ext.Msg
-																											.alert(
-																													'Warning',
-																													errMsg,
-																													function() {
-																														(function() {
-																															updateContextList();
-																														})
-																																.defer(100);
-																													});
-																								} else {
-																									Ext.Msg
-																											.alert(
-																													'Web installer',
-																													'Context successfully delete',
-																													function() {
-																														(function() {
-																															updateContextList();
-																														})
-																																.defer(100);
-																													});
-																								}
-																							}
-																						},
-																						failure : function(
-																								response,
-																								options) {
+																Ext.Ajax
+																		.request(
+																				{
+																					url : 'wiff.php',
+																					timeout : 3600,
+																					params : {
+																						contextToDelete : contextName,
+																						deleteContext : 'unregister'
+																					},
+																					success : function(
+																							response,
+																							options) {
+																						var responseDecode = Ext.util.JSON
+																								.decode(response.responseText);
+																						if (responseDecode.success == false) {
+																							Ext.Msg
+																									.alert(
+																											'Warning',
+																											responseDecode.error
+																													.toString());
 																							mask
 																									.hide();
-																							if (options.failureType) {
+																							(function() {
+																								updateContextList();
+																							})
+																									.defer(1000);
+																						} else {
+																							console
+																									.log(
+																											"Context unregister :: ",
+																											response.responseText);
+																							mask
+																									.hide();
+																							if (responseDecode.error) {
+																								errMsg = errMsg
+																										+ responseDecode.error;
+																							}
+																							if (errMsg) {
 																								Ext.Msg
 																										.alert(
 																												'Warning',
-																												options.failureType);
+																												errMsg,
+																												function() {
+																													(function() {
+																														updateContextList();
+																													})
+																															.defer(100);
+																												});
 																							} else {
 																								Ext.Msg
 																										.alert(
-																												'Warning',
-																												'Unknow Error');
+																												'Web installer',
+																												'Context successfully delete',
+																												function() {
+																													(function() {
+																														updateContextList();
+																													})
+																															.defer(100);
+																												});
 																							}
 																						}
-																					});
-																}).defer(100);
+																					},
+																					failure : function(
+																							response,
+																							options) {
+																						mask
+																								.hide();
+																						if (options.failureType) {
+																							Ext.Msg
+																									.alert(
+																											'Warning',
+																											options.failureType);
+																						} else {
+																							Ext.Msg
+																									.alert(
+																											'Warning',
+																											'Unknow Error');
+																						}
+																					}
+																				});
 															}
 														},
 														failure : function(

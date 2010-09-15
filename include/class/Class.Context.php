@@ -1261,30 +1261,30 @@ class Context
 	/*public function getFreedomContextWiff() {
 		$freedomctx=getenv("freedom_context");
 		if( $freedomctx == false || $freedomctx == "" ) {
-			return "default";
+		return "default";
 		}
 		return $freedomctx;
-	}
+		}
 
-	public function getServiceCoreWiff() {
+		public function getServiceCoreWiff() {
 		static $pg_service=null;
 
 		if ($pg_service) return $pg_service;
 
 		$freedomctx = $this->getFreedomContextWiff();
 		if ($freedomctx != "") {
-			$filename = "$this->root/context/$freedomctx/dbaccess.php";
-			if (file_exists($filename)) {
-				include($filename);
-			}
+		$filename = "$this->root/context/$freedomctx/dbaccess.php";
+		if (file_exists($filename)) {
+		include($filename);
+		}
 		}
 		if ($pgservice_core == "") {
-			error_log("Undefined pgservice_core in dbaccess.php");
-			exit(1);
+		error_log("Undefined pgservice_core in dbaccess.php");
+		exit(1);
 		}
 		$pg_service = $pgservice_core;
 		return $pg_service;
-	}*/
+		}*/
 
 	public function archiveContext($archiveName,$archiveDesc = '', $vaultExclude = false) {
 
