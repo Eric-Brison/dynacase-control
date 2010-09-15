@@ -1258,7 +1258,7 @@ class Context
 		return $this->removeModule($moduleName, 'downloaded');
 	}
 
-	public function getFreedomContextWiff() {
+	/*public function getFreedomContextWiff() {
 		$freedomctx=getenv("freedom_context");
 		if( $freedomctx == false || $freedomctx == "" ) {
 			return "default";
@@ -1284,7 +1284,7 @@ class Context
 		}
 		$pg_service = $pgservice_core;
 		return $pg_service;
-	}
+	}*/
 
 	public function archiveContext($archiveName,$archiveDesc = '', $vaultExclude = false) {
 

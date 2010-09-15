@@ -92,7 +92,7 @@ function updateWIFF() {
 						Ext.Msg.alert('Freedom Web Installer',
 								'Update successful. Click OK to restart.',
 								function(btn) {
-									window.location.reload();
+									window.location.reload(true);
 								});
 					}
 
