@@ -870,10 +870,7 @@ function updateContextList_success(responseObject, select) {
 				});
 		return (importButtonRes);
 	};
-
-	var deleteFunction = function(opt, contextName) {
-
-	}
+	
 	var onDeleteContextButton = function(button) {
 		Ext.Msg.show({
 			title : 'Warning',
