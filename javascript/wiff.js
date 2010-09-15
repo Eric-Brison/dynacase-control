@@ -287,7 +287,7 @@ function displayChangelog(record) {
 
 	var changelog = record.get('changelog');
 
-	var html = '<p>';
+	var html = '<ul>';
 	for (var i = 0; i < changelog.length; i++) {
 		html += '<li style="font-size:medium;margin-top:5px;margin-bottom:5px;border-bottom:1px solid #99BBE8;"><img src=images/icons/tick.png style="position:relative;top:3px;" /><b>  version '
 				+ changelog[i]['version']
@@ -311,7 +311,7 @@ function displayChangelog(record) {
 					+ changelog[i]['action'][j]['description'] + '</i></li>';
 		}
 	}
-	html += '</p>';
+	html += '</ul>';
 
 	var win = new Ext.Window({
 		title : record.get('name') + ' changelog',
