@@ -1096,8 +1096,14 @@ function updateContextList_success(responseObject, select) {
 																											'Warning',
 																											options.failureType);
 																						} else if (response.responseText) {
-																							console.log('error catch is :: ',response.responseText)
-																							Ext.Msg.alert('Warning', response.responseText);
+																							console
+																									.log(
+																											'error catch is :: ',
+																											response.responseText)
+																							Ext.Msg
+																									.alert(
+																											'Warning',
+																											response.responseText);
 																						} else {
 																							Ext.Msg
 																									.alert(
@@ -1420,7 +1426,6 @@ function updateContextList_success(responseObject, select) {
 														msg : 'Making Archive...'
 													});
 											mask.show();
-
 											Ext.getCmp('create-archive-form')
 													.getForm().submit({
 														url : 'wiff.php',
@@ -1431,12 +1436,14 @@ function updateContextList_success(responseObject, select) {
 															Ext.Msg
 																	.alert(
 																			'Web Installer',
-																			'Context successfully archived');
+																			'Context successfully archived',
+																			function() {
+																				(function() {
+																					updateArchiveList();
+																				})
+																						.defer(100);
+																			});
 															mask.hide();
-													(function() {
-																updateArchiveList();
-															}).defer(1000);
-
 															// archive_success(action.response);
 														},
 														failure : function(
@@ -1453,9 +1460,9 @@ function updateContextList_success(responseObject, select) {
 																				action.result.error,
 																				function() {
 																					(function() {
-																						updateContextList();
+																						updateArchiveList();
 																					})
-																							.defer(1000);
+																							.defer(100);
 																				});
 															} else if (action
 																	&& action.failureType == Ext.form.Action.CONNECT_FAILURE) {
@@ -1465,9 +1472,9 @@ function updateContextList_success(responseObject, select) {
 																				'Timeout reach if archive not created yet please reload page later',
 																				function() {
 																					(function() {
-																						updateContextList();
+																						updateArchiveList();
 																					})
-																							.defer(1000);
+																							.defer(100);
 																				});
 															} else {
 																Ext.Msg
@@ -1476,9 +1483,9 @@ function updateContextList_success(responseObject, select) {
 																				'Unknow error',
 																				function() {
 																					(function() {
-																						updateContextList();
+																						updateArchiveList();
 																					})
-																							.defer(1000);
+																							.defer(100);
 																				});
 															}
 															// archive_failure(action.response);
@@ -1504,7 +1511,6 @@ function updateContextList_success(responseObject, select) {
 									}]
 								}]
 							});
-
 							win.show();
 
 						}
