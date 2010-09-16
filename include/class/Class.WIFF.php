@@ -2163,7 +2163,7 @@ return true;
 	/**
 	 * Delete a context
 	 */
-	public function deleteContext($contextName, &$result, $opt) {
+	public function deleteContext($contextName, &$result, $opt = false) {
 		$result = true;
 		if ($opt === 'unregister') {
 			$context = $this->getContext($contextName, true);

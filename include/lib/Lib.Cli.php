@@ -1611,8 +1611,8 @@ function wiff_delete_context(&$argv) {
   }
 
   $wiff = WIFF::getInstance();
-  $ret = $wiff->deleteContext($ctx_name);
-  if( $context === false ) {
+  $ret = $wiff->deleteContext($ctx_name, $res);
+  if( $res === false ) {
     error_log(sprintf("Error: cound not delete context '%s': %s\n", $ctx_name, $wiff->errorMessage));
     return 1;
   }
