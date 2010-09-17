@@ -34,6 +34,7 @@ function reloadArchiveStore() {
 }
 
 function updateArchiveList_success(responseObject, select) {
+
 	var response = eval('(' + responseObject.responseText + ')');
 	if (response.error) {
 		Ext.Msg.alert('Server Error', response.error);
@@ -43,7 +44,6 @@ function updateArchiveList_success(responseObject, select) {
 		archiveList = data;
 
 		var panel = Ext.getCmp('archive-list');
-
 		panel.items.each(function(item, index, len) {
 					if (item.id != 'archive-list-title') {
 						this.remove(item, true);
@@ -51,7 +51,6 @@ function updateArchiveList_success(responseObject, select) {
 				}, panel);
 
 		for (var i = 0; i < data.length; i++) {
-
 			panel.add({
 				title : data[i].name
 						+ (data[i].datetime ? ' ('
@@ -339,8 +338,7 @@ function updateArchiveList_success(responseObject, select) {
 																	action) {
 																// updateContextList('select-last');
 																mask.hide();
-																console
-																		.log("Context Not created!!!");
+
 																form.reset();
 																var panel = Ext
 																		.getCmp('create-archive-form');
@@ -576,7 +574,6 @@ function updateArchiveList_success(responseObject, select) {
 
 			}
 		}
-
 	}
 
 }
@@ -605,13 +602,14 @@ function downloadArchive_success(responseObject) {
 	if (response.error) {
 		Ext.Msg.alert('Server Error', response.error);
 	}
-
-	console.log('Download Archive', response);
+	Ext.Msg.alert("Warning", "Download Archive " + response);
+	// console.log('Download Archive', response);
 
 }
 
 function downloadArchive_failure(responseObject) {
-	console.log('Download Archive Failure');
+	Ext.Msg.alert("Warning", "Download Archive Failure");
+	// console.log('Download Archive Failure');
 }
 
 function deleteArchive_success(responseObject) {
@@ -628,7 +626,7 @@ function deleteArchive_success(responseObject) {
 }
 
 function deleteArchive_failure(responseObject) {
-	console.log('Archive Failure');
+	//console.log('Archive Failure');
 }
 
 function updateArchiveList_failure(responseObject) {

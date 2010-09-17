@@ -905,8 +905,6 @@ function updateContextList_success(responseObject, select) {
 								updateContextList();
 							}).defer(1000);
 						} else {
-							console.log("Crontab deleted :: ",
-									response.responseText);
 							mask.hide();
 							mask = new Ext.LoadMask(Ext.getBody(), {
 										msg : 'Deleting vault...'
@@ -935,8 +933,6 @@ function updateContextList_success(responseObject, select) {
 											updateContextList();
 										}).defer(1000);
 									} else {
-										console.log("Vault deleted :: ",
-												response.responseText);
 										mask.hide();
 										mask = new Ext.LoadMask(Ext.getBody(),
 												{
@@ -969,10 +965,6 @@ function updateContextList_success(responseObject, select) {
 														updateContextList();
 													}).defer(1000);
 												} else {
-													console
-															.log(
-																	"Database deleted :: ",
-																	response.responseText);
 													mask.hide();
 													mask = new Ext.LoadMask(Ext
 																	.getBody(),
@@ -1007,10 +999,6 @@ function updateContextList_success(responseObject, select) {
 																	updateContextList();
 																}).defer(1000);
 															} else {
-																console
-																		.log(
-																				"Root deleted :: ",
-																				response.responseText);
 																mask.hide();
 																mask = new Ext.LoadMask(
 																		Ext
@@ -1050,10 +1038,6 @@ function updateContextList_success(responseObject, select) {
 																							})
 																									.defer(1000);
 																						} else {
-																							console
-																									.log(
-																											"Context unregister :: ",
-																											response.responseText);
 																							mask
 																									.hide();
 																							if (responseDecode.error) {
@@ -1096,10 +1080,7 @@ function updateContextList_success(responseObject, select) {
 																											'Warning',
 																											options.failureType);
 																						} else if (response.responseText) {
-																							console
-																									.log(
-																											'error catch is :: ',
-																											response.responseText)
+																						
 																							Ext.Msg
 																									.alert(
 																											'Warning',
@@ -1448,8 +1429,7 @@ function updateContextList_success(responseObject, select) {
 														},
 														failure : function(
 																form, action) {
-															console
-																	.log("Error archive not created");
+										
 															// win.hide();
 															mask.hide();
 															if (action
