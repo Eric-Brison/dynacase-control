@@ -11,7 +11,7 @@ Ext.override(Ext.layout.FormLayout, {
 					var args = this.getTemplateArgs(c);
 					if (typeof position == 'number') {
 						position = target.dom.childNodes[position] || null;
-					
+					}
 					if (position) {
 						c.itemCt = this.fieldTpl.insertBefore(position, args,
 								true);
@@ -89,7 +89,7 @@ function updateWIFF() {
 					if (response.error) {
 						Ext.Msg.alert('Server Error', response.error);
 					} else {
-						Ext.Msg.alert('Freedom Web Installer',
+						Ext.Msg.alert('Dynacase Web Installer',
 								'Update successful. Click OK to restart.',
 								function(btn) {
 									window.location.reload(true);
@@ -161,7 +161,7 @@ function displayPasswordWindow(canCancel) {
 	}
 
 	var win = new Ext.Window({
-				title : 'Freedom Web Installer - Define Password',
+				title : 'Dynacase Web Installer - Define Password',
 				layout : 'fit',
 				modal : true,
 				height : 200,
@@ -184,7 +184,7 @@ function displayPasswordWindow(canCancel) {
 									.getValue();
 
 							if (newPassword != confirmNewPassword) {
-								Ext.Msg.alert('Freedom Web Installer',
+								Ext.Msg.alert('Dynacase Web Installer',
 										'Provided passwords are not the same.');
 							} else {
 
@@ -214,7 +214,7 @@ function displayPasswordWindow(canCancel) {
 												} else {
 													Ext.Msg
 															.alert(
-																	'Freedom Web Installer',
+																	'Dynacase Web Installer',
 																	'Save successful.',
 																	function(
 																			btn) {
@@ -435,7 +435,7 @@ function displayRepositoryWindow(grid, record) {
 	}
 
 	var win = new Ext.Window({
-		title : 'Freedom Web Installer - Add Repository',
+		title : 'Dynacase Web Installer - Add Repository',
 		layout : 'fit',
 		modal : true,
 		width : 300,
@@ -468,12 +468,12 @@ function displayRepositoryWindow(grid, record) {
 							: 'no';
 
 					if (newName == '') {
-						Ext.Msg.alert('Freedom Web Installer',
+						Ext.Msg.alert('Dynacase Web Installer',
 								'A repository name must be provided.');
 					}
 
 					if (newPassword != confirmNewPassword) {
-						Ext.Msg.alert('Freedom Web Installer',
+						Ext.Msg.alert('Dynacase Web Installer',
 								'Provided passwords are not the same.');
 					}
 
@@ -510,7 +510,7 @@ function displayRepositoryWindow(grid, record) {
 											response.error);
 								} else {
 									if (response.data) {
-										Ext.Msg.alert('Freedom Web Installer',
+										Ext.Msg.alert('Dynacase Web Installer',
 												'Save successful.', function(
 														btn) {
 													win.close();
@@ -525,7 +525,7 @@ function displayRepositoryWindow(grid, record) {
 									} else {
 										Ext.Msg
 												.alert(
-														'Freedom Web Installer',
+														'Dynacase Web Installer',
 														'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.',
 														function(btn) {
 															win.close();
@@ -690,7 +690,7 @@ askRepoAuth = function(repoName) {
 	loginField.setValue(repo.login);
 
 	var win = new Ext.Window({
-		title : 'Freedom Web Installer - Authentify Repository',
+		title : 'Dynacase Web Installer - Authentify Repository',
 		layout : 'fit',
 		modal : true,
 		height : 300,
@@ -712,12 +712,12 @@ askRepoAuth = function(repoName) {
 					var confirmPassword = confirmPasswordField.getValue();
 
 					if (name == '') {
-						Ext.Msg.alert('Freedom Web Installer',
+						Ext.Msg.alert('Dynacase Web Installer',
 								'A repository name must be provided.');
 					}
 
 					if (password != confirmPassword) {
-						Ext.Msg.alert('Freedom Web Installer',
+						Ext.Msg.alert('Dynacase Web Installer',
 								'Provided passwords are not the same.');
 					}
 
@@ -747,7 +747,7 @@ askRepoAuth = function(repoName) {
 									} else {
 										if (response.data) {
 											Ext.Msg.alert(
-													'Freedom Web Installer',
+													'Dynacase Web Installer',
 													'Authentify successful.',
 													function(btn) {
 														win.close();
@@ -757,7 +757,7 @@ askRepoAuth = function(repoName) {
 													});
 										} else {
 											Ext.Msg.alert(
-													'Freedom Web Installer',
+													'Dynacase Web Installer',
 													'Authentify failed.',
 													function(btn) {
 
@@ -1627,7 +1627,7 @@ function updateContextList_success(responseObject, select) {
 										case 'x-icon-ko' :
 											Ext.Msg
 													.alert(
-															'Freedom Web Installer',
+															'Dynacase Web Installer',
 															'Error happened during <b>'
 																	+ record
 																			.get('errorstatus')
@@ -2091,7 +2091,7 @@ function upgrade_success(responseObject) {
 	htmlModuleList = htmlModuleList + '</ul>';
 
 	Ext.Msg.show({
-				title : 'Freedom Web Installer',
+				title : 'Dynacase Web Installer',
 				msg : 'Installer will install following module(s) : <br/>'
 						+ htmlModuleList,
 				buttons : {
@@ -2184,7 +2184,7 @@ function installLocal(file) {
 					mask.hide();
 
 					Ext.MessageBox.show({
-								title : 'Freedom Web Installer',
+								title : 'Dynacase Web Installer',
 								msg : 'Execute which scenario for imported module ?',
 								buttons : {
 									ok : 'Install',
@@ -2292,7 +2292,7 @@ function install_success(responseObject) {
 	}
 
 	Ext.Msg.show({
-				title : 'Freedom Web Installer',
+				title : 'Dynacase Web Installer',
 				msg : htmlModuleList,
 				buttons : {
 					ok : true,
@@ -2351,7 +2351,7 @@ function wstop(operation) {
 function getGlobalwin() {
 
 	globalwin = new Ext.Window({
-				title : 'Freedom Web Installer',
+				title : 'Dynacase Web Installer',
 				id : 'module-window',
 				layout : 'column',
 				resizable : true,
@@ -2404,7 +2404,7 @@ function wstart(module, operation) {
 				},
 				callback : function(option, success, responseObject) {
 
-					// Ext.Msg.alert('Freedom Web Installer','Module <b>' +
+					// Ext.Msg.alert('Dynacase Web Installer','Module <b>' +
 					// module.name
 					// + '</b> installed successfully', function(){
 					// If applicable, start installing next module in list
@@ -2419,7 +2419,7 @@ function wstart(module, operation) {
 							askParameter(toInstall[0], operation);
 						}
 					} else {
-						Ext.Msg.alert('Freedom Web Installer',
+						Ext.Msg.alert('Dynacase Web Installer',
 								'Install successful', function() {
 									installedStore[currentContext].load();
 									availableStore[currentContext].load();
@@ -3063,7 +3063,7 @@ function executeProcessList(module, phase, operation) {
 				handler : function(button, event) {
 					Ext.Msg.show({
 
-						title : 'Freedom Web Installer',
+						title : 'Dynacase Web Installer',
 						msg : 'Incorrect process execution will cause problems in your freedom context',
 
 						buttons : {
@@ -3473,7 +3473,7 @@ Ext.onReady(function() {
 							needUpdate = true;
 							Ext.Msg
 									.confirm(
-											'Freedom Web Installer',
+											'Dynacase Web Installer',
 											'Update available for Installer. Update now ?',
 											function(btn) {
 												if (btn == 'yes') {
@@ -3779,7 +3779,7 @@ Ext.onReady(function() {
 
 													Ext.Msg
 															.confirm(
-																	'Freedom Web Installer',
+																	'Dynacase Web Installer',
 																	'Delete repository <b>'
 																			+ repositoryName
 																			+ '</b> ?',
