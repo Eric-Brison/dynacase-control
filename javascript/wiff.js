@@ -1658,11 +1658,6 @@ function updateContextList_success(responseObject, select) {
 													iconCls : 'x-icon-help',
 													tooltip : 'Help',
 													hideIndex : '!infopath'
-													// }, {
-												// iconCls: 'x-icon-remove',
-												// tooltip: 'Remove',
-												// hideIndex:
-												// "(name=='freedom-core')"
 											}]
 									});
 
@@ -3059,7 +3054,7 @@ function executeProcessList(module, phase, operation) {
 					Ext.Msg.show({
 
 						title : 'Dynacase-Control',
-						msg : 'Incorrect process execution will cause problems in your freedom context',
+						msg : 'Incorrect process execution will cause problems in your Dynacase context',
 
 						buttons : {
 							ok : 'Continue',
@@ -3497,7 +3492,7 @@ Ext.onReady(function() {
 				mainItem : 0,
 				items : [{
 					title : 'Dynacase <br/> Dynacase-Control',
-					html : "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase-Control for Dynacase </h1>"
+					html : "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase-Control</h1>"
 							+ "<p style='margin-bottom:30px;'>If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>"
 							+ "<ul style='margin-left:30px;list-style-type: square;' >"
 							+ "<li><a href='http://www.dynacase.org/wiff' target='_blank'><h2>Documentation</h2></a></li>"
@@ -3506,7 +3501,7 @@ Ext.onReady(function() {
 				}, {
 					title : 'Setup',
 					iconCls : 'x-icon-setup',
-					tabTip : 'Setup WIFF',
+					tabTip : 'Setup Dynacase-Control',
 					layout : 'fit',
 					style : 'padding:10px;',
 					items : [{
@@ -3514,7 +3509,7 @@ Ext.onReady(function() {
 						iconCls : 'x-icon-setup',
 						bodyStyle : 'overflow:auto;',
 						items : [{
-							title : 'WIFF Information',
+							title : 'Dynacase-Control Information',
 							style : 'padding:10px;font-size:small;',
 							bodyStyle : 'padding:5px;',
 							listeners : {
@@ -3814,12 +3809,6 @@ Ext.onReady(function() {
 																														'Server Error',
 																														response.error);
 																									} else {
-																										// Ext.Msg.alert('Freedom
-																										// Web
-																										// Installer',
-																										// 'Delete
-																										// successful.',
-																										// function(btn){
 																										grid
 																												.getStore()
 																												.reload();
@@ -3829,8 +3818,6 @@ Ext.onReady(function() {
 																														'render',
 																														Ext
 																																.getCmp('create-context-form'));
-																										// });
-
 																									}
 
 																								},
