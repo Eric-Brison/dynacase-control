@@ -225,7 +225,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Web Installer',
+																	'Dynacase-Control',
 																	'A name must be provided.');
 													return;
 												};
@@ -237,7 +237,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Web Installer',
+																	'Dynacase-Control',
 																	'A root must be provided.');
 													return;
 												};
@@ -249,7 +249,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Web Installer',
+																	'Dynacase-Control',
 																	'A vault root must be provided.');
 													return;
 												};
@@ -261,7 +261,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Web Installer',
+																	'Dynacase-Control',
 																	'A database service must be provided.');
 													return;
 												};
@@ -278,7 +278,7 @@ function updateArchiveList_success(responseObject, select) {
 															.getValue()) {
 														Ext.Msg
 																.alert(
-																		'Web Installer',
+																		'Dynacase-Control',
 																		'If you remove profiles, you must specify a user login.');
 														return;
 													};
@@ -289,7 +289,7 @@ function updateArchiveList_success(responseObject, select) {
 															.getValue()) {
 														Ext.Msg
 																.alert(
-																		'Web Installer',
+																		'Dynacase-Control',
 																		'If you remove profiles, you must specify a user password.');
 														return;
 													};
@@ -322,7 +322,7 @@ function updateArchiveList_success(responseObject, select) {
 																mask.hide();
 																Ext.Msg
 																		.alert(
-																				'Web Installer',
+																				'Dynacase-Control',
 																				'Context '
 																						+ action.result.data.name
 																						+ ' successfully created',
@@ -408,40 +408,14 @@ function updateArchiveList_success(responseObject, select) {
 								win.show();
 
 							}
-						},
-								// {
-								// text: 'Download',
-								// tooltip: 'Download',
-								// iconCls: 'x-icon-archive',
-								// archive: data[i],
-								// handler: function(button){
-								//	                            
-								// Ext.Ajax.request({
-								// url: 'wiff.php',
-								// params: {
-								// downloadArchive: true,
-								// archiveId: button.archive.id
-								// },
-								// success:
-								// function(responseObject){
-								// downloadArchive_success(responseObject);
-								// },
-								// failure:
-								// function(responseObject){
-								// downloadArchive_failure(responseObject);
-								// }
-								// });
-								//	                        	
-								// }
-								// },
-								{
-									text : 'Delete',
-									tooltip : 'Delete',
-									iconCls : 'x-icon-delete-archive',
-									archive : data[i],
-									handler : function(button) {
+						}, {
+							text : 'Delete',
+							tooltip : 'Delete',
+							iconCls : 'x-icon-delete-archive',
+							archive : data[i],
+							handler : function(button) {
 
-										Ext.Ajax.request({
+								Ext.Ajax.request({
 											url : 'wiff.php',
 											params : {
 												deleteArchive : true,
@@ -455,8 +429,8 @@ function updateArchiveList_success(responseObject, select) {
 											}
 										});
 
-									}
-								}],
+							}
+						}],
 						refresh : function() {
 
 							var contextInfoHtml = '<ul><li class="x-form-item"><b>Archive Datetime :</b> '
@@ -584,7 +558,7 @@ function archive_success(responseObject) {
 	if (response.error) {
 		Ext.Msg.alert('Server Error', response.error);
 	} else {
-		Ext.Msg.alert('WIFF', 'Archive created.', function() {
+		Ext.Msg.alert('Dynacase-Control', 'Archive created.', function() {
 					updateArchiveList();
 				});
 	}
@@ -618,7 +592,7 @@ function deleteArchive_success(responseObject) {
 	if (response.error) {
 		Ext.Msg.alert('Server Error', response.error);
 	} else {
-		Ext.Msg.alert('WIFF', 'Archive deleted.', function() {
+		Ext.Msg.alert('Dynacase-Control', 'Archive deleted.', function() {
 					updateArchiveList();
 				});
 	}
@@ -626,7 +600,7 @@ function deleteArchive_success(responseObject) {
 }
 
 function deleteArchive_failure(responseObject) {
-	//console.log('Archive Failure');
+	// console.log('Archive Failure');
 }
 
 function updateArchiveList_failure(responseObject) {

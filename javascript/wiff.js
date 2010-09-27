@@ -41,7 +41,7 @@ availableStore = {};
 // Memorize repository logins and passwords
 authInfo = [];
 
-// Wiff functions
+// Dynacase-Control functions
 // Password File Test
 function checkPasswordFile() {
 	Ext.Ajax.request({
@@ -89,7 +89,7 @@ function updateWIFF() {
 					if (response.error) {
 						Ext.Msg.alert('Server Error', response.error);
 					} else {
-						Ext.Msg.alert('Dynacase Web Installer',
+						Ext.Msg.alert('Dynacase-Control',
 								'Update successful. Click OK to restart.',
 								function(btn) {
 									window.location.reload(true);
@@ -120,7 +120,7 @@ function displayPasswordWindow(canCancel) {
 	if (!canCancel) {
 		var infoPanel = new Ext.Panel({
 			border : false,
-			html : '<i>Your Wiff is currently not protected by authentification.<br/>Please define a login and a password.</i>',
+			html : '<i>Your Dynacase-Control is currently not protected by authentification.<br/>Please define a login and a password.</i>',
 			bodyStyle : 'padding-bottom:10px;'
 		});
 		fields.push(infoPanel);
@@ -161,7 +161,7 @@ function displayPasswordWindow(canCancel) {
 	}
 
 	var win = new Ext.Window({
-				title : 'Dynacase Web Installer - Define Password',
+				title : 'Dynacase-Control - Define Password',
 				layout : 'fit',
 				modal : true,
 				height : 200,
@@ -184,7 +184,7 @@ function displayPasswordWindow(canCancel) {
 									.getValue();
 
 							if (newPassword != confirmNewPassword) {
-								Ext.Msg.alert('Dynacase Web Installer',
+								Ext.Msg.alert('Dynacase-Control',
 										'Provided passwords are not the same.');
 							} else {
 
@@ -214,7 +214,7 @@ function displayPasswordWindow(canCancel) {
 												} else {
 													Ext.Msg
 															.alert(
-																	'Dynacase Web Installer',
+																	'Dynacase-Control',
 																	'Save successful.',
 																	function(
 																			btn) {
@@ -435,7 +435,7 @@ function displayRepositoryWindow(grid, record) {
 	}
 
 	var win = new Ext.Window({
-		title : 'Dynacase Web Installer - Add Repository',
+		title : 'Dynacase-Control - Add Repository',
 		layout : 'fit',
 		modal : true,
 		width : 300,
@@ -468,12 +468,12 @@ function displayRepositoryWindow(grid, record) {
 							: 'no';
 
 					if (newName == '') {
-						Ext.Msg.alert('Dynacase Web Installer',
+						Ext.Msg.alert('Dynacase-Control',
 								'A repository name must be provided.');
 					}
 
 					if (newPassword != confirmNewPassword) {
-						Ext.Msg.alert('Dynacase Web Installer',
+						Ext.Msg.alert('Dynacase-Control',
 								'Provided passwords are not the same.');
 					}
 
@@ -510,7 +510,7 @@ function displayRepositoryWindow(grid, record) {
 											response.error);
 								} else {
 									if (response.data) {
-										Ext.Msg.alert('Dynacase Web Installer',
+										Ext.Msg.alert('Dynacase-Control',
 												'Save successful.', function(
 														btn) {
 													win.close();
@@ -525,7 +525,7 @@ function displayRepositoryWindow(grid, record) {
 									} else {
 										Ext.Msg
 												.alert(
-														'Dynacase Web Installer',
+														'Dynacase-Control',
 														'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.',
 														function(btn) {
 															win.close();
@@ -690,7 +690,7 @@ askRepoAuth = function(repoName) {
 	loginField.setValue(repo.login);
 
 	var win = new Ext.Window({
-		title : 'Dynacase Web Installer - Authentify Repository',
+		title : 'Dynacase-Control - Authentify Repository',
 		layout : 'fit',
 		modal : true,
 		height : 300,
@@ -712,12 +712,12 @@ askRepoAuth = function(repoName) {
 					var confirmPassword = confirmPasswordField.getValue();
 
 					if (name == '') {
-						Ext.Msg.alert('Dynacase Web Installer',
+						Ext.Msg.alert('Dynacase-Control',
 								'A repository name must be provided.');
 					}
 
 					if (password != confirmPassword) {
-						Ext.Msg.alert('Dynacase Web Installer',
+						Ext.Msg.alert('Dynacase-Control',
 								'Provided passwords are not the same.');
 					}
 
@@ -747,7 +747,7 @@ askRepoAuth = function(repoName) {
 									} else {
 										if (response.data) {
 											Ext.Msg.alert(
-													'Dynacase Web Installer',
+													'Dynacase-Control',
 													'Authentify successful.',
 													function(btn) {
 														win.close();
@@ -757,7 +757,7 @@ askRepoAuth = function(repoName) {
 													});
 										} else {
 											Ext.Msg.alert(
-													'Dynacase Web Installer',
+													'Dynacase-Control',
 													'Authentify failed.',
 													function(btn) {
 
@@ -1058,7 +1058,7 @@ function updateContextList_success(responseObject, select) {
 																							} else {
 																								Ext.Msg
 																										.alert(
-																												'Web installer',
+																												'Dynacase-Control',
 																												'Context successfully delete',
 																												function() {
 																													(function() {
@@ -1416,7 +1416,7 @@ function updateContextList_success(responseObject, select) {
 															// win.hide();
 															Ext.Msg
 																	.alert(
-																			'Web Installer',
+																			'Dynacase-Control',
 																			'Context successfully archived',
 																			function() {
 																				(function() {
@@ -1627,7 +1627,7 @@ function updateContextList_success(responseObject, select) {
 										case 'x-icon-ko' :
 											Ext.Msg
 													.alert(
-															'Dynacase Web Installer',
+															'Dynacase-Control',
 															'Error happened during <b>'
 																	+ record
 																			.get('errorstatus')
@@ -2091,7 +2091,7 @@ function upgrade_success(responseObject) {
 	htmlModuleList = htmlModuleList + '</ul>';
 
 	Ext.Msg.show({
-				title : 'Dynacase Web Installer',
+				title : 'Dynacase-Control',
 				msg : 'Installer will install following module(s) : <br/>'
 						+ htmlModuleList,
 				buttons : {
@@ -2184,7 +2184,7 @@ function installLocal(file) {
 					mask.hide();
 
 					Ext.MessageBox.show({
-								title : 'Dynacase Web Installer',
+								title : 'Dynacase-Control',
 								msg : 'Execute which scenario for imported module ?',
 								buttons : {
 									ok : 'Install',
@@ -2292,7 +2292,7 @@ function install_success(responseObject) {
 	}
 
 	Ext.Msg.show({
-				title : 'Dynacase Web Installer',
+				title : 'Dynacase-Control',
 				msg : htmlModuleList,
 				buttons : {
 					ok : true,
@@ -2351,7 +2351,7 @@ function wstop(operation) {
 function getGlobalwin() {
 
 	globalwin = new Ext.Window({
-				title : 'Dynacase Web Installer',
+				title : 'Dynacase-Control',
 				id : 'module-window',
 				layout : 'column',
 				resizable : true,
@@ -2403,11 +2403,6 @@ function wstart(module, operation) {
 					authInfo : Ext.encode(authInfo)
 				},
 				callback : function(option, success, responseObject) {
-
-					// Ext.Msg.alert('Dynacase Web Installer','Module <b>' +
-					// module.name
-					// + '</b> installed successfully', function(){
-					// If applicable, start installing next module in list
 					if (toInstall[0]) {
 						if (toInstall[0].needphase == 'replaced') {
 							/**
@@ -2419,7 +2414,7 @@ function wstart(module, operation) {
 							askParameter(toInstall[0], operation);
 						}
 					} else {
-						Ext.Msg.alert('Dynacase Web Installer',
+						Ext.Msg.alert('Dynacase-Control',
 								'Install successful', function() {
 									installedStore[currentContext].load();
 									availableStore[currentContext].load();
@@ -3063,7 +3058,7 @@ function executeProcessList(module, phase, operation) {
 				handler : function(button, event) {
 					Ext.Msg.show({
 
-						title : 'Dynacase Web Installer',
+						title : 'Dynacase-Control',
 						msg : 'Incorrect process execution will cause problems in your freedom context',
 
 						buttons : {
@@ -3473,7 +3468,7 @@ Ext.onReady(function() {
 							needUpdate = true;
 							Ext.Msg
 									.confirm(
-											'Dynacase Web Installer',
+											'Dynacase-Control',
 											'Update available for Installer. Update now ?',
 											function(btn) {
 												if (btn == 'yes') {
@@ -3501,8 +3496,8 @@ Ext.onReady(function() {
 			items : [{
 				mainItem : 0,
 				items : [{
-					title : 'Dynacase <br/> Web Installer',
-					html : "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Web Installer for Dynacase </h1>"
+					title : 'Dynacase <br/> Dynacase-Control',
+					html : "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase-Control for Dynacase </h1>"
 							+ "<p style='margin-bottom:30px;'>If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>"
 							+ "<ul style='margin-left:30px;list-style-type: square;' >"
 							+ "<li><a href='http://www.dynacase.org/wiff' target='_blank'><h2>Documentation</h2></a></li>"
@@ -3779,7 +3774,7 @@ Ext.onReady(function() {
 
 													Ext.Msg
 															.confirm(
-																	'Dynacase Web Installer',
+																	'Dynacase-Control',
 																	'Delete repository <b>'
 																			+ repositoryName
 																			+ '</b> ?',
@@ -3856,12 +3851,7 @@ Ext.onReady(function() {
 															grid, record);
 
 													win.show();
-
-													// Ext.Msg.alert('Freedom
-													// Web Installer', 'Modify
-													// Repository ' +
-													// repositoryName);
-
+													
 													break;
 											}
 

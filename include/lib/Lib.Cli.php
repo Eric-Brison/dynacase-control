@@ -41,7 +41,7 @@ function wiff_lock() {
 	$wiff = WIFF::getInstance();
 	$wiff_lock = $wiff->lock();
 	if( $wiff_lock === false ) {
-		error_log(sprintf("Warning: could not lock wiff!"));
+		error_log(sprintf("Warning: could not lock Dynacase-Control!"));
 	}
 	return $wiff_lock;
 }
@@ -51,7 +51,7 @@ function wiff_unlock() {
 	$wiff = WIFF::getInstance();
 	$ret = $wiff->unlock($wiff_lock);
 	if( $ret === false ) {
-		error_log(sprintf("Warning: could not unlock wiff!"));
+		error_log(sprintf("Warning: could not unlock Dynacase-Control!"));
 	}
 	return $ret;
 }
@@ -235,7 +235,7 @@ function wiff_context_shell(&$context, &$argv) {
 	$envs['pgservice_core'] = $context->getParamByName("core_db");
 	$envs['pgservice_freedom'] = $envs['pgservice_core'];
 	$envs['freedom_context'] = "default";
-	$envs['PS1'] = sprintf("wiff(%s)\\w\\$ ", $context->name);
+	$envs['PS1'] = sprintf("Dynacase-Control(%s)\\w\\$ ", $context->name);
 	$envs['USER'] = $httpuser;
 	if( getenv('PATH') !== false ) {
 		$envs['PATH'] = getenv('PATH');
