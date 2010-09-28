@@ -250,7 +250,7 @@ function updateArchiveList_success(responseObject, select) {
 													Ext.Msg
 															.alert(
 																	'Dynacase-Control',
-																	'A vault root must be provided.');
+																	'A vault path must be provided.');
 													return;
 												};
 
