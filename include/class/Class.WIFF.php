@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-);
+		);
 
-fwrite($passwordFile,
-sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-);
+		fwrite($passwordFile,
+		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+		);
 
-fclose($accessFile);
-fclose($passwordFile);
+		fclose($accessFile);
+		fclose($passwordFile);
 
-return true;
+		return true;
 
 	}
 
@@ -1031,6 +1031,20 @@ return true;
 
 					// --- Restore database --- //
 
+					// Setting datestyle 
+					$dbconnect = pg_connect("service=$pgservice");
+					if ($dbconnect === false) {
+						$this->errorMessage = "Error when trying to connect to database $pgservice";
+						error_log("Error trying to connect to database $pgservice");
+						unlink($status_file);
+					}
+					$result = pg_query($dbconnect,"alter database $pgservice set datestyle = 'SQL, DMY';");
+					if ($result === false) {
+						$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
+						error_log("Error when trying to get databse info :: ".pg_last_erro());
+						unlink($status_file);
+					}
+						
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
 
 					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", $dump, $pgservice);
