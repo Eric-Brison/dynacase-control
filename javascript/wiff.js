@@ -1738,6 +1738,7 @@ function updateContextList_success(responseObject, select) {
 							var selModel = new Ext.grid.CheckboxSelectionModel(
 									{
 										// header: '',
+										checkOnly : true,
 										listeners : {
 											// prevent selection of records
 											beforerowselect : function(
@@ -1912,7 +1913,8 @@ function updateContextList_success(responseObject, select) {
 
 							var selModel = new Ext.grid.CheckboxSelectionModel(
 									{
-										header : ''
+										header : '',
+										checkOnly: true
 									});
 
 							var grid = new Ext.grid.GridPanel({
