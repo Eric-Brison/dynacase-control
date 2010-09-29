@@ -212,15 +212,12 @@ function displayPasswordWindow(canCancel) {
 															'Server Error',
 															response.error);
 												} else {
-													Ext.Msg
-															.alert(
-																	'Dynacase-Control',
-																	'Save successful.',
-																	function(
-																			btn) {
-																		win
-																				.close();
-																	});
+													Ext.Msg.alert(
+															'Dynacase-Control',
+															'Save successful.',
+															function(btn) {
+																win.close();
+															});
 
 												}
 
@@ -746,8 +743,7 @@ askRepoAuth = function(repoName) {
 												response.error);
 									} else {
 										if (response.data) {
-											Ext.Msg.alert(
-													'Dynacase-Control',
+											Ext.Msg.alert('Dynacase-Control',
 													'Authentify successful.',
 													function(btn) {
 														win.close();
@@ -756,8 +752,7 @@ askRepoAuth = function(repoName) {
 														updateContextList();
 													});
 										} else {
-											Ext.Msg.alert(
-													'Dynacase-Control',
+											Ext.Msg.alert('Dynacase-Control',
 													'Authentify failed.',
 													function(btn) {
 
@@ -1080,7 +1075,7 @@ function updateContextList_success(responseObject, select) {
 																											'Warning',
 																											options.failureType);
 																						} else if (response.responseText) {
-																						
+
 																							Ext.Msg
 																									.alert(
 																											'Warning',
@@ -1429,7 +1424,7 @@ function updateContextList_success(responseObject, select) {
 														},
 														failure : function(
 																form, action) {
-										
+
 															// win.hide();
 															mask.hide();
 															if (action
@@ -1658,7 +1653,7 @@ function updateContextList_success(responseObject, select) {
 													iconCls : 'x-icon-help',
 													tooltip : 'Help',
 													hideIndex : '!infopath'
-											}]
+												}]
 									});
 
 							actions.on({
@@ -1914,7 +1909,7 @@ function updateContextList_success(responseObject, select) {
 							var selModel = new Ext.grid.CheckboxSelectionModel(
 									{
 										header : '',
-										checkOnly: true
+										checkOnly : true
 									});
 
 							var grid = new Ext.grid.GridPanel({
@@ -2411,8 +2406,8 @@ function wstart(module, operation) {
 							askParameter(toInstall[0], operation);
 						}
 					} else {
-						Ext.Msg.alert('Dynacase-Control',
-								'Install successful', function() {
+						Ext.Msg.alert('Dynacase-Control', 'Install successful',
+								function() {
 									installedStore[currentContext].load();
 									availableStore[currentContext].load();
 									globalwin.close();
@@ -2556,6 +2551,11 @@ function askParameter_success(module, operation, responseObject) {
 
 							Ext.getCmp('parameter-window').close();
 
+							// Annule tout et ferme la fenetre.
+							/*
+							 * if (Ext.getCmp('module-window')) {
+							 * Ext.getCmp('module-window').close(); }
+							 */
 						}
 					}]
 
@@ -2997,7 +2997,7 @@ function executeProcessList(module, phase, operation) {
 
 	currentPhase = phase;
 
-	if (processList.length != 0) {
+	if (processList && processList.length != 0) {
 
 		if (!processpanel) {
 			processpanel = {};
@@ -3840,7 +3840,7 @@ Ext.onReady(function() {
 															grid, record);
 
 													win.show();
-													
+
 													break;
 											}
 
