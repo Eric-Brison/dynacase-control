@@ -1,5 +1,5 @@
-TAR_DIST_NAME=Dynacase-Control
-TAR_DIST_DIR=Dynacase-Control-$(VERSION)-$(RELEASE)
+TAR_DIST_NAME=dynacase-control
+TAR_DIST_DIR=dynacase-control-$(VERSION)-$(RELEASE)
 
 TAR_DIST_OPTS=--owner 0 --group 0
 
