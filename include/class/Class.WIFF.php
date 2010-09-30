@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-		);
+);
 
-		fwrite($passwordFile,
-		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-		);
+fwrite($passwordFile,
+sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+);
 
-		fclose($accessFile);
-		fclose($passwordFile);
+fclose($accessFile);
+fclose($passwordFile);
 
-		return true;
+return true;
 
 	}
 
@@ -359,9 +359,9 @@ require valid-user
 	public function updateParam()
 	{
 		$available_host = $this->getParam('wiff-update-host');
-		if (!$available_host)
+		if (!$available_host || $available_host === 'ftp://ftp.freedom-ecm.org/')
 		{
-			$this->setParam('wiff-update-host', 'ftp://ftp.freedom-ecm.org/');
+			$this->setParam('wiff-update-host', 'ftp://ftp.dynacase.org/');
 		}
 		$available_url = $this->getParam('wiff-update-path');
 		if (!$available_url)
@@ -369,9 +369,9 @@ require valid-user
 			$this->setParam('wiff-update-path', '2.14/tarball/');
 		}
 		$available_file = $this->getParam('wiff-update-file');
-		if (!$available_file)
+		if (!$available_file || $available_file === 'freedom-wiff-current.tar.gz')
 		{
-			$this->setParam('wiff-update-file', 'freedom-wiff-current.tar.gz');
+			$this->setParam('wiff-update-file', 'dynacase-control-current.tar.gz');
 		}
 	}
 
@@ -389,7 +389,7 @@ require valid-user
 		$xml->load($this->params_filepath);
 		if ($xml === false)
 		{
-			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->contexts_filepath);
+			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
 			return false;
 		}
 
@@ -407,6 +407,23 @@ require valid-user
 
 		return $repoList;
 
+	}
+
+	public function getParam()
+	{
+		$paramList = array();
+
+		$xml = new DOMDocument();
+		$xml->load($this->params_filepath);
+		if ($xml === false) {
+			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+			return false;
+		}
+		$params = $xml->getElementByTagName('param');
+		if ($params->length > 0) {
+			return true;
+		}
+		return true;
 	}
 
 	/**
@@ -1031,7 +1048,7 @@ require valid-user
 
 					// --- Restore database --- //
 
-					// Setting datestyle 
+					// Setting datestyle
 					$dbconnect = pg_connect("service=$pgservice");
 					if ($dbconnect === false) {
 						$this->errorMessage = "Error when trying to connect to database $pgservice";
@@ -1044,7 +1061,7 @@ require valid-user
 						error_log("Error when trying to get databse info :: ".pg_last_erro());
 						unlink($status_file);
 					}
-						
+
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
 
 					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", $dump, $pgservice);
