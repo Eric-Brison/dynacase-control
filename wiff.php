@@ -279,6 +279,34 @@ if ( isset ($_REQUEST['getParam']))
 	}
 }
 
+// Request to change Dynacas-Control params' value
+if (isset($_REQUEST['changeParams'])) 
+{
+	$result = $wiff->changeParams($_REQUEST['name'], $_REQUEST['value']);
+	if (!$wiff->errorMesssage) {
+		answer($result);
+	}
+	else {
+		answer(null, $wiff->errorMessage);
+	}
+}
+
+// Request to get all Dynacase-Control params' value
+if (isset ($_REQUEST['getParamList']))
+{
+	$paramList = $wiff->getParamList();
+	if (!$wiff->errorMessage){
+		$paramsInfo = array();
+		foreach ($paramList as $name => $value) {
+			$paramsInfo[] = array('name'=>$name, 'value'=>$value);
+		}
+		answer($paramsInfo);
+	}
+	else {
+		answer(null, $wiff->errorMessage);
+	}
+}
+
 // Request to set a wiff parameter value or to create a new one with given value
 if ( isset ($_REQUEST['setParam']))
 {

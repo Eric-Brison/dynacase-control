@@ -409,23 +409,6 @@ return true;
 
 	}
 
-	public function getParam()
-	{
-		$paramList = array();
-
-		$xml = new DOMDocument();
-		$xml->load($this->params_filepath);
-		if ($xml === false) {
-			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
-			return false;
-		}
-		$params = $xml->getElementByTagName('param');
-		if ($params->length > 0) {
-			return true;
-		}
-		return true;
-	}
-
 	/**
 	 * Get repository from global repo list
 	 */
@@ -527,6 +510,54 @@ return true;
 		}
 		return $isValid;
 
+	}
+
+	/**
+	 * Change Dynacase-control parameters
+	 * @param $name : Name of the parameters to change
+	 * @param $value : New value one want to set to the parameter
+	 * @return boolean
+	 */
+	public function changeParams($name, $value)
+	{
+		if ($name == '') {
+			$this->errorMessage = "A name must be provided";
+			return false;
+		}
+
+		$xml = new DOMDocument();
+		$xml->load($this->params_filepath);
+		if ($xml === false) {
+			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+			return false;
+		}
+		$paramList = $xml->getElementsByTagName('param');
+		if ($paramList->length > 0) {
+			foreach ($paramList as $param) {
+				if ($param->getAttribute('name') === $name) {
+					$param->removeAttribute('value');
+					if ($name === 'debug' || $name === 'use-proxy') {
+						if ($value == true) {
+							$param->setAttribute('value', 'yes');
+						}
+						else {
+							$param->setAttribute('value', 'no');
+						}
+					}
+					else {
+						$param->setAttribute('value', $value);
+					}
+					break;
+				}
+			}
+		}
+		$ret = $xml->save($this->params_filepath);
+		if ($ret === false)
+		{
+			$this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+			return false;
+		}
+		return true;
 	}
 
 	/**
