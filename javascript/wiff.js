@@ -332,11 +332,203 @@ function displayAllParametersWindow(grid) {
 	var records = grid.getStore();
 	var i = 0;
 	var max = records.getCount();
+	var paramTab = new Array();
 	while (i < max) {
-
+		if (records.getAt(i).data.name == 'debug'
+				|| records.getAt(i).data.name == 'use-proxy') {
+			paramTab[i] = new Ext.form.Checkbox({
+						fieldLabel : records.getAt(i).data.name + '?',
+						name : records.getAt(i).data.name
+					});
+			paramTab[i].setValue(records.getAt(i).data.value == 'yes'
+					? 'on'
+					: 'off');
+		} else {
+			paramTab[i] = new Ext.form.TextField({
+						fieldLabel : records.getAt(i).data.name,
+						value : records.getAt(i).data.value,
+						width : 200,
+						name : records.getAt(i).data.name
+					})
+		}
+		i++;
 	}
-	console.log('records of store == ', records, 'data0 = ',
-			records.getAt(0).data.name, 'count == ', max);
+	var sizeHeigth = max * 33;
+	var allParamsFormPanel = new Ext.form.FormPanel({
+		labelWidth : 100,
+		border : false,
+		bodyStyle : 'padding:5px;',
+		items : paramTab,
+		bbar : [{
+			text : 'Save',
+			iconCls : 'x-icon-ok',
+			handler : function(b, e) {
+				allParamsFormPanel.getForm().submit({url: 'wiff.php', params : 'changeAllParams'});
+				/*var newName = '';
+				var newValue = '';
+
+				if (nameField.isValid()) {
+
+					mask = new Ext.LoadMask(Ext.getBody(), {
+								msg : 'Saving...'
+							});
+					mask.show();
+
+					Ext.Ajax.request({
+						url : 'wiff.php',
+						params : {
+							changeParams : true,
+							name : newName,
+							value : newValue
+						},
+						success : function(responseObject) {
+
+							mask.hide();
+
+							var response = eval('('
+									+ responseObject.responseText + ')');
+							if (response.error) {
+								Ext.Msg.alert('Server Error', response.error);
+							} else {
+								if (response.data) {
+									Ext.Msg.alert('Dynacase-Control',
+											'Save successful.', function(btn) {
+												win.close();
+												grid.getStore().reload();
+												Ext.Ajax.request({
+													url : 'wiff.php',
+													params : {
+														getParam : true,
+														paramName : 'debug'
+													},
+													success : function(
+															responseObject) {
+
+														var response = eval('('
+																+ responseObject.responseText
+																+ ')');
+														if (response.error) {
+															Ext.Msg
+																	.alert(
+																			'Server Error',
+																			response.error);
+														} else {
+															if (response.data == 'yes') {
+																Ext
+																		.getCmp('button-debug-mode')
+																		.setText('Debug Mode ON');
+																Ext
+																		.getCmp('button-debug-mode')
+																		.toggle(true);
+															} else {
+																Ext
+																		.getCmp('button-debug-mode')
+																		.setText('Debug Mode OFF');
+																Ext
+																		.getCmp('button-debug-mode')
+																		.toggle(false);
+															}
+															Ext
+																	.getCmp('button-debug-mode')
+																	.enable();
+														}
+
+													},
+													failure : function(
+															responseObject) {
+
+													}
+
+												});
+											});
+								} else {
+									Ext.Msg
+											.alert(
+													'Dynacase-Control',
+													'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Parameter not valid.',
+													function(btn) {
+														win.close();
+														grid.getStore()
+																.reload();
+														Ext.Ajax.request({
+															url : 'wiff.php',
+															params : {
+																getParam : true,
+																paramName : 'debug'
+															},
+															success : function(
+																	responseObject) {
+
+																var response = eval('('
+																		+ responseObject.responseText
+																		+ ')');
+																if (response.error) {
+																	Ext.Msg
+																			.alert(
+																					'Server Error',
+																					response.error);
+																} else {
+																	if (response.data == 'yes') {
+																		Ext
+																				.getCmp('button-debug-mode')
+																				.setText('Debug Mode ON');
+																		Ext
+																				.getCmp('button-debug-mode')
+																				.toggle(true);
+																	} else {
+																		Ext
+																				.getCmp('button-debug-mode')
+																				.setText('Debug Mode OFF');
+																		Ext
+																				.getCmp('button-debug-mode')
+																				.toggle(false);
+																	}
+																	Ext
+																			.getCmp('button-debug-mode')
+																			.enable();
+																}
+
+															},
+															failure : function(
+																	responseObject) {
+
+															}
+
+														});
+													});
+								}
+
+							}
+
+						},
+						failure : function(responseObject) {
+							mask.hide();
+							Ext.Msg.alert('Warning',
+									'Server error operation aborted');
+						}
+
+					});
+
+				}*/
+
+			}
+		}, {
+			text : 'Cancel',
+			iconCls : 'x-icon-undo',
+			handler : function(b, e) {
+				win.close();
+			}
+		}]
+	});
+	var win = new Ext.Window({
+				title : 'Dynacase-Control - Change parameters',
+				layout : 'fit',
+				modal : true,
+				width : 330,
+				height : sizeHeigth,
+				items : [allParamsFormPanel]
+			});
+	return win;
 }
 
 function displayParametersWindow(grid, record) {
@@ -355,7 +547,7 @@ function displayParametersWindow(grid, record) {
 		nameField.setValue(record.get('name'));
 		if (record.get('name') == 'debug' || record.get('name') == 'use-proxy') {
 			valueField = new Ext.form.Checkbox({
-						fieldLabel : record.get('name') + '?'
+						fieldLabel : record.get('name') + ' mode?'
 					})
 			if (record.get('value') == 'yes') {
 				valueField.setValue('on');
@@ -4185,18 +4377,16 @@ Ext.onReady(function() {
 										store : ParamStore,
 										stripeRows : true,
 										loadMask : true,
-										/*
-										 * tbar : [{ text : 'Modify all
-										 * parameters', tooltip : 'Modify all
-										 * parameters of Dynacase-control',
-										 * iconCls : 'x-icon-install', handler :
-										 * function(button, eventObject) {
-										 * 
-										 * var win =
-										 * displayAllParametersWindow(gridParam);
-										 * 
-										 * //win.show(); } }],
-										 */
+										tbar : [{
+											text : 'Modify all parameters',
+											tooltip : 'Modify all parameters of Dynacase-control',
+											iconCls : 'x-icon-install',
+											handler : function(button,
+													eventObject) {
+												var win = displayAllParametersWindow(gridParam);
+												win.show();
+											}
+										}],
 										columns : [actions, {
 													id : 'ParamsName',
 													header : 'Parameters name',
