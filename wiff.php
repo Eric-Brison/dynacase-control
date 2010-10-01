@@ -278,8 +278,19 @@ if ( isset ($_REQUEST['getParam']))
 		answer(null, $wiff->errorMessage);
 	}
 }
+// Request to change all Dynacase-control params' value
+if (isset($_REQUEST['changeAllParams']))
+{
+	$result = $wiff->changeAllParams($_REQUEST);
+	if (!$wiff->errorMessage) {
+		answer($result);
+	}
+	else {
+		answer(null, $wiff->errorMessage);
+	}
+}
 
-// Request to change Dynacas-Control params' value
+// Request to change Dynacase-Control params' value
 if (isset($_REQUEST['changeParams'])) 
 {
 	$result = $wiff->changeParams($_REQUEST['name'], $_REQUEST['value']);

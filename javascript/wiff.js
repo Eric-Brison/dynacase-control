@@ -41,7 +41,7 @@ availableStore = {};
 // Memorize repository logins and passwords
 authInfo = [];
 
-// Dynacase-Control functions
+// Dynacase Control functions
 // Password File Test
 function checkPasswordFile() {
 	Ext.Ajax.request({
@@ -89,7 +89,7 @@ function updateWIFF() {
 					if (response.error) {
 						Ext.Msg.alert('Server Error', response.error);
 					} else {
-						Ext.Msg.alert('Dynacase-Control',
+						Ext.Msg.alert('Dynacase Control',
 								'Update successful. Click OK to restart.',
 								function(btn) {
 									window.location.reload(true);
@@ -120,7 +120,7 @@ function displayPasswordWindow(canCancel) {
 	if (!canCancel) {
 		var infoPanel = new Ext.Panel({
 			border : false,
-			html : '<i>Your Dynacase-Control is currently not protected by authentification.<br/>Please define a login and a password.</i>',
+			html : '<i>Your Dynacase Control is currently not protected by authentification.<br/>Please define a login and a password.</i>',
 			bodyStyle : 'padding-bottom:10px;'
 		});
 		fields.push(infoPanel);
@@ -161,7 +161,7 @@ function displayPasswordWindow(canCancel) {
 	}
 
 	var win = new Ext.Window({
-				title : 'Dynacase-Control - Define Password',
+				title : 'Dynacase Control - Define Password',
 				layout : 'fit',
 				modal : true,
 				height : 200,
@@ -184,7 +184,7 @@ function displayPasswordWindow(canCancel) {
 									.getValue();
 
 							if (newPassword != confirmNewPassword) {
-								Ext.Msg.alert('Dynacase-Control',
+								Ext.Msg.alert('Dynacase Control',
 										'Provided passwords are not the same.');
 							} else {
 
@@ -213,7 +213,7 @@ function displayPasswordWindow(canCancel) {
 															response.error);
 												} else {
 													Ext.Msg.alert(
-															'Dynacase-Control',
+															'Dynacase Control',
 															'Save successful.',
 															function(btn) {
 																win.close();
@@ -334,8 +334,8 @@ function displayAllParametersWindow(grid) {
 	var max = records.getCount();
 	var paramTab = new Array();
 	while (i < max) {
-		if (records.getAt(i).data.name == 'debug'
-				|| records.getAt(i).data.name == 'use-proxy') {
+		if (records.getAt(i).data.value == 'yes'
+				|| records.getAt(i).data.value == 'no') {
 			paramTab[i] = new Ext.form.Checkbox({
 						fieldLabel : records.getAt(i).data.name + '?',
 						name : records.getAt(i).data.name
@@ -363,154 +363,135 @@ function displayAllParametersWindow(grid) {
 			text : 'Save',
 			iconCls : 'x-icon-ok',
 			handler : function(b, e) {
-				allParamsFormPanel.getForm().submit({url: 'wiff.php', params : 'changeAllParams'});
-				/*var newName = '';
-				var newValue = '';
+				mask = new Ext.LoadMask(Ext.getBody(), {
+							msg : 'Saving...'
+						});
+				mask.show();
+				allParamsFormPanel.getForm().submit({
+					url : 'wiff.php',
+					params : {
+						changeAllParams : true
+					},
+					success : function(f, action) {
+						mask.hide();
+						if (action.result.error) {
+							Ext.Msg.alert('Server Error', action.result.error);
+						} else {
+							if (action.result.data) {
+								Ext.Msg.alert('Dynacase Control',
+										'Save successful.', function(btn) {
+											win.close();
+											grid.getStore().reload();
+											Ext.Ajax.request({
+												url : 'wiff.php',
+												params : {
+													getParam : true,
+													paramName : 'debug'
+												},
+												success : function(
+														responseObject) {
 
-				if (nameField.isValid()) {
-
-					mask = new Ext.LoadMask(Ext.getBody(), {
-								msg : 'Saving...'
-							});
-					mask.show();
-
-					Ext.Ajax.request({
-						url : 'wiff.php',
-						params : {
-							changeParams : true,
-							name : newName,
-							value : newValue
-						},
-						success : function(responseObject) {
-
-							mask.hide();
-
-							var response = eval('('
-									+ responseObject.responseText + ')');
-							if (response.error) {
-								Ext.Msg.alert('Server Error', response.error);
-							} else {
-								if (response.data) {
-									Ext.Msg.alert('Dynacase-Control',
-											'Save successful.', function(btn) {
-												win.close();
-												grid.getStore().reload();
-												Ext.Ajax.request({
-													url : 'wiff.php',
-													params : {
-														getParam : true,
-														paramName : 'debug'
-													},
-													success : function(
-															responseObject) {
-
-														var response = eval('('
-																+ responseObject.responseText
-																+ ')');
-														if (response.error) {
-															Ext.Msg
-																	.alert(
-																			'Server Error',
-																			response.error);
-														} else {
-															if (response.data == 'yes') {
-																Ext
-																		.getCmp('button-debug-mode')
-																		.setText('Debug Mode ON');
-																Ext
-																		.getCmp('button-debug-mode')
-																		.toggle(true);
-															} else {
-																Ext
-																		.getCmp('button-debug-mode')
-																		.setText('Debug Mode OFF');
-																Ext
-																		.getCmp('button-debug-mode')
-																		.toggle(false);
-															}
+													var response = eval('('
+															+ responseObject.responseText
+															+ ')');
+													if (response.error) {
+														Ext.Msg.alert(
+																'Server Error',
+																response.error);
+													} else {
+														if (response.data == 'yes') {
 															Ext
 																	.getCmp('button-debug-mode')
-																	.enable();
+																	.setText('Debug Mode ON');
+															Ext
+																	.getCmp('button-debug-mode')
+																	.toggle(true);
+														} else {
+															Ext
+																	.getCmp('button-debug-mode')
+																	.setText('Debug Mode OFF');
+															Ext
+																	.getCmp('button-debug-mode')
+																	.toggle(false);
 														}
-
-													},
-													failure : function(
-															responseObject) {
-
+														Ext
+																.getCmp('button-debug-mode')
+																.enable();
 													}
 
-												});
-											});
-								} else {
-									Ext.Msg
-											.alert(
-													'Dynacase-Control',
-													'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Parameter not valid.',
-													function(btn) {
-														win.close();
-														grid.getStore()
-																.reload();
-														Ext.Ajax.request({
-															url : 'wiff.php',
-															params : {
-																getParam : true,
-																paramName : 'debug'
-															},
-															success : function(
-																	responseObject) {
+												},
+												failure : function(
+														responseObject) {
 
-																var response = eval('('
-																		+ responseObject.responseText
-																		+ ')');
-																if (response.error) {
-																	Ext.Msg
-																			.alert(
-																					'Server Error',
-																					response.error);
-																} else {
-																	if (response.data == 'yes') {
-																		Ext
-																				.getCmp('button-debug-mode')
-																				.setText('Debug Mode ON');
-																		Ext
-																				.getCmp('button-debug-mode')
-																				.toggle(true);
-																	} else {
-																		Ext
-																				.getCmp('button-debug-mode')
-																				.setText('Debug Mode OFF');
-																		Ext
-																				.getCmp('button-debug-mode')
-																				.toggle(false);
-																	}
+												}
+
+											});
+										});
+							} else {
+								Ext.Msg
+										.alert(
+												'Dynacase Control',
+												'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Parameter not valid.',
+												function(btn) {
+													win.close();
+													grid.getStore().reload();
+													Ext.Ajax.request({
+														url : 'wiff.php',
+														params : {
+															getParam : true,
+															paramName : 'debug'
+														},
+														success : function(
+																responseObject) {
+
+															var response = eval('('
+																	+ responseObject.responseText
+																	+ ')');
+															if (response.error) {
+																Ext.Msg
+																		.alert(
+																				'Server Error',
+																				response.error);
+															} else {
+																if (response.data == 'yes') {
 																	Ext
 																			.getCmp('button-debug-mode')
-																			.enable();
+																			.setText('Debug Mode ON');
+																	Ext
+																			.getCmp('button-debug-mode')
+																			.toggle(true);
+																} else {
+																	Ext
+																			.getCmp('button-debug-mode')
+																			.setText('Debug Mode OFF');
+																	Ext
+																			.getCmp('button-debug-mode')
+																			.toggle(false);
 																}
-
-															},
-															failure : function(
-																	responseObject) {
-
+																Ext
+																		.getCmp('button-debug-mode')
+																		.enable();
 															}
 
-														});
-													});
-								}
+														},
+														failure : function(
+																responseObject) {
 
+														}
+
+													});
+												});
 							}
 
-						},
-						failure : function(responseObject) {
-							mask.hide();
-							Ext.Msg.alert('Warning',
-									'Server error operation aborted');
 						}
 
-					});
-
-				}*/
-
+					},
+					failure : function(f, action) {
+						mask.hide();
+						Ext.Msg.alert('Warning',
+								'Server error operation aborted');
+					}
+				});
 			}
 		}, {
 			text : 'Cancel',
@@ -521,7 +502,7 @@ function displayAllParametersWindow(grid) {
 		}]
 	});
 	var win = new Ext.Window({
-				title : 'Dynacase-Control - Change parameters',
+				title : 'Dynacase Control - Change parameters',
 				layout : 'fit',
 				modal : true,
 				width : 330,
@@ -545,7 +526,7 @@ function displayParametersWindow(grid, record) {
 			})
 	if (record) {
 		nameField.setValue(record.get('name'));
-		if (record.get('name') == 'debug' || record.get('name') == 'use-proxy') {
+		if (record.get('value') == 'yes' || record.get('value') == 'no') {
 			valueField = new Ext.form.Checkbox({
 						fieldLabel : record.get('name') + ' mode?'
 					})
@@ -559,7 +540,7 @@ function displayParametersWindow(grid, record) {
 		}
 	}
 	var win = new Ext.Window({
-		title : 'Dynacase-Control - Change parameters',
+		title : 'Dynacase Control - Change parameters',
 		layout : 'fit',
 		modal : true,
 		width : 300,
@@ -602,7 +583,7 @@ function displayParametersWindow(grid, record) {
 											response.error);
 								} else {
 									if (response.data) {
-										Ext.Msg.alert('Dynacase-Control',
+										Ext.Msg.alert('Dynacase Control',
 												'Save successful.', function(
 														btn) {
 													win.close();
@@ -656,7 +637,7 @@ function displayParametersWindow(grid, record) {
 									} else {
 										Ext.Msg
 												.alert(
-														'Dynacase-Control',
+														'Dynacase Control',
 														'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Parameter not valid.',
 														function(btn) {
 															win.close();
@@ -849,7 +830,7 @@ function displayRepositoryWindow(grid, record) {
 	}
 
 	var win = new Ext.Window({
-		title : 'Dynacase-Control - Add Repository',
+		title : 'Dynacase Control - Add Repository',
 		layout : 'fit',
 		modal : true,
 		width : 300,
@@ -882,12 +863,12 @@ function displayRepositoryWindow(grid, record) {
 							: 'no';
 
 					if (newName == '') {
-						Ext.Msg.alert('Dynacase-Control',
+						Ext.Msg.alert('Dynacase Control',
 								'A repository name must be provided.');
 					}
 
 					if (newPassword != confirmNewPassword) {
-						Ext.Msg.alert('Dynacase-Control',
+						Ext.Msg.alert('Dynacase Control',
 								'Provided passwords are not the same.');
 					}
 
@@ -924,7 +905,7 @@ function displayRepositoryWindow(grid, record) {
 											response.error);
 								} else {
 									if (response.data) {
-										Ext.Msg.alert('Dynacase-Control',
+										Ext.Msg.alert('Dynacase Control',
 												'Save successful.', function(
 														btn) {
 													win.close();
@@ -939,7 +920,7 @@ function displayRepositoryWindow(grid, record) {
 									} else {
 										Ext.Msg
 												.alert(
-														'Dynacase-Control',
+														'Dynacase Control',
 														'Save successful.<br/><img src="images/icons/error.png" style="margin-right:2px;vertical-align:bottom;"/><b>Warning.</b> Repository not valid.',
 														function(btn) {
 															win.close();
@@ -1104,7 +1085,7 @@ askRepoAuth = function(repoName) {
 	loginField.setValue(repo.login);
 
 	var win = new Ext.Window({
-		title : 'Dynacase-Control - Authentify Repository',
+		title : 'Dynacase Control - Authentify Repository',
 		layout : 'fit',
 		modal : true,
 		height : 300,
@@ -1126,12 +1107,12 @@ askRepoAuth = function(repoName) {
 					var confirmPassword = confirmPasswordField.getValue();
 
 					if (name == '') {
-						Ext.Msg.alert('Dynacase-Control',
+						Ext.Msg.alert('Dynacase Control',
 								'A repository name must be provided.');
 					}
 
 					if (password != confirmPassword) {
-						Ext.Msg.alert('Dynacase-Control',
+						Ext.Msg.alert('Dynacase Control',
 								'Provided passwords are not the same.');
 					}
 
@@ -1160,7 +1141,7 @@ askRepoAuth = function(repoName) {
 												response.error);
 									} else {
 										if (response.data) {
-											Ext.Msg.alert('Dynacase-Control',
+											Ext.Msg.alert('Dynacase Control',
 													'Authentify successful.',
 													function(btn) {
 														win.close();
@@ -1169,7 +1150,7 @@ askRepoAuth = function(repoName) {
 														updateContextList();
 													});
 										} else {
-											Ext.Msg.alert('Dynacase-Control',
+											Ext.Msg.alert('Dynacase Control',
 													'Authentify failed.',
 													function(btn) {
 
@@ -1470,7 +1451,7 @@ function updateContextList_success(responseObject, select) {
 																							} else {
 																								Ext.Msg
 																										.alert(
-																												'Dynacase-Control',
+																												'Dynacase Control',
 																												'Context successfully delete',
 																												function() {
 																													(function() {
@@ -1828,7 +1809,7 @@ function updateContextList_success(responseObject, select) {
 															// win.hide();
 															Ext.Msg
 																	.alert(
-																			'Dynacase-Control',
+																			'Dynacase Control',
 																			'Context successfully archived',
 																			function() {
 																				(function() {
@@ -2039,7 +2020,7 @@ function updateContextList_success(responseObject, select) {
 										case 'x-icon-ko' :
 											Ext.Msg
 													.alert(
-															'Dynacase-Control',
+															'Dynacase Control',
 															'Error happened during <b>'
 																	+ record
 																			.get('errorstatus')
@@ -2500,7 +2481,7 @@ function upgrade_success(responseObject) {
 	htmlModuleList = htmlModuleList + '</ul>';
 
 	Ext.Msg.show({
-				title : 'Dynacase-Control',
+				title : 'Dynacase Control',
 				msg : 'Installer will install following module(s) : <br/>'
 						+ htmlModuleList,
 				buttons : {
@@ -2593,7 +2574,7 @@ function installLocal(file) {
 					mask.hide();
 
 					Ext.MessageBox.show({
-								title : 'Dynacase-Control',
+								title : 'Dynacase Control',
 								msg : 'Execute which scenario for imported module ?',
 								buttons : {
 									ok : 'Install',
@@ -2701,7 +2682,7 @@ function install_success(responseObject) {
 	}
 
 	Ext.Msg.show({
-				title : 'Dynacase-Control',
+				title : 'Dynacase Control',
 				msg : htmlModuleList,
 				buttons : {
 					ok : true,
@@ -2760,7 +2741,7 @@ function wstop(operation) {
 function getGlobalwin() {
 
 	globalwin = new Ext.Window({
-				title : 'Dynacase-Control',
+				title : 'Dynacase Control',
 				id : 'module-window',
 				layout : 'column',
 				resizable : true,
@@ -2823,7 +2804,7 @@ function wstart(module, operation) {
 							askParameter(toInstall[0], operation);
 						}
 					} else {
-						Ext.Msg.alert('Dynacase-Control', 'Install successful',
+						Ext.Msg.alert('Dynacase Control', 'Install successful',
 								function() {
 									installedStore[currentContext].load();
 									availableStore[currentContext].load();
@@ -3472,7 +3453,7 @@ function executeProcessList(module, phase, operation) {
 				handler : function(button, event) {
 					Ext.Msg.show({
 
-						title : 'Dynacase-Control',
+						title : 'Dynacase Control',
 						msg : 'Incorrect process execution will cause problems in your Dynacase context',
 
 						buttons : {
@@ -3882,7 +3863,7 @@ Ext.onReady(function() {
 							needUpdate = true;
 							Ext.Msg
 									.confirm(
-											'Dynacase-Control',
+											'Dynacase Control',
 											'Update available for Installer. Update now ?',
 											function(btn) {
 												if (btn == 'yes') {
@@ -3910,8 +3891,8 @@ Ext.onReady(function() {
 			items : [{
 				mainItem : 0,
 				items : [{
-					title : 'Dynacase <br/> Dynacase-Control',
-					html : "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase-Control</h1>"
+					title : 'Dynacase <br/>  Control',
+					html : "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase Control</h1>"
 							+ "<p style='margin-bottom:30px;'>If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>"
 							+ "<ul style='margin-left:30px;list-style-type: square;' >"
 							+ "<li><a href='http://www.dynacase.org/wiff' target='_blank'><h2>Documentation</h2></a></li>"
@@ -3920,7 +3901,7 @@ Ext.onReady(function() {
 				}, {
 					title : 'Setup',
 					iconCls : 'x-icon-setup',
-					tabTip : 'Setup Dynacase-Control',
+					tabTip : 'Setup Dynacase Control',
 					layout : 'fit',
 					style : 'padding:10px;',
 					items : [{
@@ -3928,7 +3909,7 @@ Ext.onReady(function() {
 						iconCls : 'x-icon-setup',
 						bodyStyle : 'overflow:auto;',
 						items : [{
-							title : 'Dynacase-Control Information',
+							title : 'Dynacase Control Information',
 							style : 'padding:10px;font-size:small;',
 							bodyStyle : 'padding:5px;',
 							listeners : {
@@ -4201,7 +4182,7 @@ Ext.onReady(function() {
 
 													Ext.Msg
 															.confirm(
-																	'Dynacase-Control',
+																	'Dynacase Control',
 																	'Delete repository <b>'
 																			+ repositoryName
 																			+ '</b> ?',
@@ -4344,6 +4325,7 @@ Ext.onReady(function() {
 												fields : ['name', 'value'],
 												autoLoad : true
 											});
+									ParamStore.setDefaultSort('name');
 									var actions = new Ext.ux.grid.RowActions({
 												header : '',
 												autoWidth : false,
@@ -4379,7 +4361,7 @@ Ext.onReady(function() {
 										loadMask : true,
 										tbar : [{
 											text : 'Modify all parameters',
-											tooltip : 'Modify all parameters of Dynacase-control',
+											tooltip : 'Modify all parameters of Dynacase Control',
 											iconCls : 'x-icon-install',
 											handler : function(button,
 													eventObject) {

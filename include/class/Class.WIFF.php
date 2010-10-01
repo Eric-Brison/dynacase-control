@@ -204,16 +204,16 @@ AuthType Basic
 <Limit GET POST>
 require valid-user
 </Limit>"
-);
+		);
 
-fwrite($passwordFile,
-sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-);
+		fwrite($passwordFile,
+		sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+		);
 
-fclose($accessFile);
-fclose($passwordFile);
+		fclose($accessFile);
+		fclose($passwordFile);
 
-return true;
+		return true;
 
 	}
 
@@ -513,9 +513,48 @@ return true;
 	}
 
 	/**
+	 * Change all parameters in one go
+	 * @param array $request
+	 * @return boolean
+	 */
+	public function changeAllParams($request)
+	{
+		if (count($request) <= 1) {
+			$this->errorMessage = "No params to change";
+			return false;
+		}
+		$paramList = $this->getParamList();
+		if ($paramList === false) {
+			return false;
+		}
+		foreach ($paramList as $name => $value) {
+			$i = 0;
+			foreach ($request as $r_name => $r_value) {
+				if ($r_name !== 'changeAllParams') {
+					if ($r_name == $name) {
+						$err = $this->changeParams($r_name, $r_value);
+						if ($err === false) {
+							return false;
+						}
+						$i++;
+						break;
+					}
+				}
+			}
+			if ($i === 0) {
+				$err = $this->changeParams($name, false);
+				if ($err === false) {
+					return false;
+				}
+			}
+		}
+		return $paramList;
+	}
+
+	/**
 	 * Change Dynacase-control parameters
-	 * @param $name : Name of the parameters to change
-	 * @param $value : New value one want to set to the parameter
+	 * @param string $name : Name of the parameters to change
+	 * @param string $value : New value one want to set to the parameter
 	 * @return boolean
 	 */
 	public function changeParams($name, $value)
@@ -535,9 +574,10 @@ return true;
 		if ($paramList->length > 0) {
 			foreach ($paramList as $param) {
 				if ($param->getAttribute('name') === $name) {
+					$valueTest = $param->getAttribute('value');
 					$param->removeAttribute('value');
-					if ($name === 'debug' || $name === 'use-proxy') {
-						if ($value == true) {
+					if ($valueTest == 'yes' || $valueTest == 'no') {
+						if ($value === true || $value === 'on' || $value === 'true') {
 							$param->setAttribute('value', 'yes');
 						}
 						else {
@@ -736,7 +776,7 @@ return true;
 
 
 		$archived_root = $this->archive_filepath;
-			
+
 		if (is_dir($archived_root))
 		{
 			if (!is_writable($archived_root))
@@ -752,11 +792,11 @@ return true;
 				return false;
 			}
 		}
-			
+
 		if ($handle = opendir($archived_root)) {
 
 			while (false !== ($file = readdir($handle))){
-					
+
 				if(preg_match('/^.+\.ctx$/',$file)){
 
 					$status_handle = fopen($archived_root.DIRECTORY_SEPARATOR.$file,'r');
@@ -779,15 +819,15 @@ return true;
 	{
 
 		$archivedContextList = array();
-			
+
 		$wiff_root = getenv('WIFF_ROOT');
 		if ($wiff_root !== false)
 		{
 			$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
 		}
-			
+
 		$archived_root = $wiff_root.WIFF::archive_filepath;
-			
+
 		if (is_dir($archived_root))
 		{
 			if (!is_writable($archived_root))
@@ -847,7 +887,7 @@ return true;
 						}
 
 						$archived_contexts = $xpath->query("/info/archive");
-							
+
 						if ($archived_contexts->length > 0)
 						{
 							foreach ($archived_contexts as $context){ // Should be only one context
@@ -857,11 +897,11 @@ return true;
 								$archiveContext['id'] = $fmatch['basename'];
 								$archiveContext['datetime'] = $context->getAttribute('datetime');
 								$archiveContext['vault'] = $context->getAttribute('vault');
-									
+
 								$moduleList = array();
-									
+
 								$moduleDom = $xpath->query("/info/context[@name='".$contextName."']/modules/module");
-									
+
 								foreach ($moduleDom as $module)
 								{
 									$mod = new Module($this, null, $module, true);
@@ -870,20 +910,20 @@ return true;
 										$moduleList[] = $mod;
 									}
 								}
-									
+
 								$archiveContext['moduleList'] = $moduleList;
-									
+
 								$archivedContextList[] = $archiveContext ;
 							}
 						}
-							
-							
+
+
 					} else {
 						$this->errorMessage = "info.xml not found in archive";
 					}
 
 				}
-					
+
 				if(preg_match('/^.+\.sts$/',$file)){
 
 					error_log('STATUS FILE --- '.$file);
@@ -911,7 +951,7 @@ return true;
 		{
 			$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
 		}
-			
+
 		$archived_root = $wiff_root.WIFF::archive_filepath;
 
 		// --- Create status file for context --- //
@@ -1028,7 +1068,7 @@ return true;
 			$vault_root = $abs_vault_root;
 		}
 
-			
+
 		$wiff_root = getenv('WIFF_ROOT');
 		if ($wiff_root !== false)
 		{
@@ -1132,9 +1172,9 @@ return true;
 								}
 
 								$script = sprintf("tar -zxf %s -C %s", escapeshellarg($vault_tar), escapeshellarg($vault_subdir));
-									
+
 								$result = exec($script,$output,$retval);
-									
+
 								if($retval != 0){
 									$this->errorMessage = "Error when extracting vault to $vault_root";
 									// --- Delete status file --- //
@@ -1149,7 +1189,7 @@ return true;
 							}
 
 						}
-							
+
 					}
 
 					error_log('Vault tar gz extracted');
@@ -1158,7 +1198,7 @@ return true;
 			}
 
 		}
-			
+
 		// Write contexts XML
 		$xml = new DOMDocument();
 		$xml->preserveWhiteSpace = false;
@@ -1249,13 +1289,13 @@ return true;
 		$vault_save->setAttribute('name','vault_save');
 		$vault_save->setAttribute('value',$vault_save_value);
 		$paramValueList->item(0)->appendChild($vault_save);
-			
+
 		if(isset($remove_profiles) && $remove_profiles == true){
 			// Modify or add remove_profiles in xml
 			$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='remove_profiles']");
 			if ($paramList->length != 1)
 			{
-					
+
 				$paramValueList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value");
 
 				$paramRemoveProfiles = $xml->createElement('param');
@@ -1366,9 +1406,9 @@ return true;
 		{
 			$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
 		}
-			
+
 		$archived_root = $wiff_root.WIFF::archive_filepath;
-			
+
 		if(unlink($archived_root.$archiveId.'.fcz'))
 		{
 			return true ;
@@ -1386,7 +1426,7 @@ return true;
 	public function downloadArchive($archiveId){
 
 		$archived_url = curPageURL().wiff::archive_filepath ;
-			
+
 		return $archived_url.DIRECTORY_SEPARATOR.$archiveId.'fcz';
 
 	}

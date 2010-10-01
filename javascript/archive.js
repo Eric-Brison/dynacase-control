@@ -225,7 +225,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Dynacase-Control',
+																	'Dynacase Control',
 																	'A name must be provided.');
 													return;
 												};
@@ -237,7 +237,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Dynacase-Control',
+																	'Dynacase Control',
 																	'A root must be provided.');
 													return;
 												};
@@ -249,7 +249,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Dynacase-Control',
+																	'Dynacase Control',
 																	'A vault path must be provided.');
 													return;
 												};
@@ -261,7 +261,7 @@ function updateArchiveList_success(responseObject, select) {
 														.getValue()) {
 													Ext.Msg
 															.alert(
-																	'Dynacase-Control',
+																	'Dynacase Control',
 																	'A database service must be provided.');
 													return;
 												};
@@ -278,7 +278,7 @@ function updateArchiveList_success(responseObject, select) {
 															.getValue()) {
 														Ext.Msg
 																.alert(
-																		'Dynacase-Control',
+																		'Dynacase Control',
 																		'If you remove profiles, you must specify a user login.');
 														return;
 													};
@@ -289,7 +289,7 @@ function updateArchiveList_success(responseObject, select) {
 															.getValue()) {
 														Ext.Msg
 																.alert(
-																		'Dynacase-Control',
+																		'Dynacase Control',
 																		'If you remove profiles, you must specify a user password.');
 														return;
 													};
@@ -322,7 +322,7 @@ function updateArchiveList_success(responseObject, select) {
 																mask.hide();
 																Ext.Msg
 																		.alert(
-																				'Dynacase-Control',
+																				'Dynacase Control',
 																				'Context '
 																						+ action.result.data.name
 																						+ ' successfully created',
@@ -558,7 +558,7 @@ function archive_success(responseObject) {
 	if (response.error) {
 		Ext.Msg.alert('Server Error', response.error);
 	} else {
-		Ext.Msg.alert('Dynacase-Control', 'Archive created.', function() {
+		Ext.Msg.alert('Dynacase Control', 'Archive created.', function() {
 					updateArchiveList();
 				});
 	}
@@ -592,7 +592,7 @@ function deleteArchive_success(responseObject) {
 	if (response.error) {
 		Ext.Msg.alert('Server Error', response.error);
 	} else {
-		Ext.Msg.alert('Dynacase-Control', 'Archive deleted.', function() {
+		Ext.Msg.alert('Dynacase Control', 'Archive deleted.', function() {
 					updateArchiveList();
 				});
 	}
