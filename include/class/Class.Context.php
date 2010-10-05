@@ -133,9 +133,9 @@ class Context
 
 		$moduleXML->setAttribute('tmpfile', $archive);
 		if( $status == '' ) {
-	  $moduleXML->setAttribute('status', 'downloaded');
+			$moduleXML->setAttribute('status', 'downloaded');
 		} else {
-	  $moduleXML->setAttribute('status', $status);
+			$moduleXML->setAttribute('status', $status);
 		}
 
 		// Get <modules> node
@@ -148,15 +148,14 @@ class Context
 		}
 		$modulesNode = $modulesNodeList->item(0);
 
-
 		// Look for an existing <module> node
 		$query = '';
-		if( $status == 'downloaded' ) {
-	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->name, $module->name);
-		} else if( $status == 'installed' ) {
-	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='installed']", $this->name, $module->name);
+		if($status == 'downloaded') {
+			$query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->name, $module->name);
+		} else if($status == 'installed') {
+			$query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='installed']", $this->name, $module->name);
 		} else {
-	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->name, $module->name);
+			$query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s']", $this->name, $module->name);
 		}
 			
 		# $existingModuleNodeList = $contextsXPath->query("/contexts/context[@name='".$this->name."']/modules/module[@name='".$module->name."']");
@@ -895,7 +894,7 @@ class Context
 
 		// Put toolbox always at the beginning of the list
 		foreach($orderList as $key=>$value){
-		  if(($value->name == 'dynacase-platform')  || ($value->name == 'freedom-toolbox')){
+			if(($value->name == 'dynacase-platform')  || ($value->name == 'freedom-toolbox')){
 
 				unset($orderList[$key]);
 				array_unshift($orderList,$value);
