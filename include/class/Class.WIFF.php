@@ -144,13 +144,12 @@ class WIFF
 		foreach ($modules as $module)
 		{
 			$name = $module->getAttribute('name');
-			if ($name == 'freedom-wiff')
+			if ($name == 'dynacase-control')
 			{
 				$version = $module->getAttribute('version');
 				$release = $module->getAttribute('release');
 				$return = $version.'-'.$release;
 			}
-
 		}
 
 		unlink($tmpfile);
