@@ -135,7 +135,7 @@ Ext.ux.GroupTab = Ext.extend(Ext.Container, {
         });
                 
         if (!this.itemTpl) {
-            var tt = new Ext.Template('<li class="{cls}" id="{id}">', '<a onclick="return false;" class="x-grouptabs-text {iconCls}">{text}</a>', '</li>');
+            var tt = new Ext.Template('<li class="{cls}" id="{id}">', '<a onclick="return false;" class="x-grouptabs-text {iconCls}" href="#">{text}</a>', '</li>');
             tt.disableFormats = true;
             tt.compile();
             Ext.ux.GroupTab.prototype.itemTpl = tt;
