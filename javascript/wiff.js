@@ -3899,7 +3899,7 @@ Ext.onReady(function() {
 				mainItem : 0,
 				items : [{
 					title : 'Control',
-					html : "<div style='padding:30px;'><img src='images/logo/freedom.png' style='height:80px;float:left; margin-right:20px;' /><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase Control</h1>"
+					html : "<div style='padding:30px;'><img src='images/logo/dynacase.png' style='height:80px; float:left; margin-right:20px;' /><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase Control</h1>"
 							+ "<p style='margin-bottom:30px;'>If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>"
 							+ "<ul style='margin-left:30px;list-style-type: square;' >"
 							+ "<li><a href='http://www.dynacase.org/wiff' target='_blank'><h2>Documentation</h2></a></li>"
