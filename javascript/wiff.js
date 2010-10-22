@@ -1133,7 +1133,7 @@ function displayRepositoryWindow(grid, record) {
 			});
 
 	var authentifiedBox = new Ext.form.Checkbox({
-				fieldLabel : 'Authentified',
+				fieldLabel : 'Authenticated',
 				listeners : {
 					check : function(checkbox, checked) {
 						if (checked == true) {
@@ -1458,7 +1458,7 @@ askRepoAuth = function(repoName) {
 	loginField.setValue(repo.login);
 
 	var win = new Ext.Window({
-		title : 'Dynacase Control - Authentify Repository',
+		title : 'Dynacase Control - Authenticated Repository',
 		layout : 'fit',
 		modal : true,
 		height : 300,
@@ -1471,7 +1471,7 @@ askRepoAuth = function(repoName) {
 			items : [nameField, descriptionField, loginField, passwordField,
 					confirmPasswordField],
 			bbar : [{
-				text : 'Authentify',
+				text : 'Authenticate',
 				iconCls : 'x-icon-ok',
 				handler : function(b, e) {
 					var name = nameField.getValue();
@@ -1490,7 +1490,7 @@ askRepoAuth = function(repoName) {
 					}
 
 					mask = new Ext.LoadMask(Ext.getBody(), {
-								msg : 'Authentifying...'
+								msg : 'Authentication...'
 							});
 					mask.show();
 
@@ -1515,7 +1515,7 @@ askRepoAuth = function(repoName) {
 									} else {
 										if (response.data) {
 											Ext.Msg.alert('Dynacase Control',
-													'Authentify successful.',
+													'Authentication successful.',
 													function(btn) {
 														win.close();
 														setRepoAuth(name,
@@ -1524,7 +1524,7 @@ askRepoAuth = function(repoName) {
 													});
 										} else {
 											Ext.Msg.alert('Dynacase Control',
-													'Authentify failed.',
+													'Authentication failed.',
 													function(btn) {
 
 													});
