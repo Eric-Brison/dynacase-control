@@ -2110,7 +2110,7 @@ function updateContextList_success(responseObject, select) {
 											authInfo : Ext.encode(authInfo)
 										},
 										root : 'data',
-										fields : ['name', 'versionrelease',
+										fields : ['name', 'vendor', 'versionrelease',
 												'availableversionrelease',
 												'description', 'infopath',
 												'errorstatus', {
@@ -2185,13 +2185,19 @@ function updateContextList_success(responseObject, select) {
 											dataIndex : 'name',
 											width : 140
 										}, {
+											header : 'Vendor',
+											dataIndex : 'vendor',
+											width : 70
+										}, {
 											id : 'installed-version',
-											header : 'Installed Version',
-											dataIndex : 'versionrelease'
+											header : 'Installed<br/>Version',
+											dataIndex : 'versionrelease',
+											width : 60
 										}, {
 											id : 'available-version',
-											header : 'Available Version',
-											dataIndex : 'availableversionrelease'
+											header : 'Available<br/>Version',
+											dataIndex : 'availableversionrelease',
+											width : 60
 										}, status, {
 											id : 'description',
 											header : 'Description',
@@ -2349,8 +2355,9 @@ function updateContextList_success(responseObject, select) {
 											width : 140
 										}, {
 											id : 'available-version',
-											header : 'Available Version',
-											dataIndex : 'versionrelease'
+											header : 'Available<br/>Version',
+											dataIndex : 'versionrelease',
+											width : 60
 										}, {
 											id : 'description',
 											header : 'Description',

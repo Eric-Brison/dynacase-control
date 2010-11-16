@@ -12,6 +12,7 @@ class Module
      * xml attributes
      */
     public $name;
+    public $vendor;
     public $version;
     public $release;
     public $versionrelease;
@@ -100,6 +101,7 @@ class Module
         // Load xmlNode attributes="value"
         foreach ( array (
         'name',
+        'vendor',
         'version',
         'release',
         'author',
