@@ -1825,7 +1825,7 @@ class Context
 			$pv = $parametersValueNodeList->item($i);
 			$moduleName = $pv->getAttribute('modulename');
 			$module = $this->getModule($moduleName);
-			if( $module === false ) {
+			if( $module === false || $pv->getAttribute('volatile') == 'yes' ) {
 				array_push($purgeNodeList, $pv);
 			}
 		}
