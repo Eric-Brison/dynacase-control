@@ -496,7 +496,7 @@ class Module
             }
 
             $contextsXpath = new DOMXPath($xml);
-            $params = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/modules/module[@name='".$this->name."']/parameters/param");
+            $params = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/modules/module[@name='".$this->name."' and @status='".$this->status."']/parameters/param");
             if ($params->length <= 0)
             {
                 $this->errorMessage = sprintf("Cound not find parameters for module '%s' in context '%s'.", $this->name, $this->context->name);
@@ -514,7 +514,7 @@ class Module
                 $pSeen[$paramName]++;
 
                 $p = new Parameter();
-                foreach ( array ('name', 'label', 'default', 'type', 'needed', 'values') as $attr)
+                foreach ( array ('name', 'label', 'default', 'type', 'needed', 'values', 'volatile') as $attr)
                 {
                     $p->$attr = $param->getAttribute($attr);
 
@@ -530,10 +530,19 @@ class Module
                 $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$p->name."' and @modulename='".$this->name."']");
                 if ($storedParamValue->length <= 0)
                 {
-		    $p->value = $this->getParameterValueFromReplacedModules($contextsXpath, $p->name);
+                    $p->value = $this->getParameterValueFromReplacedModules($contextsXpath, $p->name);
                 } else
                 {
-                    $p->value = $storedParamValue->item(0)->getAttribute('value');
+                    if( $p->volatile == 'yes' && $storedParamValue->item(0)->getAttribute('volatile') != 'yes' ) {
+                        /*
+                         * Handle the case where a parameter is defined as volatile in the module and the stored value
+                         * is not declared as volatile: the definition from the module supersede the stored one.
+                         * So, we take the default value from the modules parameter definition instead of the stored one.
+                         */
+                        $p->value = $p->default;
+                    } else {
+                        $p->value = $storedParamValue->item(0)->getAttribute('value');
+                    }
                 }
 
                 $plist[] = $p;
@@ -647,6 +656,9 @@ class Module
             $param->setAttribute('name', $parameter->name);
             $param->setAttribute('modulename', $this->name);
             $param->setAttribute('value', $parameter->value);
+            if( $parameter->volatile == 'yes' ) {
+                $param->setAttribute('volatile', $parameter->volatile);
+            }
 
             $ret = $xml->save($wiff->contexts_filepath);
             if ($ret === false)

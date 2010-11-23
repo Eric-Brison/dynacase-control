@@ -14,6 +14,7 @@ class Parameter
 	public $default ;
 	public $type ;
 	public $needed ;
+	public $volatile ;
 	
 	public $values ; // Used for enum type parameters.
 	
