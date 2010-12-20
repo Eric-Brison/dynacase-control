@@ -190,30 +190,30 @@ class WIFF
 
 	public function createPasswordFile($login, $password)
 	{
+		$this->createHtpasswdFile($login, $password);
+		$this->createHtaccessFile();
 
+		return true;
+	}
+
+	public function createHtaccessFile() {
 		@$accessFile = fopen('.htaccess', 'w');
-		@$passwordFile = fopen('.htpasswd', 'w');
-
 		fwrite($accessFile,
-        "AuthUserFile ".getenv('WIFF_ROOT')."/.htpasswd
-AuthGroupFile /dev/null
-AuthName 'Veuillez vous identifier'
-AuthType Basic
+			"AuthUserFile ".getenv('WIFF_ROOT')."/.htpasswd\n".
+			"AuthName 'Veuillez vous identifier'\n".
+			"AuthType Basic\n".
+			"\n".
+			"Require valid-user\n"
+		);
+		fclose($accessFile);
+	}
 
-<Limit GET POST>
-require valid-user
-</Limit>"
-);
-
-fwrite($passwordFile,
-sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
-);
-
-fclose($accessFile);
-fclose($passwordFile);
-
-return true;
-
+	public function createHtpasswdFile($login, $password) {
+		@$passwordFile = fopen('.htpasswd', 'w');
+		fwrite($passwordFile,
+			sprintf("%s:{SHA}%s", $login, base64_encode(sha1($password, true)))
+		);
+		fclose($passwordFile);
 	}
 
 	/**

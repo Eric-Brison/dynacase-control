@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+set_include_path(get_include_path().PATH_SEPARATOR.getcwd().DIRECTORY_SEPARATOR.'include');
+
+putenv('WIFF_ROOT='.getcwd());
+
+require_once ('class/Class.WIFF.php');
+
+function __autoload($class_name) {
+  require_once 'class/Class.'.$class_name.'.php';
+}
+
+$wiff = WIFF::getInstance();
+if( $wiff === false ) {
+  error_log(sprintf("Error: could not get WIFF instance"));
+  exit(1);
+}
+
+$wiff->createHtaccessFile();
+
+exit(0);
+
+?>
