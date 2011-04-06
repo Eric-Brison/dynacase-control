@@ -2295,6 +2295,10 @@ class WIFF
 		return ;
 	}
 
+ 	public function fmtSystemMsg($m) {
+	  return ( $m!="" ? '<div style="margin-top:10px;font-color:#333;font-size:85%">'.$m.'</div>' : "" );
+	}
+
 }
 
 ?>
