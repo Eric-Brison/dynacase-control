@@ -408,7 +408,18 @@ function updateArchiveList_success(responseObject, select) {
 								win.show();
 
 							}
-						}, {
+						},{
+							text : 'Download',
+							tooltip : 'Download',
+							iconCls : 'x-icon-archive-download',
+							archive : data[i],
+							    handler : function (button) {
+							    button.el.insertHtml(
+										 'beforeBegin', 
+										 '<form action="'+button.archive.urlfile+'" target="_blank" method="get" style="display:none"></form>'
+										 ).submit();
+							}
+						    }, {
 							text : 'Delete',
 							tooltip : 'Delete',
 							iconCls : 'x-icon-delete-archive',
@@ -570,21 +581,6 @@ function archive_failure(responseObject) {
 	// console.log('Archive Failure');
 }
 
-function downloadArchive_success(responseObject) {
-
-	var response = eval('(' + responseObject.responseText + ')');
-	if (response.error) {
-		Ext.Msg.alert('Server Error', response.error);
-	}
-	Ext.Msg.alert("Warning", "Download Archive " + response);
-	// console.log('Download Archive', response);
-
-}
-
-function downloadArchive_failure(responseObject) {
-	Ext.Msg.alert("Warning", "Download Archive Failure");
-	// console.log('Download Archive Failure');
-}
 
 function deleteArchive_success(responseObject) {
 
