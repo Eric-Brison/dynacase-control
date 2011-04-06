@@ -3898,8 +3898,8 @@ Ext.onReady(function() {
 			items : [{
 				mainItem : 0,
 				items : [{
-					title : 'Dynacase <br/>  Control',
-					html : "<div style='padding:30px;'><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase Control</h1>"
+					title : 'Control',
+					html : "<div style='padding:30px;'><img src='images/logo/freedom.png' style='height:80px;float:left; margin-right:20px;' /><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase Control</h1>"
 							+ "<p style='margin-bottom:30px;'>If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>"
 							+ "<ul style='margin-left:30px;list-style-type: square;' >"
 							+ "<li><a href='http://www.dynacase.org/wiff' target='_blank'><h2>Documentation</h2></a></li>"
@@ -4559,7 +4559,7 @@ Ext.onReady(function() {
 				id : 'context-list',
 				items : [{
 							id : 'context-list-title',
-							title : 'Context List',
+							title : 'Context',
 							iconCls : 'x-icon-list'
 						}]
 			}, {
@@ -4567,7 +4567,7 @@ Ext.onReady(function() {
 				id : 'archive-list',
 				items : [{
 							id : 'archive-list-title',
-							title : 'Archive List',
+							title : 'Archive',
 							iconCls : 'x-icon-list'
 						}]
 			}]
