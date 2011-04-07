@@ -1631,6 +1631,8 @@ function updateContextList_success(responseObject, select) {
 
 									buttons : [{
 										text : 'Save',
+										id : 'save-context-form-button',
+										disabled : true,
 										handler : function() {
 											Ext.getCmp('save-context-form')
 													.getForm().submit({
@@ -1705,7 +1707,7 @@ function updateContextList_success(responseObject, select) {
 
 															for (var j = 0; j < button.context.repo.length; j++) {
 																if (button.context.repo[j].name == record
-																		.get('name')) {
+																    .get('name')) {
 																	checked = true;
 																}
 															}
@@ -1713,7 +1715,7 @@ function updateContextList_success(responseObject, select) {
 															repoBoxList.push({
 																boxLabel : record
 																		.get('description')
-																		+ ' <i>('
+																		+ '<i>('
 																		+ record
 																				.get('displayUrl')
 																		+ ')</i>'
@@ -1741,7 +1743,7 @@ function updateContextList_success(responseObject, select) {
 												panel.checkBoxGroup = panel
 														.add(panel.checkBoxGroup);
 												panel.doLayout();
-
+												Ext.getCmp('save-context-form-button').enable();
 											});
 
 										}
