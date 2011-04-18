@@ -758,7 +758,7 @@ class WIFF
 					$repoList[] = new Repository($repository);
 				}
 
-				$context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'));
+				$context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'), $context->getAttribute('register'));
 				$context->isValid();
 
 				if (!$context->isWritable())
@@ -1466,7 +1466,7 @@ class WIFF
 			}
 
 			$this->errorMessage = null;
-			$context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList, $context->item(0)->getAttribute('url'));
+			$context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList, $context->item(0)->getAttribute('url'), $context->item(0)->getAttribute('register'));
 
 			if (!$context->isWritable() && $opt == false)
 			{
@@ -2104,7 +2104,7 @@ class WIFF
 		if( $lock === false ) {
 			$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on context XML file.");
 			error_log($err);
-			$this->errorMessage($err);
+			$this->errorMessage = $err;
 			return false;
 		}
 
@@ -2149,7 +2149,7 @@ class WIFF
 		if( $lock === false ) {
 			$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on context XML file.");
 			error_log($err);
-			$this->errorMessage($err);
+			$this->errorMessage = $err;
 			return false;
 		}
 
@@ -2293,6 +2293,236 @@ class WIFF
 			return $err;
 		}
 		return ;
+	}
+
+	/**
+	 * Generate a UUID suitable for registration process
+	 *
+	 * @return string $uuid the UUID in RFC 4122 form
+	 *
+	 */
+	function genControlID() {
+		return sprintf("%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
+			rand(0, 0xffff), rand(0, 0xffff),
+			rand(0, 0xffff),
+			rand(0, 0xffff),
+			rand(0, 0xffff),
+			rand(0, 0xffff), rand(0, 0xffff), rand(0, 0xffff)
+			);
+	}
+
+	/**
+	 * Generate a {mid, ctrlid} and store it in params <registration/> node
+	 *
+	 * @param boolean $force to force regeneration of a new UUID
+	 *
+	 * @return array() on success or boolean false on error
+	 *
+	 */
+	function checkInitRegistration($force = false) {
+		$mid = $this->getMachineId();
+		if( $mid === false ) {
+			return false;
+		}
+
+		$info = $this->getRegistrationInfo();
+		if( $info === false ) {
+			return false;
+		}
+
+		$rewriteInfo = false;
+		if( $info['mid'] != $mid ) {
+			$info['mid'] = $mid;
+			$info['status'] = '';
+			$rewriteInfo = true;
+		}
+		if( $force || $info['mid'] == '' ) {
+			$info['mid'] = $this->getMachineId();
+			$rewriteInfo = true;
+		}
+		if( $force || $info['ctrlid'] == '' ) {
+			$info['ctrlid'] = $this->genControlId();
+			$rewriteInfo = true;
+		}
+
+		if( $rewriteInfo ) {
+			$ret = $this->setRegistrationInfo($info);
+			if( $ret === false ) {
+				return false;
+			}
+		}
+
+		return $info;
+	}
+
+	function getMachineId() {
+		include_once('class/Class.StatCollector.php');
+
+		$sc = new StatCollector();
+
+		$mid = $sc->getMachineId();
+
+		if( $mid === false ) {
+			$this->errorMessage = sprintf("Could not get machine id: %s", $sc->last_error);
+			return false;
+		}
+
+		return $mid;
+	}
+
+	/**
+	 * Retrieve registration information.
+	 *
+	 * @return boolean false on error or array() $info on success
+	 *
+	 *   array(
+	 *     'mid' => $mid || '',
+	 *     'ctrlid' => $ctrlid || '',
+	 *     'login' => $login || '',
+	 *     'status' => 'registered' || 'unregistered' || ''
+	 *   )
+     *
+	 */
+	function getRegistrationInfo() {
+		$xml = new DOMDocument();
+		$ret = $xml->load($this->params_filepath);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+			return false;
+		}
+
+		$xPath = new DOMXPath($xml);
+
+		$info = array('mid' => '', 'ctrlid' => '', 'login' => '', 'status' => '');
+
+		$registrationNodeList = $xPath->query('/wiff/registration');
+		if( $registrationNodeList->length > 0 ) {
+			$registrationNode = $registrationNodeList->item(0);
+			foreach( array_keys($info) as $key ) {
+				$info[$key] = $registrationNode->getAttribute($key);
+			}
+		}
+
+		return $info;
+	}
+
+	/**
+	 * Set/store registration info
+	 *
+	 * @param array() $info containing the registration information
+	 *
+	 *   array(
+	 *     'uuid' => $uuid || '',
+	 *     'login' => $login || '',
+	 *     'status' => 'registered' || 'unregistered' || ''
+	 *   )
+	 *
+	 * @return boolean false on error or true on success.
+	 *
+	 */
+	function setRegistrationInfo($info) {
+		$xml = new DOMDocument();
+		$xml->preserveWhiteSpace = false;
+		$xml->formatOutput = true;
+
+		$ret = $xml->load($this->params_filepath);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+			return false;
+		}
+
+		$xPath = new DOMXpath($xml);
+
+		$registrationNode = null;
+		$registrationNodeList = $xPath->query('/wiff/registration');
+		if( $registrationNodeList->length <= 0 ) {
+			$registrationNode = $xml->createElement('registration');
+			$xml->documentElement->appendChild($registrationNode);
+		} else {
+			$registrationNode = $registrationNodeList->item(0);
+		}
+
+		foreach( $info as $key => $value ) {
+			$registrationNode->setAttribute($key, $value);
+		}
+
+		$ret = $xml->save($this->params_filepath);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+			return false;
+		}
+
+		return $info;
+	}
+
+	function getRegistrationClient() {
+		include_once('class/Class.RegistrationClient.php');
+
+		$rc = new RegistrationClient();
+
+		if( $this->getParam('use-proxy') === 'yes' ) {
+			$proxy_host = $this->getParam('proxy-host');
+			$proxy_port = $this->getParam('proxy-port');
+			$proxy_user = $this->getParam('proxy-username');
+			$proxy_pass = $this->getParam('proxy-password');
+
+			if( $proxy_host != '' ) {
+				if( $proxy_user != '' ) {
+					$rc->setProxy($proxy_host, $proxy_port, $proxy_user, $proxy_pass);
+				} else {
+					$rc->setProxy($proxy_host, $proxy_port);
+				}
+			}
+		}
+
+		return $rc;
+	}
+
+	function tryRegister($mid, $ctrlid, $login, $password) {
+		$rc = $this->getRegistrationClient();
+
+		$response = $rc->register($mid, $ctrlid, $login, $password);
+		if( $response === false ) {
+			$this->errorMessage = sprintf("Error posting register request: '%s'", $rc->last_error);
+			return false;
+		}
+
+		if( $response['code'] >= 200 && $response['code'] < 300 ) {
+			$info['login'] = $login;
+			$info['status'] = 'registered';
+			$ret = $this->setRegistrationInfo($info);
+			if( $ret === false ) {
+				$this->errorMessage = sprintf("Error storing registration information to local XML file.");
+				return false;
+			}
+		}
+
+		return $response;
+	}
+
+	function sendContextRegistrationStatistics($contextName) {
+		$regInfo = $this->getRegistrationInfo();
+		if( $regInfo === false ) {
+			return false;
+		}
+
+		if( $regInfo['status'] != 'registered' ) {
+			$this->errorMessage = sprintf("Installation '%s/%s' is not registered!", $regInfo['mid'], $regInfo['ctrlid']);
+			return false;
+		}
+
+		$context = $this->getContext($contextName);
+		if( $context === false ) {
+			return false;
+		}
+
+		$ret = $context->sendRegistrationStatistics($this);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Could not send context registration statistics for context '%s': %s", $contextName, $context->errorMessage);
+			return false;
+		}
+
+		return true;
 	}
 
 }

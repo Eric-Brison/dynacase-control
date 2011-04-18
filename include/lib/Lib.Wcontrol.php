@@ -593,4 +593,58 @@ function wcontrol_msg_phpbug45996(&$process) {
     return sprintf("Checking for PHP bug #45996");
 }
 
+/**
+ * PHP bug #40926
+ */
+function wcontrol_check_phpbug40926(&$process) {
+	require_once ('lib/Lib.System.php');
+	require_once ('class/Class.WIFF.php');
+
+	$wiff = WIFF::getInstance();
+	$service = $process->getAttribute('service');
+	$service = $wiff->expandParamValue($service);
+
+	$php = WiffLibSystem::getCommandPath('php');
+	if( $ret === false ) {
+		error_log(__FUNCTION__." ".sprintf("PHP CLI not found."));
+		return false;
+	}
+
+	$tmpfile = WiffLibSystem::tempnam(null, 'WIFF_phpbug40926');
+	if( $tmpfile === false ) {
+		error_log(__FUNCTION__." ".sprintf("Error creating temporary file."));
+		return false;
+	}
+
+	$testcode = <<<EOF
+<?php
+pg_connect('service=$service');
+exit(0);
+?>
+EOF;
+
+	$ret = file_put_contents($tmpfile, $testcode);
+	if( $ret === false ) {
+		error_log(__FUNCTION__." ".sprintf("Error writing to temporary file '%s'.", $tmpfile));
+		unlink($tmpfile);
+		return false;
+	}
+
+	$out = array();
+	$ret = 0;
+	$cmd = sprintf('%s %s', escapeshellarg($php), escapeshellarg($tmpfile));
+	exec($cmd, $out, $ret);
+	if( $ret != 0 ) {
+		unlink($tmpfile);
+		return false;
+	}
+
+	unlink($tmpfile);
+	return true;
+}
+
+function wcontrol_msg_phpbug40926(&$process) {
+    return sprintf("Checking for PHP bug #40926");
+}
+
 ?>

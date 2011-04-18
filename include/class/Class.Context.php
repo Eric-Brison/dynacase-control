@@ -29,16 +29,18 @@ class Context
 	public $root;
 	public $url;
 	public $repo;
+	public $register;
 
 	private $errorMessage = null;
 
-	public function __construct($name, $desc, $root, $repo, $url)
+	public function __construct($name, $desc, $root, $repo, $url, $register)
 	{
 		$this->name = $name;
 		$this->description = $desc;
 		$this->root = $root;
 		$this->url = $url;
 		$this->repo = $repo;
+		$this->register = $register;
 		foreach ($this->repo as $repository)
 		{
 			$repository->context = $this;
@@ -1846,9 +1848,9 @@ class Context
 
 
 	public function wsh($api_name, $args) {
-		$cmd = $this->root."/./wsh.php --api=$api_name";
+		$cmd = sprintf('%s/wsh.php --api=%s', $this->root, escapeshellarg($api_name));
 		foreach ($args as $name => $value) {
-			$cmd .= " --$name=$value";
+			$cmd .= sprintf(' --%s=%s', $name, escapeshellarg($value));
 		}
 
 		system(sprintf("%s", $cmd), $ret);
@@ -1884,6 +1886,14 @@ class Context
 		if ($opt === 'database' || $opt === false) {
 			$err = '';
 			$ret = $this->deleteContextDatabaseContent($err);
+			if( $ret === false ) {
+				$err_msg .= $this->errorMessage;
+				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextDatabaseContent returned with error: %s", $this->errorMessage));
+			} elseif( $err != '' ) {
+				$err_msg .= $err;
+				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextDatabaseContent returned with warning: %s", $err));
+			}
+			/*
 			if( $ret ) {
 				$err_msg .= $ret;
 				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteContextDatabaseContent returned with error: %s", $this->errorMessage));
@@ -1891,6 +1901,7 @@ class Context
 			if ($err != '') {
 				$err_msg .= $$err;
 			}
+			*/
 			error_log("database deleted");
 		}
 		if ($opt === 'root' || $opt === false) {
@@ -1909,6 +1920,12 @@ class Context
 				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("unregisterContextFromConfig returned with error: %s", $this->errorMessage));
 			}
 			error_log("context unregister");
+		}
+		if( $this->register == 'registered' ) {
+			$ret = $this->deleteRegistrationStatistics();
+			if( $ret === false ) {
+				$err_msg .= sprintf("Error deleting registration statistics.");
+			}
 		}
 		return $err_msg;
 	}
@@ -2102,13 +2119,15 @@ class Context
 
 		if( $pgservice_core == "" ) {
 			$this->errorMessage .= sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
-			return sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
+			return false;
+			// return sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
 		}
 
 		$conn = pg_connect(sprintf("service=%s", $pgservice_core));
 		if( $conn === false ) {
 			$this->errorMessage .= sprintf("Error connecting to 'service=%s'.\n", $pgservice_core);
-			return sprintf("Error connecting to 'service=%s'.\n", $pgservice_core);
+			return false;
+			// return sprintf("Error connecting to 'service=%s'.\n", $pgservice_core);
 		}
 
 		$res = pg_query($conn, sprintf("DROP SCHEMA public CASCADE"));
@@ -2130,7 +2149,112 @@ class Context
 			}
 		}
 
-		return;
+		return true;
+	}
+
+	public function setRegister($register) {
+		require_once ('class/Class.WIFF.php');
+		require_once ('class/Class.Repository.php');
+
+		if( ! is_bool($register) ) {
+			$this->errorMessage = sprintf("Argument of %s::%s should be boolean (%s given).", __CLASS__, __FUNCTION__, gettype($register));
+			return false;
+		}
+
+		$wiff = WIFF::getInstance();
+
+		$paramsXml = new DOMDocument();
+		$paramsXml->load($wiff->params_filepath);
+
+		$paramsXPath = new DOMXPath($paramsXml);
+
+		$contextsXml = new DOMDocument();
+		$contextsXml->load($wiff->contexts_filepath);
+
+		$contextsXPath = new DOMXPath($contextsXml);
+
+		// Get this context
+		$contextList = $contextsXPath->query("/contexts/context[@name='".$this->name."']");
+		if( $contextList->length <= 0) {
+			$this->errorMessage = sprintf("Could not get context with name '%s'.", $this->name);
+			return false;
+		}
+		if( $contextList->length > 1 ) {
+			$this->errorMessage = sprintf("Found more than 1 context with name '%s'.", $this->name);
+			return false;
+		}
+
+		$contextNode = $contextList->item(0);
+		$contextNode->setAttribute('register', ($register === true)?'registered':'unregistered');
+
+		$ret = $contextsXml->save($wiff->contexts_filepath);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error writing file '%s'.", $wiff->contexts_filepath);
+			return false;
+		}
+
+		return true;
+	}
+
+	public function sendRegistrationStatistics() {
+		include_once('class/Class.StatCollector.php');
+
+		if( $this->register != 'registered' ) {
+			$this->errorMessage = sprintf("Context '%s' is not registered.", $this->name);
+			error_log(__CLASS__."::".__FUNCTION__." ".$this->errorMessage);
+			return true;
+		}
+
+		$wiff = WIFF::getInstance();
+		$info = $wiff->getRegistrationInfo();
+		if( $info === false ) {
+			$this->errorMessage = sprintf("Could not get WIFF registration info.");
+			return false;
+		}
+
+		$sc = new StatCollector($wiff, $this);
+		$sc->collect();
+		$stats = $sc->getXML();
+
+		$rc = $wiff->getRegistrationClient();
+
+		$res = $rc->add_context($info['mid'], $info['ctrlid'], $this->name, $stats);
+		if( $res === false ) {
+			$this->errorMessage = sprintf("Error add_context request: %s", $rc->last_error);
+			return false;
+		}
+
+		if( $res['code'] >= 200 && $res['code'] < 300 ) {
+			return true;
+		}
+
+		$this->errorMessage = sprintf("Unknwon response with code '%s': %s", $res['code'], $res['response']);
+		return false;
+	}
+
+	public function deleteRegistrationStatistics() {
+		$wiff = WIFF::getInstance();
+
+		$info = $wiff->getRegistrationInfo();
+		if( $info === false ) {
+			$this->errorMessage = sprintf("Error getting registration info: %s", $wiff->errorMessage);
+			return false;
+		}
+
+		$rc = $wiff->getRegistrationClient();
+
+		$res = $rc->delete_context($info['mid'], $info['ctrlid'], $this->name);
+		if( $res === false ) {
+			$this->errorMessage = sprintf("Error delete_context request: %s", $rc->last_error);
+			return false;
+		}
+
+		if( $res['code'] >= 200 && $res['code'] < 300 ) {
+			return true;
+		}
+
+		$this->errorMessage = sprintf("Unknown response with code '%s': %s", $res['code'], $res['response']);
+		return false;
 	}
 
 }

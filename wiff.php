@@ -76,7 +76,8 @@ function checkInitServer()
 			 'zip_open' => 'zip',
 			 'date' => 'date',
 			 'preg_match' => 'pcre',
-			 'pg_connect' => 'pgsql'
+			 'pg_connect' => 'pgsql',
+			 'curl_init' => 'curl'
 			 ) as $function => $extension )
 			 {
 			 	if (!function_exists($function))
@@ -447,71 +448,81 @@ if (isset ($_REQUEST['getArchivedContextList']))
 // Request to create new context
 if ( isset ($_REQUEST['createContext']))
 {
-	$context = $wiff->createContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
+	$ret = $context = $wiff->createContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
+	if( $ret === false ) {
+		answer(null, $wiff->errorMessage);
+		exit( 1 );
+	}
 
-	if (!$wiff->errorMessage)
+	$register = (isset($_REQUEST['register'])) ? true : false;
+
+	$ret = $context->setRegister($register);
+	if( $ret === false ) {
+		answer(null, $wiff->errorMessage);
+		exit( 1 );
+	}
+
+	$repoList = $wiff->getRepoList();
+
+	foreach ($repoList as $repo)
 	{
-		$repoList = $wiff->getRepoList();
+		$postcode = 'repo-'.$repo->name;
 
-		foreach ($repoList as $repo)
+		str_replace('.', '_', $postcode); // . characters in variables are replaced by _ characters during POST requesting
+
+		if ( isset ($_REQUEST[$postcode]))
 		{
-			$postcode = 'repo-'.$repo->name;
-
-			str_replace('.', '_', $postcode); // . characters in variables are replaced by _ characters during POST requesting
-
-			if ( isset ($_REQUEST[$postcode]))
+			$ret = $context->activateRepo($repo->name);
+			if ($ret === false)
 			{
-				$context->activateRepo($repo->name);
-				if ($context->errorMessage)
-				{
-					answer(null, $context->errorMessage);
-				}
+				answer(null, $context->errorMessage);
+				exit( 1 );
 			}
 		}
-
-		// answer(json_encode($context));
-		answer($context);
-
-	} else
-	{
-		answer(null, $wiff->errorMessage);
 	}
+
+	// answer(json_encode($context));
+	answer($context);
 }
 
 // Request to modify an existing context
 if ( isset ($_REQUEST['saveContext']))
 {
-	$context = $wiff->saveContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
+	$ret = $context = $wiff->saveContext($_REQUEST['name'], $_REQUEST['root'], $_REQUEST['desc'], $_REQUEST['url']);
+	if( $ret === false ) {
+		answer(null, $wiff->errorMessage);
+		exit( 1 );
+	}
 
-	if (!$wiff->errorMessage)
-	{
-		$context->deactivateAllRepo();
+	$ret = $context->setRegister( (isset($_REQUEST['register'])) ? true : false );
+	if( $ret === false ) {
+		answer(null, $context->errorMessage);
+		exit( 1 );
+	}
+
+	$context->deactivateAllRepo();
 			
-		$repoList = $wiff->getRepoList();
+	$repoList = $wiff->getRepoList();
 
-		foreach ($repoList as $repo)
+	foreach ($repoList as $repo)
+	{
+		$postcode = 'repo-'.$repo->name;
+
+		str_replace('.', '_', $postcode); // . characters in variables are replaced by _ characters during POST requesting
+
+		if ( isset ($_REQUEST[$postcode]))
 		{
-			$postcode = 'repo-'.$repo->name;
-
-			str_replace('.', '_', $postcode); // . characters in variables are replaced by _ characters during POST requesting
-
-			if ( isset ($_REQUEST[$postcode]))
+			$context->activateRepo($repo->name);
+			if ($context->errorMessage)
 			{
-				$context->activateRepo($repo->name);
-				if ($context->errorMessage)
-				{
-					answer(null, $context->errorMessage);
-				}
+				answer(null, $context->errorMessage);
+				exit( 1 );
 			}
 		}
-
-		// answer(json_encode($context));
-		answer($context);
-
-	} else
-	{
-		answer(null, $wiff->errorMessage);
 	}
+
+	// answer(json_encode($context));
+	answer($context);
 }
 
 // Request to archive an existing context
@@ -1146,6 +1157,119 @@ if( isset($_REQUEST['purgeUnreferencedParametersValue']) && isset($_REQUEST['con
 	}
 
 	answer(true);
+}
+
+if( isset($_REQUEST['checkInitRegistration']) ) {
+	$force = ( isset($_REQUEST['force']) && $_REQUEST['force'] == 'true' ) ? true : false;
+	$info = $wiff->checkInitRegistration($force);
+	if( $info === false ) {
+		$answer = new JSONAnswer(null, sprintf("Error getting registration info: %s", $wiff->errorMessage));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	$answer = new JSONAnswer($info, null, true);
+	echo $answer->encode();
+	exit( 0 );
+}
+
+if( isset($_REQUEST['tryRegister']) && isset($_REQUEST['mid']) && isset($_REQUEST['ctrlid']) && isset($_REQUEST['login']) && isset($_REQUEST['password']) ) {
+	$mid = $_REQUEST['mid'];
+	$ctrlid = $_REQUEST['ctrlid'];
+	$login = $_REQUEST['login'];
+	$password = $_REQUEST['password'];
+
+	$response = $wiff->tryRegister($mid, $ctrlid, $login, $password);
+	if( $response === false ) {
+		$answer = new JSONAnswer(null, sprintf("Error registering mid/ctrlid : %s", $wiff->errorMessage));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	$answer = new JSONAnswer($response, null, true);
+	echo $answer->encode();
+	exit( 0 );
+}
+
+if( isset($_REQUEST['continueUnregistered']) ) {
+	$info = $wiff->getRegistrationInfo();
+	if( $ret === false ) {
+		$answer = new JSONAnswer(null, sprintf("Error reading registration information: %s", $wiff->errorMessage));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	$info['status'] = 'unregistered';
+
+	$ret = $wiff->setRegistrationInfo($info);
+	if ($ret === false ) {
+		$answer = new JSONAnswer(null, sprintf("Error writing registration information: %s", $wiff->errorMessage));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	answer(true);
+}
+
+if( isset($_REQUEST['getRegistrationInfo']) ) {
+	$info = $wiff->getRegistrationInfo();
+	if( $ret === false ) {
+		$answer = new JSONAnswer(null, sprintf("Error reading registration information: %s", $wiff->errorMessage));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	$answer = new JSONAnswer($info, null, true);
+	echo $answer->encode();
+	exit( 0 );
+}
+
+if( isset($_REQUEST['sendContextRegistrationStatistics']) && isset($_REQUEST['context']) ) {
+	$info = $wiff->getRegistrationInfo();
+	if( $ret === false ) {
+		$answer = new JSONAnswer(null, sprintf("Could not get registration info: %s", $wiff->errorMessage));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	if( $info['status'] != 'registered' ) {
+		$answer = new JSONAnswer(null, sprintf("Dynacase-control is not registeted!"));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	$ret = $wiff->sendContextRegistrationStatistics($_REQUEST['context']);
+	if( $ret === false ) {
+		$answer = new JSONAnswer(null, $wiff->errorMessage);
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	answer(true);
+}
+
+if( isset($_REQUEST['getStatistics']) && isset($_REQUEST['context']) ) {
+	$contextName = $_REQUEST['context'];
+
+	$context = $wiff->getContext($contextName);
+	if( $context === false ) {
+		$answer = new JSONAnswer(null, $wiff->errorMessage);
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	$sc = new StatCollector($wiff, $context);
+	$sc->collect();
+	$xml = $sc->getXML();
+	if( $xml === false ) {
+		$answer = new JSONAnswer(null, sprintf("Error getting XML statistics."));
+		echo $answer->encode();
+		exit( 1 );
+	}
+
+	$answer = new JSONAnswer(array('stats' => $xml));
+	echo $answer->encode();
+	exit( 0 );
 }
 
 // Call to get a param value

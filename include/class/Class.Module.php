@@ -235,7 +235,11 @@ class Module
         $wiff = WIFF::getInstance();
 
         $xml = new DOMDocument();
-        $xml->load($wiff->contexts_filepath);
+        $ret = $xml->load($wiff->contexts_filepath);
+        if( $ret === false ) {
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $wiff->contexts_filepath);
+            return false;
+        }
         $xpath = new DOMXPath($xml);
 
         $modules = $xpath->query("/contexts/context[@name = '".$this->context->name."']/modules/module[@name = '".$this->name."']");
@@ -274,11 +278,19 @@ class Module
 
         $infoXML = new DOMDocument();
         $ret = $infoXML->loadXML($info);
+        if( $ret === false ) {
+            $this->errorMessage = sprintf("Error loading info.xml from module at '%s'.", $modUrl);
+            return false;
+        }
 
         $module = $infoXML->firstChild;
 
         $contextsXML = new DOMDocument();
-        $contextsXML->load($wiff->contexts_filepath);
+        $ret = $contextsXML->load($wiff->contexts_filepath);
+        if( $ret === false ) {
+            $this->errorMessage = sprintf("Error loading XML file '%s'.", $wiff->contexts_filepath);
+            return false;
+        }
         $contextsXPath = new DOMXPath($contextsXML);
 
         $module = $contextsXML->importNode($module, true); // Import module to contexts xml document
