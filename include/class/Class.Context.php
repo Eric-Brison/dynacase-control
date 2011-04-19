@@ -1913,6 +1913,13 @@ class Context
 			error_log("root deleted");
 		}
 		if ($opt === 'unregister' || $opt === false) {
+			if( $this->register == 'registered' ) {
+				$ret = $this->deleteRegistrationConfiguration();
+				if( $ret === false ) {
+					$err_msg .= $this->errorMessage;
+					error_log(__CLASS__."::".__FUNCTION__." ".sprintf("deleteRegistrationConfiguration returned with error: %s", $this->errrorMessage));
+				}
+			}
 			$ret = $this->unregisterContextFromConfig();
 			if( $ret ) {
 				$res = false;
@@ -1920,12 +1927,6 @@ class Context
 				error_log(__CLASS__."::".__FUNCTION__." ".sprintf("unregisterContextFromConfig returned with error: %s", $this->errorMessage));
 			}
 			error_log("context unregister");
-		}
-		if( $this->register == 'registered' ) {
-			$ret = $this->deleteRegistrationStatistics();
-			if( $ret === false ) {
-				$err_msg .= sprintf("Error deleting registration statistics.");
-			}
 		}
 		return $err_msg;
 	}
@@ -2196,7 +2197,7 @@ class Context
 		return true;
 	}
 
-	public function sendRegistrationStatistics() {
+	public function sendConfiguration() {
 		include_once('class/Class.StatCollector.php');
 
 		if( $this->register != 'registered' ) {
@@ -2232,7 +2233,7 @@ class Context
 		return false;
 	}
 
-	public function deleteRegistrationStatistics() {
+	public function deleteRegistrationConfiguration() {
 		$wiff = WIFF::getInstance();
 
 		$info = $wiff->getRegistrationInfo();

@@ -1224,7 +1224,7 @@ if( isset($_REQUEST['getRegistrationInfo']) ) {
 	exit( 0 );
 }
 
-if( isset($_REQUEST['sendContextRegistrationStatistics']) && isset($_REQUEST['context']) ) {
+if( isset($_REQUEST['sendContextConfiguration']) && isset($_REQUEST['context']) ) {
 	$info = $wiff->getRegistrationInfo();
 	if( $ret === false ) {
 		$answer = new JSONAnswer(null, sprintf("Could not get registration info: %s", $wiff->errorMessage));
@@ -1238,7 +1238,7 @@ if( isset($_REQUEST['sendContextRegistrationStatistics']) && isset($_REQUEST['co
 		exit( 1 );
 	}
 
-	$ret = $wiff->sendContextRegistrationStatistics($_REQUEST['context']);
+	$ret = $wiff->sendContextConfiguration($_REQUEST['context']);
 	if( $ret === false ) {
 		$answer = new JSONAnswer(null, $wiff->errorMessage);
 		echo $answer->encode();
@@ -1248,7 +1248,7 @@ if( isset($_REQUEST['sendContextRegistrationStatistics']) && isset($_REQUEST['co
 	answer(true);
 }
 
-if( isset($_REQUEST['getStatistics']) && isset($_REQUEST['context']) ) {
+if( isset($_REQUEST['getConfiguration']) && isset($_REQUEST['context']) ) {
 	$contextName = $_REQUEST['context'];
 
 	$context = $wiff->getContext($contextName);

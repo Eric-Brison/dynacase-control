@@ -731,10 +731,10 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 		$wiff = WIFF::getInstance();
 		$registrationInfo = $wiff->checkInitRegistration();
 		if( $registrationInfo['status'] == 'registered' && $context->register == 'registered' ) {
-			echo sprintf("Sending context registration statistics... ");
-			$ret = $wiff->sendContextRegistrationStatistics($context->name);
+			echo sprintf("Sending context configuration... ");
+			$ret = $wiff->sendContextConfiguration($context->name);
 			if( $ret === false ) {
-				$err = sprintf("Error: Could not send context registration statistics: %s", $wiff->errorMessage);
+				$err = sprintf("Error: Could not send context configuration: %s", $wiff->errorMessage);
 				echo sprintf("[%sSKIPPED%s] (%s)\n", fg_blue(), color_reset(), $err);
 			} else {
 				echo sprintf("[%sOK%s]\n", fg_green(), color_reset());

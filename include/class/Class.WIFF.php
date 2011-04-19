@@ -2500,7 +2500,7 @@ class WIFF
 		return $response;
 	}
 
-	function sendContextRegistrationStatistics($contextName) {
+	function sendContextConfiguration($contextName) {
 		$regInfo = $this->getRegistrationInfo();
 		if( $regInfo === false ) {
 			return false;
@@ -2516,9 +2516,9 @@ class WIFF
 			return false;
 		}
 
-		$ret = $context->sendRegistrationStatistics($this);
+		$ret = $context->sendConfiguration($this);
 		if( $ret === false ) {
-			$this->errorMessage = sprintf("Could not send context registration statistics for context '%s': %s", $contextName, $context->errorMessage);
+			$this->errorMessage = sprintf("Could not send context configuration for context '%s': %s", $contextName, $context->errorMessage);
 			return false;
 		}
 

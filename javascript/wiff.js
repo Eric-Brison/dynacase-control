@@ -315,7 +315,7 @@ function registrationClient() {
 	this.tryRegisterFailure = function(responseObject) {
 		var response = eval('(' + responseObject.responseText + ')');
 
-		Ext.Masg.alert(
+		Ext.Msg.alert(
 			"Registration",
 			"Call to 'tryRegister' failed."
 		);
@@ -323,28 +323,28 @@ function registrationClient() {
 		return;
 	};
 
-	this.sendContextStatistics = function(contextid) {
+	this.sendContextConfiguration = function(contextid) {
 		return false;
 	};
 
-	this.showSentStatistics = function() {
+	this.showConfiguration = function() {
 		Ext.Ajax.request({
 			scope : this,
 			url : 'wiff.php',
 			params : {
-				getStatistics : true,
+				getConfiguration : true,
 				context : currentContext
 			},
 			success : function(responseObject) {
-				return this.showSentStatisticsSuccess(responseObject);
+				return this.showConfigurationSuccess(responseObject);
 			},
 			failure : function(responseObject) {
-				return this.showSentStatisticsFailure(responseObject);
+				return this.showConfigurationFailure(responseObject);
 			}
 		});
 	};
 
-	this.showSentStatisticsSuccess = function(responseObject) {
+	this.showConfigurationSuccess = function(responseObject) {
 		var response = eval('(' + responseObject.responseText + ')');
 
 		if( response.error ) {
@@ -360,7 +360,7 @@ function registrationClient() {
 
 		var headerPanel = new Ext.Panel({
 					bodyStyle : 'padding-bottom:10px;',
-					html : "<p>Statistics sent for context '" + currentContext + "' with mid/ctrlid:</p><pre>" + this.ctx.mid + "/" + this.ctx.ctrlid + "</pre>"
+					html : "<p>Configuration sent for context '" + currentContext + "' with mid/ctrlid:</p><pre>" + this.ctx.mid + "/" + this.ctx.ctrlid + "</pre>"
 				});
 
 		var statsPanel = new Ext.Panel({
@@ -374,8 +374,8 @@ function registrationClient() {
 					})]
 		});
 
-		var statsFormPanel = new Ext.form.FormPanel({
-					id : 'statistics-formpanel',
+		var configFormPanel = new Ext.form.FormPanel({
+					id : 'configuration-formpanel',
 					border : false,
 					frame : true,
 					bodyStyle : 'padding:15px;',
@@ -384,9 +384,9 @@ function registrationClient() {
 					items : [headerPanel, statsPanel]
 				});
 
-		var statsWin = new Ext.Window({
-					id : 'statistics-window',
-					items : [statsFormPanel],
+		var configWin = new Ext.Window({
+					id : 'configuration-window',
+					items : [configFormPanel],
 					height : 400,
 					width : 600,
 					modal : true,
@@ -394,12 +394,12 @@ function registrationClient() {
 					layout : 'fit'
 				});
 
-		statsWin.show();
+		configWin.show();
 	};
 
-	this.showSentStatisticsFailure = function(responseObject) {
-		return Ext.Masg.alert(
-			"Sent Statistics",
+	this.showConfigurationFailure = function(responseObject) {
+		return Ext.Msg.alert(
+			"Sent configuration",
 			"Call to 'getStatisticsXML' failed."
 		);
 	};
@@ -2284,7 +2284,7 @@ function updateContextList_success(responseObject, select) {
 					refresh : function() {
 						var repositoryHtml = '<ul>';
 						var registerHtml = (this.context.register == 'registered') ?
-								'<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;<span style="">Registered</span> (&nbsp;<a href="javascript:forceSendContextRegistrationStatistics();">Send registration statistics</a>&nbsp;|&nbsp;<a href="javascript:registrationClient.showSentStatistics(currentContext)">Show sent statistics</a>&nbsp;)'
+								'<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;<span style="">Registered</span> (&nbsp;<a href="javascript:registrationClient.showConfiguration(currentContext)">Show configuration</a>&nbsp;|&nbsp;<a href="javascript:forceSendContextConfiguration();">Send configuration</a>&nbsp;)'
 								:
 								'<img src="images/icons/error.png" style="vertical-align: middle;" />&nbsp;<span style="">Unregistered</span>';
 
@@ -3207,7 +3207,7 @@ function wstart(module, operation) {
 					} else {
 						var context = getCurrentContext();
 						if( context.register == 'registered' ) {
-							return sendContextRegistrationStatistics();
+							return sendContextConfiguration();
 						}
 						return installHappyEnd();
 					}
@@ -3227,8 +3227,8 @@ function installHappyEnd() {
 		});
 }
 
-function forceSendContextRegistrationStatistics() {
-	return sendContextRegistrationStatistics({
+function forceSendContextConfiguration() {
+	return sendContextConfiguration({
 		success : function(responseObject) {
 			var response = eval('(' + responseObject.responseText + ')');
 			if( response.error ) {
@@ -3236,42 +3236,42 @@ function forceSendContextRegistrationStatistics() {
 				return Ext.Msg.alert('Server Error', response.error);
 			} else {
 				registrationClient.ctx.mask.hide();
-				return Ext.Msg.alert('Registration Statistics', 'Registration statistics successfully sent.');
+				return Ext.Msg.alert('Configuration', 'Configuration successfully sent.');
 			}
 		},
 		failure : function() {
-			Ext.Msg.alert('Registration Statistics', 'Error sending registration statistics.');
+			Ext.Msg.alert('Configuration', 'Error sending configuration.');
 		}
 	});
 };
 
-function sendContextRegistrationStatistics(opts) {
-	registrationClient.ctx.mask = new Ext.LoadMask(Ext.getBody(), { msg : 'Sending statistics...' });
+function sendContextConfiguration(opts) {
+	registrationClient.ctx.mask = new Ext.LoadMask(Ext.getBody(), { msg : 'Sending configuration...' });
 	registrationClient.ctx.mask.show();
 
 	Ext.Ajax.request({
 		url : 'wiff.php',
 		params : {
-			sendContextRegistrationStatistics : 'yes',
+			sendContextConfiguration : 'yes',
 			context : currentContext
 		},
 		success : (opts != undefined && opts.success != undefined) ? opts.success : function(responseObject) {
-			sendContextRegistrationStatisticsSuccess(responseObject);
+			sendContextConfigurationSuccess(responseObject);
 		},
 		failure : (opts != undefined && opts.failure != undefined) ? opts.failure : function(responseObject) {
-			sendContextRegistrationStatisticsFailure(responseObject);
+			sendContextConfigurationFailure(responseObject);
 		}
 	});
 }
 
-function sendContextRegistrationStatisticsSuccess(responseObject) {
+function sendContextConfigurationSuccess(responseObject) {
 	registrationClient.ctx.mask.hide();
 	return installHappyEnd();
 }
 
-function sendContextRegistrationStatisticsFailure(responseObject) {
+function sendContextConfigurationFailure(responseObject) {
 	registrationClient.ctx.mask.hide();
-	Ext.Msg.alert('Dynacase Control', 'Error sending context statistics');
+	Ext.Msg.alert('Dynacase Control', 'Error sending context configuration');
 	return installHappyEnd();
 }
 

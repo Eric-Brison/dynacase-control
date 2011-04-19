@@ -274,7 +274,7 @@ class StatCollector  {
 			$this->last_error = sprintf("Could not compute machine ID for Linux host type");
 			return false;
 		}
-		
+
 		$mid = sprintf("%s,%s", $hwaddr, $cpucount);
 		return sha1($mid);
 	}
@@ -291,37 +291,97 @@ class StatCollector  {
 		$mid = sprintf("%s,%s", $hwaddr, $cpucount);
 		return sha1($mid);
 	}
-	
+
 	function getMachineMacAddr_Linux() {
+		$hwaddr = false;
+
+		$hwaddr = $this->getMachineMacAddr_Linux_iproute2();
+		if( $hwaddr === false ) {
+			$hwaddr = $this->getMachineMacAddr_Linux_ifconfig();
+		}
+
+		if( $hwaddr === false ) {
+			return false;
+		}
+
+		return strtolower($hwaddr);
+	}
+
+	function getMachineMacAddr_Linux_iproute2() {
 		include_once('lib/Lib.System.php');
 		
+		$ip = WiffLibSystem::getCommandPath('ip');
+		if( $ip === false ) {
+			$ip = '/sbin/ip';
+		}
+
+		$hwaddr = false;
+
+		$out = array();
+		$ret = 0;
+		$locale = getenv("LC_ALL");
+		putenv("LC_ALL=C");
+		exec(sprintf("%s link show", $ip), $out, $ret);
+		putenv(sprintf("LC_ALL=%s", $locale));
+		if( $ret != 0 ) {
+			return false;
+		}
+
+		$ifname = false;
+		foreach( $out as $line ) {
+			if( preg_match('/^(?P<ifindex>\d+):\s+(?P<ifname>[^\s]+):\s+.*$/', $line, $m) ) {
+				$ifname = $m['ifname'];
+				continue;
+			} elseif( preg_match('|^\s+link/ether\s+(?P<hwaddr>[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f])\s+.*$|i', $line, $m) ) {
+				if( $ifname == 'eth0' ) {
+					$hwaddr = $m['hwaddr'];
+					break;
+				}
+				if( $hwaddr === false ) {
+					$hwaddr = $m['hwaddr'];
+					continue;
+				}
+			}
+		}
+
+		return $hwaddr;
+	}
+
+	function getMachineMacAddr_Linux_ifconfig() {
+		include_once('lib/Lib.System.php');
+
 		$ifconfig = WiffLibSystem::getCommandPath('ifconfig');
 		if( $ifconfig === false ) {
 			$ifconfig = '/sbin/ifconfig';
 		}
-		
+
+		$hwaddr = false;
+
 		$out = array();
 		$ret = 0;
-		exec(sprintf("%s eth0", $ifconfig), $out, $ret);
+		$locale = getenv("LC_ALL");
+		putenv("LC_ALL=C");
+		exec(sprintf("%s", $ifconfig), $out, $ret);
+		putenv(sprintf("LC_ALL=%s", $locale));
 		if( $ret != 0 ) {
 			return false;
 		}
-		
-		$hwaddr = false;
+
 		foreach( $out as $line ) {
-			if( preg_match('/\s+HWaddr\s+(?P<hwaddr>[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F])$/', $line, $m) ) {
-				$hwaddr = $m['hwaddr'];
-				break;
+			if( preg_match('/^(?P<ifname>[^\s]+)\s+Link\s+encap:Ethernet\s+HWaddr\s+(?P<hwaddr>[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f])$/i', $line, $m) ) {
+				if( $m['ifname'] == 'eth0' ) {
+					$hwaddr = $m['hwaddr'];
+					break;
+				}
+				if( $hwaddr === false ) {
+					$hwaddr = $m['hwaddr'];
+				}
 			}
 		}
-		
-		if( $hwaddr === false ) {
-			return false;
-		}
-		
-		return strtolower($hwaddr);
+
+		return $hwaddr;
 	}
-	
+
 	function getMachineCPUCount_Linux() {
 		include_once('lib/Lib.System.php');
 		
