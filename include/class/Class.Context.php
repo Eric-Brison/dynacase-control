@@ -1284,7 +1284,7 @@ class Context
 			}
 		}
 
-		$zip = new ZipArchive();
+		$zip = new ZipArchiveCmd();
 
 		$wiff_root = getenv('WIFF_ROOT');
 		if ($wiff_root !== false)
@@ -1301,8 +1301,9 @@ class Context
 		$status_file = $archived_root.DIRECTORY_SEPARATOR.$archiveId.'.sts';
 		$status_handle = fopen($status_file, "w");
 		fwrite($status_handle,$archiveName);
-			
-		if($zip->open($archived_root."/$archiveId.fcz", ZipArchive::CREATE) == TRUE)	{
+
+		$zipfile = $archived_root."/$archiveId.fcz";
+		if( $zip->open($zipfile, ZipArchiveCmd::CREATE) !== false ) {
 
 			// --- Generate info.xml --- //
 			$doc = new DOMDocument();
@@ -1364,9 +1365,9 @@ class Context
 				unlink($status_file);
 				return false;
 			}
-			$err = $zip->addFile("$tmp/context.tar.gz","context.tar.gz");
+			$err = $zip->addFileWithoutPath("$tmp/context.tar.gz");
 			if ($err === false) {
-				$this->errorMessage = "Could not had file to archive";
+				$this->errorMessage = sprintf("Could not add 'context.tar.gz' to archive: %s", $zip->getStatusString());
 				if (file_exists("$tmp/context.tar.gz")) {
 					unlink("$tmp/context.tar.gz");
 				}
@@ -1403,9 +1404,9 @@ class Context
 				return false;
 			}
 
-			$err = $zip->addFile($dump,'core_db.pg_dump.gz');
+			$err = $zip->addFileWithoutPath($dump);
 			if ($err === false) {
-				$this->errorMessage = "Could not add file to archive";
+				$this->errorMessage = sprintf("Could not add 'core_db.pg_dump.gz' to archive: %s", $zip->getStatusString());
 				if (file_exists("$tmp/context.tar.gz")) {
 					unlink("$tmp/context.tar.gz");
 				}
@@ -1488,9 +1489,9 @@ class Context
 							unlink($status_file);
 							return false;
 						}
-						$err = $zip->addFile("$tmp/vault_$id_fs.tar.gz","vault_$id_fs.tar.gz");
+						$err = $zip->addFileWithoutPath("$tmp/vault_${id_fs}.tar.gz");
 						if ($err === false) {
-							$this->errorMessage = "Error when making vault tar :: ".$res;
+							$this->errorMessage = sprintf("Could not add 'vault_%s.tar.gz' to archive: %s", $id_fs, $zip->getStatusString());
 							if (file_exists("$tmp/context.tar.gz")) {
 								unlink("$tmp/context.tar.gz");
 							}
@@ -1566,7 +1567,7 @@ class Context
 				if (file_exists($tmp."/vault_$id_fs.tar.gz")) {
 					unlink($tmp."/vault_$id_fs.tar.gz");
 				}
-				$this->errorMessage = "Can'st add file to archive";
+				$this->errorMessage = sprintf("Could not add 'info.xml' to archive: %s", $zip->getStatusString());
 				return false;
 			}
 
@@ -1599,7 +1600,7 @@ class Context
 			return $archiveId ;
 
 		} else {
-			$this->errorMessage = 'Can not create archive.';
+			$this->errorMessage = sprintf("Cannot create Zip archive '%s': %s", $zipfile, $zip->getStatusString());
 			// --- Delete status file --- //
 			unlink($status_file);
 		}

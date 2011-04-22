@@ -111,7 +111,7 @@ function wcontrol_process($process)
         );
     }
 
-    $cmd = sprintf('( %s ) 1> "%s" 2>&1', $cmd, escapeshellcmd($tmpfile));
+    $cmd = sprintf('( %s ) 1> %s 2>&1', escapeshellarg($cmd), escapeshellarg($tmpfile));
     # error_log(sprintf("%s %s", __FUNCTION__ , $cmd));
 
     /*
