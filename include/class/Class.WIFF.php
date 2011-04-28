@@ -1148,12 +1148,43 @@ class WIFF
 						$this->errorMessage = "Error when trying to connect to database $pgservice";
 						error_log("Error trying to connect to database $pgservice");
 						unlink($status_file);
+						return false;
 					}
-					$result = pg_query($dbconnect,"alter database $pgservice set datestyle = 'SQL, DMY';");
-					if ($result === false) {
-						$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
-						error_log("Error when trying to get databse info :: ".pg_last_erro());
+					// Get current database name
+					$result = pg_query($dbconnect, sprintf("SELECT current_database()"));
+					if( $result === false ) {
+						$this->errorMessage = sprintf("Error getting current database name: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
 						unlink($status_file);
+						return false;
+					}
+					$row = pg_fetch_assoc($result);
+					if( $row === false ) {
+						$this->errorMessage = sprintf("Error fetching first row for current database name: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					if( ! isset($row['current_database']) ) {
+						$this->errorMessage = sprintf("Error getting 'current_database' field in row: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					$current_database = $row['current_database'];
+					if( $current_database == '' ) {
+						$this->errorMessage = sprintf("Got an empty current database name!?!");
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					// Alter current database datestyle
+					$result = pg_query($dbconnect, sprintf("ALTER DATABASE \"%s\" SET datestyle = 'SQL, DMY';", str_replace("\"", "\"\"", $current_database)));
+					if ($result === false) {
+						$this->errorMessage = "Error when trying to set database datestyle :: ".pg_last_error($dbconnect);
+						error_log("Error when trying to set database datestyle :: ".pg_last_error($dbconnect));
+						unlink($status_file);
+						return false;
 					}
 
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
