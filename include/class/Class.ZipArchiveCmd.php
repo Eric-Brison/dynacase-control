@@ -33,10 +33,23 @@ class ZipArchiveCmd {
 		return $this;
 	}
 
+	/**
+	 * Get last error message.
+	 *
+	 * @return string the last error message
+	 */
 	public function getStatusString() {
 		return $this->last_error;
 	}
 
+	/**
+	 * Open a zip file for creation or extraction.
+	 *
+	 * @param string $zipfile path name of the Zip file to open or create
+	 * @param int $mode ZipArchiveCmd::CREATE or ZipArchiveCmd::EXTRACT
+	 *
+	 * @return boolean false on error or $this
+	 */
 	public function open($zipfile, $mode = self::EXTRACT) {
 		include_once('lib/Lib.System.php');
 
@@ -76,14 +89,40 @@ class ZipArchiveCmd {
 		return $this;
 	}
 
-	public function addFileWithoutPath($file) {
-		return $this->_addFile($file, '-j');
-	}
-
+	/**
+	 * Add a file to the Zip archive and keep its original
+	 * path name into the archive.
+	 *
+	 * @param string $file the file to add
+	 *
+	 * @return boolean false on error or $this
+	 */
 	public function addFile($file) {
 		return $this->_addFile($file, '');
 	}
 
+	/**
+	 * Add a file to the Zip archive without keeping its original
+	 * path name into the archive:
+	 *
+	 *    /foo/bar/baz.txt -> baz.txt
+	 *
+	 * @param string $file the file to add
+	 *
+	 * @return boolean false on error or $this
+	 */
+	public function addFileWithoutPath($file) {
+		return $this->_addFile($file, '-j');
+	}
+
+	/**
+	 * Add a file to the Zip archive with specific 'zip' command line flags
+	 *
+	 * @param string $file the file to add
+	 * @param string $flags the 'zip' command line flags to use
+	 *
+	 * @return boolean false on error or $this
+	 */
 	private function _addFile($file, $flags) {
 		if( $this->mode != self::CREATE ) {
 			$this->last_error = sprintf("Zip file '%s' is not opened in CREATE mode.", $this->zipfile);
@@ -106,11 +145,19 @@ class ZipArchiveCmd {
 		return $this;
 	}
 
+	/**
+	 * Add a file in the zip archive wiht the supplied file content
+	 *
+	 * @param string $filename the name of the file in the zip archive
+	 * @param string $string the content of the file in the zip archive
+	 *
+	 * @return boolean false on error or $this
+	 */
 	public function addFromString($filename, $string) {
 		include_once('lib/Lib.System.php');
 
-		/* Refuse filename path which may get out of the base
-		 * temporary directory be using the '../' sequence.
+		/* Refuse filenames which may get out of the base
+		 * temporary directory by using the '../' sequence.
 		 */
 		if( strpos($filename, '../') !== false ) {
 			$this->last_error = sprintf("For security reasons, the '../' sequence is not allowed in filename path '%s'.", $filename);
@@ -142,7 +189,7 @@ class ZipArchiveCmd {
 			return false;
 		}
 
-		/* Write the data to the filename path constructed
+		/* Write the data to the filename constructed
 		 * below the temporary directory.
 		 */
 		$tmpfile = sprintf("%s/%s", $tmpdir, $f_basename);
@@ -155,7 +202,7 @@ class ZipArchiveCmd {
 			return false;
 		}
 
-		/* cd into $tempname dir in order to add the file
+		/* cd into temporary directory in order to add the file
 		 * with its relative base pathname
 		 */
 		$cwd = getcwd();
@@ -176,6 +223,14 @@ class ZipArchiveCmd {
 		return $this;
 	}
 
+	/**
+	 * Helper method to write content to a file
+	 *
+	 * @param string $tmpfile the filename to write to
+	 * @param string $data the content to write
+	 *
+	 * @return boolean false on error or $this
+	 */
 	public function _file_put_contents_excl_creat($tmpfile, $data) {
 		$fh = fopen($tmpfile, 'x+');
 		if( $fh === false ) {
@@ -193,8 +248,24 @@ class ZipArchiveCmd {
 			}
 			$pos += $wsize;
 		}
+
+		return $this;
 	}
 
+	/**
+	 * Get the index of the Zip archive in the form of an array-of-array:
+	 *   array(
+	 *     array(
+	 *       'name' => $file1_name,
+	 *       'size' => $file1_size_in_bytes,
+	 *       'date' => $file1_date,
+	 *       'time' => $file1_time
+	 *     ),
+	 *     [...]
+	 *   );
+	 *
+	 * @return boolean false on error or an array-of-array as decribed above
+	 */
 	public function getIndex() {
 		$out = array();
 		$ret = 0;
@@ -223,6 +294,13 @@ class ZipArchiveCmd {
 		return $index;
 	}
 
+	/**
+	 * Extract the archive into the specified directory
+	 *
+	 * @param string $exdir the directory to extract to
+	 *
+	 * @return boolean false on error or $this
+	 */
 	public function extractTo($exdir) {
 		if( ! is_dir($exdir) ) {
 			$this->last_error = sprintf("Extraction directory '%s' is not a valid directory.", $exdir);
@@ -244,6 +322,13 @@ class ZipArchiveCmd {
 		return $this;
 	}
 
+	/**
+	 * Get the content of a file from the archive
+	 *
+	 * @param string $name the filename in the archive
+	 *
+	 * @return boolean false on error or a string containing the content of the file
+	 */
 	public function getFileContentFromName($name) {
 		$data = false;
 
@@ -259,10 +344,17 @@ class ZipArchiveCmd {
 			return false;
 		}
 
-		unlink($tmpfile);		
+		unlink($tmpfile);
 		return $data;
 	}
 
+	/**
+	 * Extract the content of a file into a temporary file
+	 *
+	 * @param string $name the filename to extract
+	 *
+	 * @return boolean false on error or a string containing the temporary filename holding the extracted content
+	 */
 	public function getTmpFileFromName($name) {
 		$data = false;
 
@@ -288,6 +380,9 @@ class ZipArchiveCmd {
 		return $tmpfile;
 	}
 
+	/**
+	 * Close a previously opened archive
+	 */
 	public function close() {
 		$this->zipcmd = false;
 		$this->unzipcmd = false;
