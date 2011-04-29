@@ -849,76 +849,87 @@ class WIFF
 
 				if(preg_match('/^(?P<basename>.+)\.fcz$/',$file,$fmatch)){
 
-					$zip = zip_open($archived_root.DIRECTORY_SEPARATOR.$file);
+					$zipfile = $archived_root.DIRECTORY_SEPARATOR.$file;
 
-					if(is_int($zip)){
+					$zip = new ZipArchiveCmd();
+					$ret = $zip->open($zipfile);
+					if( $ret === false ) {
 						$this->errorMessage = "Error when opening archive.";
 						return false;
 					}
 
-					do {
-						$info = zip_read($zip);
-					} while ($info && zip_entry_name($info) != "info.xml");
+					$zipIndex = $zip->getIndex();
+					if( $zipIndex === false ) {
+						$this->errorMessage = sprintf("Error getting index from Zip file '%s': %s", $zipfile, $zip->getStatusString());
+						return false;
+					}
 
-					if(zip_entry_name($info) == "info.xml"){
-
-						zip_entry_open($zip, $info, "r");
-
-						$info_content = zip_entry_read($info, zip_entry_filesize($info));
-
-						$xml = new DOMDocument();
-						$xml->loadXML($info_content);
-						if ($xml === false)
-						{
-							$this->errorMessage = sprintf("Error loading XML file '%s'.", $info);
-							return false;
+					$foundInfoXML = false;
+					foreach( $zipIndex as $info ) {
+						if( $info['name'] == 'info.xml' ) {
+							$foundInfoXML = true;
+							break;
 						}
+					}
+					if( ! $foundInfoXML ) {
+						$this->errorMessage = sprintf("Could not find 'info.xml' in content index of Zip file '%s'.", $zipfile);
+						return false;
+					}
 
-						$xpath = new DOMXpath($xml);
+					$info_content = $zip->getFileContentFromName('info.xml');
+					if( $info_content === false ) {
+						$this->errorMessage = sprintf("Error extracting 'info.xml' from '%s': %s", $zipfile, $zip->getStatusString());
+						return false;
+					}
 
-						$contexts = $xpath->query("/info/context");
+					$xml = new DOMDocument();
+					$xml->loadXML($info_content);
+					if ($xml === false)
+					{
+						$this->errorMessage = sprintf("Error loading XML file '%s'.", $info);
+						return false;
+					}
 
-						if ($contexts->length > 0)
-						{
-							foreach ($contexts as $context){ // Should be only one context
-								$contextName = $context->getAttribute('name');
-							}
+					$xpath = new DOMXpath($xml);
+
+					$contexts = $xpath->query("/info/context");
+
+					if ($contexts->length > 0)
+					{
+						foreach ($contexts as $context){ // Should be only one context
+							$contextName = $context->getAttribute('name');
 						}
+					}
 
-						$archived_contexts = $xpath->query("/info/archive");
+					$archived_contexts = $xpath->query("/info/archive");
 
-						if ($archived_contexts->length > 0)
-						{
-							foreach ($archived_contexts as $context){ // Should be only one context
-								$archiveContext = array();
-								$archiveContext['name'] = $context->getAttribute('name');
-								$archiveContext['description'] = $context->getAttribute('description');
-								$archiveContext['id'] = $fmatch['basename'];
-								$archiveContext['datetime'] = $context->getAttribute('datetime');
-								$archiveContext['vault'] = $context->getAttribute('vault');
+					if ($archived_contexts->length > 0)
+					{
+						foreach ($archived_contexts as $context){ // Should be only one context
+							$archiveContext = array();
+							$archiveContext['name'] = $context->getAttribute('name');
+							$archiveContext['description'] = $context->getAttribute('description');
+							$archiveContext['id'] = $fmatch['basename'];
+							$archiveContext['datetime'] = $context->getAttribute('datetime');
+							$archiveContext['vault'] = $context->getAttribute('vault');
 
 								$moduleList = array();
 
-								$moduleDom = $xpath->query("/info/context[@name='".$contextName."']/modules/module");
+							$moduleDom = $xpath->query("/info/context[@name='".$contextName."']/modules/module");
 
-								foreach ($moduleDom as $module)
+							foreach ($moduleDom as $module)
+							{
+								$mod = new Module($this, null, $module, true);
+								if ($mod->status == 'installed')
 								{
-									$mod = new Module($this, null, $module, true);
-									if ($mod->status == 'installed')
-									{
-										$moduleList[] = $mod;
-									}
+									$moduleList[] = $mod;
 								}
-
-								$archiveContext['moduleList'] = $moduleList;
-
-								$archivedContextList[] = $archiveContext ;
 							}
+
+							$archiveContext['moduleList'] = $moduleList;
+
+							$archivedContextList[] = $archiveContext ;
 						}
-
-
-					} else {
-						$this->errorMessage = "info.xml not found in archive";
 					}
 
 				}
@@ -957,6 +968,15 @@ class WIFF
 		$status_file = $archived_root.DIRECTORY_SEPARATOR.$archiveId.'.ctx';
 		$status_handle = fopen($status_file, "w");
 		fwrite($status_handle,$name);
+
+		// --- Connect to database --- //
+		$dbconnect = pg_connect("service=$pgservice");
+		if ($dbconnect === false) {
+			$this->errorMessage = "Error connecting to database 'service=$pgservice'";
+			error_log($this->errorMessage);
+			unlink($status_file);
+			return false;
+		}
 
 		// --- Create or reuse directory --- //
 		if (is_dir($root))
@@ -1086,16 +1106,29 @@ class WIFF
 				{
 
 					$temporary_extract_root = $archived_root.'archived-tmp';
+					if( ! is_dir($temporary_extract_root) ) {
+						$ret = mkdir($temporary_extract_root);
+						if( $ret === false ) {
+							$this->errorMessage = sprintf("Error creating temporary extract root directory '%s'.", $temporary_extract_root);
+							unlink($status_file);
+							return false;
+						}
+					}
 
-					$zip = new ZipArchive();
-					$res = $zip->open($archived_root.DIRECTORY_SEPARATOR.$file);
-					if ($res === TRUE) {
-						$zip->extractTo($temporary_extract_root);
-						$zip->close();
-					} else {
-						$this->errorMessage = "Error when opening archive.";
+					$zip = new ZipArchiveCmd();
+					$zipfile = $archived_root.DIRECTORY_SEPARATOR.$file;
+					$ret = $zip->open($zipfile);
+					if( $ret === false ) {
+						$this->errorMessage = sprintf("Error when opening archive '%s': %s", $zipfile, $zip->getStatusString());
 						// --- Delete status file --- //
 						unlink($status_file);
+						return false;
+					}
+					$ret = $zip->extractTo($temporary_extract_root);
+					if( $ret === false ) {
+						$this->errorMessage = sprintf("Error extracting '%s' into '%s': %s", $zipfile, $temporary_extract_root, $zip->getStatusString());
+						unlink($status_file);
+						$zip->close();
 						return false;
 					}
 
@@ -1119,22 +1152,48 @@ class WIFF
 					// --- Restore database --- //
 
 					// Setting datestyle
-					$dbconnect = pg_connect("service=$pgservice");
-					if ($dbconnect === false) {
-						$this->errorMessage = "Error when trying to connect to database $pgservice";
-						error_log("Error trying to connect to database $pgservice");
+
+					// Get current database name
+					$result = pg_query($dbconnect, sprintf("SELECT current_database()"));
+					if( $result === false ) {
+						$this->errorMessage = sprintf("Error getting current database name: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
 						unlink($status_file);
+						return false;
 					}
-					$result = pg_query($dbconnect,"alter database $pgservice set datestyle = 'SQL, DMY';");
+					$row = pg_fetch_assoc($result);
+					if( $row === false ) {
+						$this->errorMessage = sprintf("Error fetching first row for current database name: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					if( ! isset($row['current_database']) ) {
+						$this->errorMessage = sprintf("Error getting 'current_database' field in row: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					$current_database = $row['current_database'];
+					if( $current_database == '' ) {
+						$this->errorMessage = sprintf("Got an empty current database name!?!");
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					// Alter current database datestyle
+					$result = pg_query($dbconnect, sprintf("ALTER DATABASE \"%s\" SET datestyle = 'SQL, DMY';", str_replace("\"", "\"\"", $current_database)));
 					if ($result === false) {
-						$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
-						error_log("Error when trying to get databse info :: ".pg_last_erro());
+						$this->errorMessage = "Error when trying to set database datestyle :: ".pg_last_error($dbconnect);
+						error_log("Error when trying to set database datestyle :: ".pg_last_error($dbconnect));
 						unlink($status_file);
+						return false;
 					}
+					pg_close($dbconnect);
 
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
 
-					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", $dump, $pgservice);
+					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", escapeshellarg($dump), escapeshellarg($pgservice));
 					$result = exec($script,$output,$retval);
 
 					if($retval != 0){

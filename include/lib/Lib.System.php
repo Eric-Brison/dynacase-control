@@ -21,6 +21,22 @@ class WiffLibSystem {
 				return "$path/$cmdname";
 			}
 		}
+
+		/* If the command has not been found it may be
+		 * because of open_basedir restriction.
+		 * In this case, try to detect with the which
+		 * command.
+		 */
+		if( ini_get("open_basedir") != '' ) {
+			$out = array();
+			$ret = 0;
+			$cmd = sprintf("which %s", escapeshellarg($cmdname));
+			exec($cmd, $out, $ret);
+			if( $ret == 0 ) {
+				return $out[0];
+			}
+		}
+
 		return false;
 	}
 

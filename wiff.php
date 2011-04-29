@@ -102,7 +102,7 @@ function checkInitServer()
         		continue ;
         	}
         	$fout = fopen($file, 'x');
-        	if ($fh === false)
+        	if ($fout === false)
         	{
         		array_push($errors, sprintf("Could not create '%s' file.", $file));
         		continue ;

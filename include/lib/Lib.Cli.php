@@ -1214,7 +1214,7 @@ function wiff_mkrepoidx(&$argv) {
 		if( ! preg_match('/\.webinst$/', $file) ) {
 			continue;
 		}
-		$cmd = "tar -zxOf ".escapeshellcmd($repoPath.'/'.$file)." info.xml 2> /dev/null";
+		$cmd = sprintf("tar -zxOf %s info.xml 2> /dev/null", escapeshellarg($repoPath.DIRECTORY_SEPARATOR.$file));
 		$tar = popen($cmd, "r");
 		if( $tar === FALSE ) {
 			error_log(sprintf("Error: running '%s'!\n", $cmd));

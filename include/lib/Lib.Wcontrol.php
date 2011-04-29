@@ -61,6 +61,12 @@ function wcontrol_process($process)
     require_once ('lib/Lib.System.php');
 
     $cmd = $process->getAttribute('command');
+    if( $cmd == '' ) {
+        return array (
+            'ret'=>false,
+            'output'=>"Missing, or empty, 'command' attribute in process."
+        );
+    }
 
     if (!preg_match('|^\s*/|', $cmd))
     {
@@ -111,7 +117,7 @@ function wcontrol_process($process)
         );
     }
 
-    $cmd = sprintf('( %s ) 1> "%s" 2>&1', $cmd, escapeshellcmd($tmpfile));
+    $cmd = sprintf('( %s ) 1> %s 2>&1', escapeshellcmd($cmd), escapeshellarg($tmpfile));
     # error_log(sprintf("%s %s", __FUNCTION__ , $cmd));
 
     /*
