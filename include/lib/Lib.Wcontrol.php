@@ -61,6 +61,12 @@ function wcontrol_process($process)
     require_once ('lib/Lib.System.php');
 
     $cmd = $process->getAttribute('command');
+    if( $cmd == '' ) {
+        return array (
+            'ret'=>false,
+            'output'=>"Missing, or empty, 'command' attribute in process."
+        );
+    }
 
     if (!preg_match('|^\s*/|', $cmd))
     {
