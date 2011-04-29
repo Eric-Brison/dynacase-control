@@ -1345,6 +1345,10 @@ class Context
 			}
 
 			$context = $doc->importNode($contextList->item(0), true); // Node must be imported from contexts document.
+			if( $context->hasAttribute('register') ) {
+				// Remove register status on archived contexts
+				$context->removeAttribute('register');
+			}
 			$context = $root->appendChild($context);
 
 			$repositories = $context->getElementsByTagName('repositories')->item(0);
