@@ -969,6 +969,15 @@ class WIFF
 		$status_handle = fopen($status_file, "w");
 		fwrite($status_handle,$name);
 
+		// --- Connect to database --- //
+		$dbconnect = pg_connect("service=$pgservice");
+		if ($dbconnect === false) {
+			$this->errorMessage = "Error connecting to database 'service=$pgservice'";
+			error_log($this->errorMessage);
+			unlink($status_file);
+			return false;
+		}
+
 		// --- Create or reuse directory --- //
 		if (is_dir($root))
 		{
@@ -1143,13 +1152,7 @@ class WIFF
 					// --- Restore database --- //
 
 					// Setting datestyle
-					$dbconnect = pg_connect("service=$pgservice");
-					if ($dbconnect === false) {
-						$this->errorMessage = "Error when trying to connect to database $pgservice";
-						error_log("Error trying to connect to database $pgservice");
-						unlink($status_file);
-						return false;
-					}
+
 					// Get current database name
 					$result = pg_query($dbconnect, sprintf("SELECT current_database()"));
 					if( $result === false ) {
@@ -1186,10 +1189,11 @@ class WIFF
 						unlink($status_file);
 						return false;
 					}
+					pg_close($dbconnect);
 
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
 
-					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", $dump, $pgservice);
+					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", escapeshellarg($dump), escapeshellarg($pgservice));
 					$result = exec($script,$output,$retval);
 
 					if($retval != 0){
