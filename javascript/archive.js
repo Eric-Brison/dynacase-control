@@ -58,7 +58,7 @@ function updateArchiveList_success(responseObject, select) {
 				iconCls : (!data[i].inProgress)
 						? 'x-icon-archive'
 						: 'x-icon-loading',
-				tabTip : data[i].description ? data[i].description : '',
+				    tabTip : '('+(data[i].datetime?data[i].datetime.substr(0, 16):'')+') '+(data[i].description?data[i].description:''),
 				style : 'padding:10px;',
 				layout : 'fit',
 				disabled : data[i].inProgress,
@@ -444,7 +444,7 @@ function updateArchiveList_success(responseObject, select) {
 						}],
 						refresh : function() {
 
-							var contextInfoHtml = '<ul><li class="x-form-item"><b>Archive Datetime :</b> '
+							var contextInfoHtml = '<ul><li class="x-form-item"><b>Datetime :</b> '
 									+ Ext.util.Format
 											.htmlEncode(this.archive.datetime)
 									+ '</li><li class="x-form-item"><b>Description :</b> '
@@ -453,8 +453,10 @@ function updateArchiveList_success(responseObject, select) {
 									+ '</li><li class="x-form-item"><b>Archive id :</b> '
 									+ Ext.util.Format
 											.htmlEncode(this.archive.id)
-									+ '<li></ul><p>'
-									+ '</li><li class="x-form-item"><b>Vault saved :</b> '
+									+ '</li><li class="x-form-item"><b>Size</b> : '
+									+ Ext.util.Format
+											.htmlEncode(this.archive.size)
+							                + ', <b>Vault saved :</b> '
 									+ Ext.util.Format
 											.htmlEncode(this.archive.vault)
 									+ '<li></ul><p>';

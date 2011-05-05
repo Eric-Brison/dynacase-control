@@ -850,6 +850,8 @@ class WIFF
 				if(preg_match('/^(?P<basename>.+)\.fcz$/',$file,$fmatch)){
 
 					$zipfile = $archived_root.DIRECTORY_SEPARATOR.$file;
+					$size = filesize($zipfile);
+
 
 					$zip = new ZipArchiveCmd();
 					$ret = $zip->open($zipfile);
@@ -908,10 +910,12 @@ class WIFF
 						foreach ($archived_contexts as $context){ // Should be only one context
 							$archiveContext = array();
 							$archiveContext['name'] = $context->getAttribute('name');
+							$archiveContext['size'] = $size/(1024*1024) >= 1024 ? sprintf("%.3f Go",$size/(1024.0*1024.0*1024.0)) : sprintf("%.3f Mo",$size/(1024.0*1024.0));
 							$archiveContext['description'] = $context->getAttribute('description');
 							$archiveContext['id'] = $fmatch['basename'];
 							$archiveContext['datetime'] = $context->getAttribute('datetime');
 							$archiveContext['vault'] = $context->getAttribute('vault');
+
 
 								$moduleList = array();
 
