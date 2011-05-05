@@ -758,7 +758,7 @@ class WIFF
 					$repoList[] = new Repository($repository);
 				}
 
-				$context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'));
+				$context = new Context($context->getAttribute('name'), $context->getElementsByTagName('description')->item(0)->nodeValue, $context->getAttribute('root'), $repoList, $context->getAttribute('url'), $context->getAttribute('register'));
 				$context->isValid();
 
 				if (!$context->isWritable())
@@ -849,76 +849,87 @@ class WIFF
 
 				if(preg_match('/^(?P<basename>.+)\.fcz$/',$file,$fmatch)){
 
-					$zip = zip_open($archived_root.DIRECTORY_SEPARATOR.$file);
+					$zipfile = $archived_root.DIRECTORY_SEPARATOR.$file;
 
-					if(is_int($zip)){
+					$zip = new ZipArchiveCmd();
+					$ret = $zip->open($zipfile);
+					if( $ret === false ) {
 						$this->errorMessage = "Error when opening archive.";
 						return false;
 					}
 
-					do {
-						$info = zip_read($zip);
-					} while ($info && zip_entry_name($info) != "info.xml");
+					$zipIndex = $zip->getIndex();
+					if( $zipIndex === false ) {
+						$this->errorMessage = sprintf("Error getting index from Zip file '%s': %s", $zipfile, $zip->getStatusString());
+						return false;
+					}
 
-					if(zip_entry_name($info) == "info.xml"){
-
-						zip_entry_open($zip, $info, "r");
-
-						$info_content = zip_entry_read($info, zip_entry_filesize($info));
-
-						$xml = new DOMDocument();
-						$xml->loadXML($info_content);
-						if ($xml === false)
-						{
-							$this->errorMessage = sprintf("Error loading XML file '%s'.", $info);
-							return false;
+					$foundInfoXML = false;
+					foreach( $zipIndex as $info ) {
+						if( $info['name'] == 'info.xml' ) {
+							$foundInfoXML = true;
+							break;
 						}
+					}
+					if( ! $foundInfoXML ) {
+						$this->errorMessage = sprintf("Could not find 'info.xml' in content index of Zip file '%s'.", $zipfile);
+						return false;
+					}
 
-						$xpath = new DOMXpath($xml);
+					$info_content = $zip->getFileContentFromName('info.xml');
+					if( $info_content === false ) {
+						$this->errorMessage = sprintf("Error extracting 'info.xml' from '%s': %s", $zipfile, $zip->getStatusString());
+						return false;
+					}
 
-						$contexts = $xpath->query("/info/context");
+					$xml = new DOMDocument();
+					$xml->loadXML($info_content);
+					if ($xml === false)
+					{
+						$this->errorMessage = sprintf("Error loading XML file '%s'.", $info);
+						return false;
+					}
 
-						if ($contexts->length > 0)
-						{
-							foreach ($contexts as $context){ // Should be only one context
-								$contextName = $context->getAttribute('name');
-							}
+					$xpath = new DOMXpath($xml);
+
+					$contexts = $xpath->query("/info/context");
+
+					if ($contexts->length > 0)
+					{
+						foreach ($contexts as $context){ // Should be only one context
+							$contextName = $context->getAttribute('name');
 						}
+					}
 
-						$archived_contexts = $xpath->query("/info/archive");
+					$archived_contexts = $xpath->query("/info/archive");
 
-						if ($archived_contexts->length > 0)
-						{
-							foreach ($archived_contexts as $context){ // Should be only one context
-								$archiveContext = array();
-								$archiveContext['name'] = $context->getAttribute('name');
-								$archiveContext['description'] = $context->getAttribute('description');
-								$archiveContext['id'] = $fmatch['basename'];
-								$archiveContext['datetime'] = $context->getAttribute('datetime');
-								$archiveContext['vault'] = $context->getAttribute('vault');
+					if ($archived_contexts->length > 0)
+					{
+						foreach ($archived_contexts as $context){ // Should be only one context
+							$archiveContext = array();
+							$archiveContext['name'] = $context->getAttribute('name');
+							$archiveContext['description'] = $context->getAttribute('description');
+							$archiveContext['id'] = $fmatch['basename'];
+							$archiveContext['datetime'] = $context->getAttribute('datetime');
+							$archiveContext['vault'] = $context->getAttribute('vault');
 
 								$moduleList = array();
 
-								$moduleDom = $xpath->query("/info/context[@name='".$contextName."']/modules/module");
+							$moduleDom = $xpath->query("/info/context[@name='".$contextName."']/modules/module");
 
-								foreach ($moduleDom as $module)
+							foreach ($moduleDom as $module)
+							{
+								$mod = new Module($this, null, $module, true);
+								if ($mod->status == 'installed')
 								{
-									$mod = new Module($this, null, $module, true);
-									if ($mod->status == 'installed')
-									{
-										$moduleList[] = $mod;
-									}
+									$moduleList[] = $mod;
 								}
-
-								$archiveContext['moduleList'] = $moduleList;
-
-								$archivedContextList[] = $archiveContext ;
 							}
+
+							$archiveContext['moduleList'] = $moduleList;
+
+							$archivedContextList[] = $archiveContext ;
 						}
-
-
-					} else {
-						$this->errorMessage = "info.xml not found in archive";
 					}
 
 				}
@@ -957,6 +968,15 @@ class WIFF
 		$status_file = $archived_root.DIRECTORY_SEPARATOR.$archiveId.'.ctx';
 		$status_handle = fopen($status_file, "w");
 		fwrite($status_handle,$name);
+
+		// --- Connect to database --- //
+		$dbconnect = pg_connect("service=$pgservice");
+		if ($dbconnect === false) {
+			$this->errorMessage = "Error connecting to database 'service=$pgservice'";
+			error_log($this->errorMessage);
+			unlink($status_file);
+			return false;
+		}
 
 		// --- Create or reuse directory --- //
 		if (is_dir($root))
@@ -1086,16 +1106,29 @@ class WIFF
 				{
 
 					$temporary_extract_root = $archived_root.'archived-tmp';
+					if( ! is_dir($temporary_extract_root) ) {
+						$ret = mkdir($temporary_extract_root);
+						if( $ret === false ) {
+							$this->errorMessage = sprintf("Error creating temporary extract root directory '%s'.", $temporary_extract_root);
+							unlink($status_file);
+							return false;
+						}
+					}
 
-					$zip = new ZipArchive();
-					$res = $zip->open($archived_root.DIRECTORY_SEPARATOR.$file);
-					if ($res === TRUE) {
-						$zip->extractTo($temporary_extract_root);
-						$zip->close();
-					} else {
-						$this->errorMessage = "Error when opening archive.";
+					$zip = new ZipArchiveCmd();
+					$zipfile = $archived_root.DIRECTORY_SEPARATOR.$file;
+					$ret = $zip->open($zipfile);
+					if( $ret === false ) {
+						$this->errorMessage = sprintf("Error when opening archive '%s': %s", $zipfile, $zip->getStatusString());
 						// --- Delete status file --- //
 						unlink($status_file);
+						return false;
+					}
+					$ret = $zip->extractTo($temporary_extract_root);
+					if( $ret === false ) {
+						$this->errorMessage = sprintf("Error extracting '%s' into '%s': %s", $zipfile, $temporary_extract_root, $zip->getStatusString());
+						unlink($status_file);
+						$zip->close();
 						return false;
 					}
 
@@ -1119,22 +1152,48 @@ class WIFF
 					// --- Restore database --- //
 
 					// Setting datestyle
-					$dbconnect = pg_connect("service=$pgservice");
-					if ($dbconnect === false) {
-						$this->errorMessage = "Error when trying to connect to database $pgservice";
-						error_log("Error trying to connect to database $pgservice");
+
+					// Get current database name
+					$result = pg_query($dbconnect, sprintf("SELECT current_database()"));
+					if( $result === false ) {
+						$this->errorMessage = sprintf("Error getting current database name: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
 						unlink($status_file);
+						return false;
 					}
-					$result = pg_query($dbconnect,"alter database $pgservice set datestyle = 'SQL, DMY';");
+					$row = pg_fetch_assoc($result);
+					if( $row === false ) {
+						$this->errorMessage = sprintf("Error fetching first row for current database name: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					if( ! isset($row['current_database']) ) {
+						$this->errorMessage = sprintf("Error getting 'current_database' field in row: %s", pg_last_error($dbconnect));
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					$current_database = $row['current_database'];
+					if( $current_database == '' ) {
+						$this->errorMessage = sprintf("Got an empty current database name!?!");
+						error_log($this->errorMessage);
+						unlink($status_file);
+						return false;
+					}
+					// Alter current database datestyle
+					$result = pg_query($dbconnect, sprintf("ALTER DATABASE \"%s\" SET datestyle = 'SQL, DMY';", str_replace("\"", "\"\"", $current_database)));
 					if ($result === false) {
-						$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
-						error_log("Error when trying to get databse info :: ".pg_last_erro());
+						$this->errorMessage = "Error when trying to set database datestyle :: ".pg_last_error($dbconnect);
+						error_log("Error when trying to set database datestyle :: ".pg_last_error($dbconnect));
 						unlink($status_file);
+						return false;
 					}
+					pg_close($dbconnect);
 
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
 
-					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", $dump, $pgservice);
+					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", escapeshellarg($dump), escapeshellarg($pgservice));
 					$result = exec($script,$output,$retval);
 
 					if($retval != 0){
@@ -1466,7 +1525,7 @@ class WIFF
 			}
 
 			$this->errorMessage = null;
-			$context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList, $context->item(0)->getAttribute('url'));
+			$context = new Context($context->item(0)->getAttribute('name'), $context->item(0)->getElementsByTagName('description')->item(0)->nodeValue, $context->item(0)->getAttribute('root'), $repoList, $context->item(0)->getAttribute('url'), $context->item(0)->getAttribute('register'));
 
 			if (!$context->isWritable() && $opt == false)
 			{
@@ -2104,7 +2163,7 @@ class WIFF
 		if( $lock === false ) {
 			$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on context XML file.");
 			error_log($err);
-			$this->errorMessage($err);
+			$this->errorMessage = $err;
 			return false;
 		}
 
@@ -2149,7 +2208,7 @@ class WIFF
 		if( $lock === false ) {
 			$err = sprintf(__CLASS__."::".__FUNCTION__." "."Could not get lock on context XML file.");
 			error_log($err);
-			$this->errorMessage($err);
+			$this->errorMessage = $err;
 			return false;
 		}
 
@@ -2297,6 +2356,236 @@ class WIFF
 
  	public function fmtSystemMsg($m) {
 	  return ( $m!="" ? '<div style="margin-top:10px;font-color:#333;font-size:85%">'.$m.'</div>' : "" );
+	}
+
+	/**
+	 * Generate a UUID suitable for registration process
+	 *
+	 * @return string $uuid the UUID in RFC 4122 form
+	 *
+	 */
+	function genControlID() {
+		return sprintf("%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
+			rand(0, 0xffff), rand(0, 0xffff),
+			rand(0, 0xffff),
+			rand(0, 0xffff),
+			rand(0, 0xffff),
+			rand(0, 0xffff), rand(0, 0xffff), rand(0, 0xffff)
+			);
+	}
+
+	/**
+	 * Generate a {mid, ctrlid} and store it in params <registration/> node
+	 *
+	 * @param boolean $force to force regeneration of a new UUID
+	 *
+	 * @return array() on success or boolean false on error
+	 *
+	 */
+	function checkInitRegistration($force = false) {
+		$mid = $this->getMachineId();
+		if( $mid === false ) {
+			return false;
+		}
+
+		$info = $this->getRegistrationInfo();
+		if( $info === false ) {
+			return false;
+		}
+
+		$rewriteInfo = false;
+		if( $info['mid'] != $mid ) {
+			$info['mid'] = $mid;
+			$info['status'] = '';
+			$rewriteInfo = true;
+		}
+		if( $force || $info['mid'] == '' ) {
+			$info['mid'] = $this->getMachineId();
+			$rewriteInfo = true;
+		}
+		if( $force || $info['ctrlid'] == '' ) {
+			$info['ctrlid'] = $this->genControlId();
+			$rewriteInfo = true;
+		}
+
+		if( $rewriteInfo ) {
+			$ret = $this->setRegistrationInfo($info);
+			if( $ret === false ) {
+				return false;
+			}
+		}
+
+		return $info;
+	}
+
+	function getMachineId() {
+		include_once('class/Class.StatCollector.php');
+
+		$sc = new StatCollector();
+
+		$mid = $sc->getMachineId();
+
+		if( $mid === false ) {
+			$this->errorMessage = sprintf("Could not get machine id: %s", $sc->last_error);
+			return false;
+		}
+
+		return $mid;
+	}
+
+	/**
+	 * Retrieve registration information.
+	 *
+	 * @return boolean false on error or array() $info on success
+	 *
+	 *   array(
+	 *     'mid' => $mid || '',
+	 *     'ctrlid' => $ctrlid || '',
+	 *     'login' => $login || '',
+	 *     'status' => 'registered' || 'unregistered' || ''
+	 *   )
+     *
+	 */
+	function getRegistrationInfo() {
+		$xml = new DOMDocument();
+		$ret = $xml->load($this->params_filepath);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+			return false;
+		}
+
+		$xPath = new DOMXPath($xml);
+
+		$info = array('mid' => '', 'ctrlid' => '', 'login' => '', 'status' => '');
+
+		$registrationNodeList = $xPath->query('/wiff/registration');
+		if( $registrationNodeList->length > 0 ) {
+			$registrationNode = $registrationNodeList->item(0);
+			foreach( array_keys($info) as $key ) {
+				$info[$key] = $registrationNode->getAttribute($key);
+			}
+		}
+
+		return $info;
+	}
+
+	/**
+	 * Set/store registration info
+	 *
+	 * @param array() $info containing the registration information
+	 *
+	 *   array(
+	 *     'uuid' => $uuid || '',
+	 *     'login' => $login || '',
+	 *     'status' => 'registered' || 'unregistered' || ''
+	 *   )
+	 *
+	 * @return boolean false on error or true on success.
+	 *
+	 */
+	function setRegistrationInfo($info) {
+		$xml = new DOMDocument();
+		$xml->preserveWhiteSpace = false;
+		$xml->formatOutput = true;
+
+		$ret = $xml->load($this->params_filepath);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error loading XML file '%s'.", $this->params_filepath);
+			return false;
+		}
+
+		$xPath = new DOMXpath($xml);
+
+		$registrationNode = null;
+		$registrationNodeList = $xPath->query('/wiff/registration');
+		if( $registrationNodeList->length <= 0 ) {
+			$registrationNode = $xml->createElement('registration');
+			$xml->documentElement->appendChild($registrationNode);
+		} else {
+			$registrationNode = $registrationNodeList->item(0);
+		}
+
+		foreach( $info as $key => $value ) {
+			$registrationNode->setAttribute($key, $value);
+		}
+
+		$ret = $xml->save($this->params_filepath);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Error writing file '%s'.", $this->params_filepath);
+			return false;
+		}
+
+		return $info;
+	}
+
+	function getRegistrationClient() {
+		include_once('class/Class.RegistrationClient.php');
+
+		$rc = new RegistrationClient();
+
+		if( $this->getParam('use-proxy') === 'yes' ) {
+			$proxy_host = $this->getParam('proxy-host');
+			$proxy_port = $this->getParam('proxy-port');
+			$proxy_user = $this->getParam('proxy-username');
+			$proxy_pass = $this->getParam('proxy-password');
+
+			if( $proxy_host != '' ) {
+				if( $proxy_user != '' ) {
+					$rc->setProxy($proxy_host, $proxy_port, $proxy_user, $proxy_pass);
+				} else {
+					$rc->setProxy($proxy_host, $proxy_port);
+				}
+			}
+		}
+
+		return $rc;
+	}
+
+	function tryRegister($mid, $ctrlid, $login, $password) {
+		$rc = $this->getRegistrationClient();
+
+		$response = $rc->register($mid, $ctrlid, $login, $password);
+		if( $response === false ) {
+			$this->errorMessage = sprintf("Error posting register request: '%s'", $rc->last_error);
+			return false;
+		}
+
+		if( $response['code'] >= 200 && $response['code'] < 300 ) {
+			$info['login'] = $login;
+			$info['status'] = 'registered';
+			$ret = $this->setRegistrationInfo($info);
+			if( $ret === false ) {
+				$this->errorMessage = sprintf("Error storing registration information to local XML file.");
+				return false;
+			}
+		}
+
+		return $response;
+	}
+
+	function sendContextConfiguration($contextName) {
+		$regInfo = $this->getRegistrationInfo();
+		if( $regInfo === false ) {
+			return false;
+		}
+
+		if( $regInfo['status'] != 'registered' ) {
+			$this->errorMessage = sprintf("Installation '%s/%s' is not registered!", $regInfo['mid'], $regInfo['ctrlid']);
+			return false;
+		}
+
+		$context = $this->getContext($contextName);
+		if( $context === false ) {
+			return false;
+		}
+
+		$ret = $context->sendConfiguration($this);
+		if( $ret === false ) {
+			$this->errorMessage = sprintf("Could not send context configuration for context '%s': %s", $contextName, $context->errorMessage);
+			return false;
+		}
+
+		return true;
 	}
 
 }

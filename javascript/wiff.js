@@ -56,6 +56,7 @@ function checkPasswordFile() {
 					} else {
 						if (response.data) {
 							// Nothing to do.
+							registrationClient.checkInitRegistration();
 						} else {
 							displayPasswordWindow(false);
 						}
@@ -67,6 +68,377 @@ function checkPasswordFile() {
 				}
 
 			});
+}
+
+function registrationClient() {
+	var _self = this;
+
+	this.ctx = {};
+
+	this.checkInitRegistration = function(force) {
+		this.ctx = {};
+
+		if( force == undefined ) {
+			force = false;
+		}
+
+		Ext.Ajax.request({
+			scope : this,
+			url : 'wiff.php',
+			params : {
+				checkInitRegistration : true,
+				force : (force) ? 'true' : 'false'
+			},
+			success : function(responseObject, requestObject) { return this.checkInitRegistrationSuccess(responseObject); },
+			failure : function(responseObject, requestObject) { return this.checkInitRegistrationFailure(responseObject); }
+		});
+	};
+
+	this.checkInitRegistrationSuccess = function(responseObject) {
+		var response = eval('(' + responseObject.responseText + ')');
+
+		this.ctx.mid = response.data.mid;
+		this.ctx.ctrlid = response.data.ctrlid;
+		this.ctx.login = response.data.login;
+		this.ctx.status = response.data.status;
+
+		if( response.data.status == '' ) {
+			return this.askRegistration();
+		}
+	};
+
+	this.checkInitRegistrationFailure = function(responseObject) {
+		var response = eval('(' + responseObject.responseText + ')');
+		Ext.Msg.alert('Error checkInitRegistration()', response.error);
+	};
+
+	this.askRegistration = function() {
+		var fields = [];
+
+		var infoPanel = new Ext.Panel({
+			border : false,
+			html : '<i>Do you want to register your dynacase-control with your EEC account?</i>',
+			bodyStyle : 'padding-bottom:10px;'
+		});
+		fields.push(infoPanel);
+
+		var midField = new Ext.form.TextField({
+			fieldLabel : 'Machine ID',
+			xtype : 'textfield',
+			anchor : '-15',
+			disabled : true,
+			value : this.ctx.mid
+		});
+		fields.push(midField);
+
+		var ctrlidField = new Ext.form.TextField({
+			fieldLabel : 'Control ID',
+			xtype : 'textfield',
+			anchor : '-15',
+			disabled : true,
+			value : this.ctx.ctrlid
+		});
+		fields.push(ctrlidField);
+
+		var loginField = new Ext.form.TextField({
+			fieldLabel : 'EEC login',
+			xtype : 'textfield',
+			anchor : '-15',
+			value : ( this.ctx.login != '' ) ? this.ctx.login : ''
+		});
+		fields.push(loginField);
+
+		var passwordField = new Ext.form.TextField({
+			fieldLabel : 'EEC password',
+			xtype : 'textfield',
+			inputType : 'password',
+			anchor : '-15'
+		});
+		fields.push(passwordField);
+
+		var infoPanel = new Ext.Panel({
+			border : false,
+			html : 'If you choose not to register now, you can perform this operation later from the <i>Setup</i> section.',
+			bodyStyle : 'padding-top:10px;'
+		});
+		fields.push(infoPanel);
+
+		var win = new Ext.Window({
+			title : 'Dynacase Control - EEC registration',
+			layout : 'fit',
+			modal : true,
+			height : 240,
+			width : 440,
+			items : [{
+				xtype : 'form',
+				labelWidth : 120,
+				bodyStyle : 'padding:10px',
+				border : false,
+				items : fields,
+				bbar : [{
+					text : 'Register now!',
+					iconCls : 'x-icon-ok',
+					scope : this,
+					handler : function(b, e) {
+
+						var mid = midField.getValue();
+						var ctrlid = ctrlidField.getValue();
+						var eecLogin = loginField.getValue();
+						var eecPassword = passwordField.getValue();
+
+						mask = new Ext.LoadMask(Ext.getBody(), {
+							msg : 'Saving...'
+						});
+
+						mask.show();
+
+						win.close();
+
+						this.ctx.mask = mask;
+
+						return this.tryRegister(mid, ctrlid, eecLogin, eecPassword);
+					}
+				}, {
+					text : 'Register later...',
+					iconCls : 'x-icon-undo',
+					scope : this,
+					handler : function(b, e) {
+						win.close();
+						return this.continueUnregistered();
+					},
+					disabled : false
+				}]
+			}],
+			listeners : {
+				afterrender : function() {
+				},
+				close : function() {
+				}
+			}
+		});
+		win.show();
+		return;
+	};
+
+	this.continueUnregistered = function() {
+		this.ctx.status = 'unregistered';
+		Ext.Ajax.request({
+			url : 'wiff.php',
+			scope : this,
+			params : {
+				continueUnregistered : true,
+				mid : this.ctx.mid,
+				ctrlid : this.ctx.ctrlid
+			},
+			sucess : function(responseObject, requestObject) { this.ctx.mask.hide(); this.continueUnregisteredSuccess(responseObject); },
+			failure : function(responseObject, requestObject) { this.ctx.mask.hide(); this.continueUnregisteredFailure(responseObject); }
+		});
+	};
+
+	this.continueUnregisteredSuccess = function(responseObject) {
+		return;
+	};
+
+	this.continueUnregisteredFailure = function(responseObject) {
+		return;
+	};
+
+	this.tryRegister = function(mid, ctrlid, eecLogin, eecPassword) {
+		this.ctx.mid = mid;
+		this.ctx.ctrlid = ctrlid;
+		this.ctx.login = eecLogin;
+
+		Ext.Ajax.request({
+			scope : this,
+			url : 'wiff.php',
+			params : {
+				tryRegister : true,
+				mid : mid,
+				ctrlid : ctrlid,
+				login : eecLogin,
+				password : eecPassword
+			},
+			success : function(responseObject, requestObject) { this.ctx.mask.hide(); this.tryRegisterSuccess(responseObject); },
+			failure : function(responseObject, requestObject) { this.ctx.mask.hide(); this.tryRegisterFailure(responseObject); }
+		});
+	};
+
+	this.tryRegisterSuccess = function(responseObject) {
+		var response = eval('(' + responseObject.responseText + ')');
+
+		if( response.error ) {
+			Ext.Msg.alert('Server Error', response.error,
+				function(btn, text) {
+					return;
+				}
+			);
+		} else {
+			if( response.data.code >= 200 && response.data.code < 300 ) {
+				this.ctx.status = 'registered';
+				refreshRender('dynacase-control-information');
+				refreshRender('create-context-form');
+				Ext.Msg.alert(
+					"Registration",
+					"Your dynacase-control is now registered to your EEC account '"+this.ctx.login+"' with mid/ctrlid '"+this.ctx.mid+"/"+this.ctx.ctrlid+"'",
+					function(btn, text) {
+						return;
+					},
+					this
+				);
+			} else if( response.data.code == 403 ) {
+				this.ctx.status = 'unregistered';
+				Ext.Msg.alert(
+					"Registration",
+					"Authentication failed for login '"+this.ctx.login+"'",
+					function(btn, text) {
+						if( btn == 'ok' ) {
+							return this.askRegistration();
+						}
+					},
+					this
+				);
+			} else {
+				this.ctx.status = 'unregistered';
+				Ext.Msg.alert(
+					"Registration",
+					"Unknown response with code '" + response.data.code + "': " + response.data.response,
+					function(btn, text) {
+						return;
+					},
+					this
+				);
+			}
+		}
+		return;
+	};
+
+	this.tryRegisterFailure = function(responseObject) {
+		var response = eval('(' + responseObject.responseText + ')');
+
+		Ext.Msg.alert(
+			"Registration",
+			"Call to 'tryRegister' failed."
+		);
+
+		return;
+	};
+
+	this.sendContextConfiguration = function(contextid) {
+		return false;
+	};
+
+	this.showConfiguration = function() {
+		Ext.Ajax.request({
+			scope : this,
+			url : 'wiff.php',
+			params : {
+				getConfiguration : true,
+				context : currentContext
+			},
+			success : function(responseObject) {
+				return this.showConfigurationSuccess(responseObject);
+			},
+			failure : function(responseObject) {
+				return this.showConfigurationFailure(responseObject);
+			}
+		});
+	};
+
+	this.showConfigurationSuccess = function(responseObject) {
+		var response = eval('(' + responseObject.responseText + ')');
+
+		if( response.error ) {
+			return Ext.Msg.alert('Server Error', response.error,
+				function(btn, text) {
+					return;
+				}
+			);
+		}
+
+
+		var statsText = Ext.util.Format.htmlEncode(response.data.stats);
+
+		var headerPanel = new Ext.Panel({
+					bodyStyle : 'padding-bottom:10px;',
+					html : "<p>Configuration sent for context '" + currentContext + "' with mid/ctrlid:</p><pre>" + this.ctx.mid + "/" + this.ctx.ctrlid + "</pre>"
+				});
+
+		var statsPanel = new Ext.Panel({
+			border : false,
+			bodyStyle : 'padding-bottom:10px;',
+			autoScroll : true,
+			flex : 1,
+			items : [new Ext.Panel({
+						html : '<pre style="color: black; background-color: white; white-space: pre-wrap">'
+								+ statsText + '</pre>'
+					})]
+		});
+
+		var configFormPanel = new Ext.form.FormPanel({
+					id : 'configuration-formpanel',
+					border : false,
+					frame : true,
+					bodyStyle : 'padding:15px;',
+					monitorValid : true,
+					layout : 'vbox',
+					items : [headerPanel, statsPanel]
+				});
+
+		var configWin = new Ext.Window({
+					id : 'configuration-window',
+					items : [configFormPanel],
+					height : 400,
+					width : 600,
+					modal : true,
+					closable : true,
+					layout : 'fit'
+				});
+
+		configWin.show();
+	};
+
+	this.showConfigurationFailure = function(responseObject) {
+		return Ext.Msg.alert(
+			"Sent configuration",
+			"Call to 'getStatisticsXML' failed."
+		);
+	};
+
+	this.getRegistrationInfo = function(opts) {
+		Ext.Ajax.request({
+			scope : this,
+			url : 'wiff.php',
+			params : {
+				getRegistrationInfo : true
+			},
+			success : function(responseObject) {
+				var response = eval('(' + responseObject.responseText + ')');
+				if( response.error ) {
+					Ext.Msg.alert('Server Error', response.error);
+					registrationInfo = "Can't get registration status";
+				} else {
+					this.ctx.mid = response.data.mid;
+					this.ctx.ctrlid = response.data.ctrlid;
+					this.ctx.login = response.data.login;
+					this.ctx.status = response.data.status;
+
+					refreshRender('dynacase-control-information');
+				}
+			},
+			failure : function(responseObject) {
+			}
+		});
+	};
+
+};
+
+var registrationClient = new registrationClient();
+
+function refreshRender(id) {
+	var obj = Ext.getCmp(id);
+	if( obj != undefined ) {
+		obj.fireEvent('render', obj);
+	}
 }
 
 function updateWIFF() {
@@ -217,6 +589,7 @@ function displayPasswordWindow(canCancel) {
 															'Save successful.',
 															function(btn) {
 																win.close();
+																registrationClient.checkInitRegistration();
 															});
 
 												}
@@ -1728,6 +2101,20 @@ function updateContextList_success(responseObject, select) {
 
 														});
 
+												var isContextRegistered = (getCurrentContext().register == 'registered') ? true : false;
+
+												panel.remove(panel.registrationCheckbox);
+												panel.registrationCheckbox = new Ext.form.Checkbox({
+													fieldLabel : 'Registration',
+													name : 'register',
+													anchor : '-15',
+													columns : 1,
+													boxLabel: (registrationClient.ctx.status == 'registered') ? 'Register this context with your EEC account?' : 'You cannot register this context because your dynacase-control is not registered with your EEC account...',
+													checked : (registrationClient.ctx.status == 'registered') ? isContextRegistered : false,
+													disabled : (registrationClient.ctx.status == 'registered') ? false : true
+												});
+												panel.add(panel.registrationCheckbox);
+
 												panel
 														.remove(panel.checkBoxGroup);
 
@@ -1898,6 +2285,10 @@ function updateContextList_success(responseObject, select) {
 					}],
 					refresh : function() {
 						var repositoryHtml = '<ul>';
+						var registerHtml = (this.context.register == 'registered') ?
+								'<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;<span style="">Registered</span> (&nbsp;<a href="javascript:registrationClient.showConfiguration(currentContext)">Show configuration</a>&nbsp;|&nbsp;<a href="javascript:forceSendContextConfiguration();">Send configuration</a>&nbsp;)'
+								:
+								'<img src="images/icons/error.png" style="vertical-align: middle;" />&nbsp;<span style="">Unregistered</span>';
 
 						var needRepoValidationList = new Array();
 						var lenghtRepo = 0;
@@ -1953,7 +2344,10 @@ function updateContextList_success(responseObject, select) {
 												+ this.context.url + '</a>'
 										: '<i> no url</i>')
 								+ '</li><li class="x-form-item"><b>Repositories :</b> '
-								+ repositoryHtml + '</li></ul><p>';
+								+ repositoryHtml + '</li>'
+								+ '<li class="x-form-item"><b>Registration</b> : ' + registerHtml + '</li>'
+								+ '</ul>'
+								+ '<p>';
 
 						this.body.update(contextInfoHtml);
 
@@ -2813,18 +3207,74 @@ function wstart(module, operation) {
 							askParameter(toInstall[0], operation);
 						}
 					} else {
-						Ext.Msg.alert('Dynacase Control', 'Install successful',
-								function() {
-									installedStore[currentContext].load();
-									availableStore[currentContext].load();
-									globalwin.close();
-								});
+						var context = getCurrentContext();
+						if( context.register == 'registered' ) {
+							return sendContextConfiguration();
+						}
+						return installHappyEnd();
 					}
 					// })
 
 					// The end
 				}
 			});
+}
+
+function installHappyEnd() {
+	Ext.Msg.alert('Dynacase Control', 'Install successful',
+		function() {
+			installedStore[currentContext].load();
+			availableStore[currentContext].load();
+			globalwin.close();
+		});
+}
+
+function forceSendContextConfiguration() {
+	return sendContextConfiguration({
+		success : function(responseObject) {
+			var response = eval('(' + responseObject.responseText + ')');
+			if( response.error ) {
+				registrationClient.ctx.mask.hide();
+				return Ext.Msg.alert('Server Error', response.error);
+			} else {
+				registrationClient.ctx.mask.hide();
+				return Ext.Msg.alert('Configuration', 'Configuration successfully sent.');
+			}
+		},
+		failure : function() {
+			Ext.Msg.alert('Configuration', 'Error sending configuration.');
+		}
+	});
+};
+
+function sendContextConfiguration(opts) {
+	registrationClient.ctx.mask = new Ext.LoadMask(Ext.getBody(), { msg : 'Sending configuration...' });
+	registrationClient.ctx.mask.show();
+
+	Ext.Ajax.request({
+		url : 'wiff.php',
+		params : {
+			sendContextConfiguration : 'yes',
+			context : currentContext
+		},
+		success : (opts != undefined && opts.success != undefined) ? opts.success : function(responseObject) {
+			sendContextConfigurationSuccess(responseObject);
+		},
+		failure : (opts != undefined && opts.failure != undefined) ? opts.failure : function(responseObject) {
+			sendContextConfigurationFailure(responseObject);
+		}
+	});
+}
+
+function sendContextConfigurationSuccess(responseObject) {
+	registrationClient.ctx.mask.hide();
+	return installHappyEnd();
+}
+
+function sendContextConfigurationFailure(responseObject) {
+	registrationClient.ctx.mask.hide();
+	Ext.Msg.alert('Dynacase Control', 'Error sending context configuration');
+	return installHappyEnd();
 }
 
 /**
@@ -3847,6 +4297,54 @@ function setRepoValidityIconLabel(repoName, repoIconId, repoLabelId) {
 	});
 }
 
+spinlock = (function() {
+
+	function _class(opts) {
+		var _self = this;
+
+		this.check = opts.check;
+		this.onready = opts.onready;
+
+		this.timeout = 250;
+		if( opts.timeout != undefined ) {
+			this.timeout = opts.timeout;
+		}
+
+		this.check_scope = window;
+		if( opts.check_scope != undefined ) {
+			this.check_scope = opts.check_scope;
+		};
+
+		this.onready_scope = window;
+		if( opts.onready_scope != undefined ) {
+			this.onready_scope = opts.onready_scope;
+		};
+
+		this.check_argv = [];
+		if( opts.check_argv != undefined ) {
+			this.check_argv = opts.check_argv;
+		};
+
+		this.onready_argv = [];
+		if( opts.onready_argv != undefined ) {
+			this.onready_argv = opts.onready_argv;
+		};
+
+		this.wait = function() {
+			// console.log("spinlock.wait");
+			var ready = _self.check.call(_self.check_scope, _self.check_argv);
+			// console.log("ready = " + ready);
+			if( ! ready ) {
+				return setTimeout(_self.wait, _self.timeout);
+			} else {
+				return _self.onready.call(_self.onready_scope, _self.onready_argv);
+			}
+		};
+	}
+
+	return _class;
+})();
+
 Ext.onReady(function() {
 
 	Ext.BLANK_IMAGE_URL = 'javascript/lib/ext/resources/images/default/s.gif';
@@ -3856,6 +4354,21 @@ Ext.onReady(function() {
 
 	checkPasswordFile();
 
+	lock = new spinlock({
+		timeout : 1000,
+		check_scope : registrationClient,
+		check : function() {
+			if( this.ctx == undefined || this.ctx.status == undefined || this.ctx.status == '' ) {
+				return false;
+			}
+			return true;
+		},
+		onready : function() { return displayInterface(); }
+	});
+	lock.wait();
+});
+
+function displayInterface() {
 	// Update Available Test
 	needUpdate = false;
 	Ext.Ajax.request({
@@ -3918,6 +4431,7 @@ Ext.onReady(function() {
 						iconCls : 'x-icon-setup',
 						bodyStyle : 'overflow:auto;',
 						items : [{
+							id : 'dynacase-control-information',
 							title : 'Dynacase Control Information',
 							style : 'padding:10px;font-size:small;',
 							bodyStyle : 'padding:5px;',
@@ -3926,14 +4440,23 @@ Ext.onReady(function() {
 
 									var currentVersion = null;
 									var availableVersion = null;
+									var registrationInfo = null;
+
+									if( registrationClient.ctx.status == 'registered' ) {
+										registrationInfo = '<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;'
+											+ "Registered with '<tt>" + registrationClient.ctx.mid + "/" + registrationClient.ctx.ctrlid + "</tt>' and EEC account '<tt>" + registrationClient.ctx.login + "'</tt>";
+									} else {
+										registrationInfo = '<img src="images/icons/error.png" style="vertical-align: middle;" />&nbsp;'
+											+ "Unregistered '<tt>" + registrationClient.ctx.mid + "/" + registrationClient.ctx.ctrlid + "</tt>' ... (&nbsp;<a href=\"javascript:registrationClient.askRegistration();\">Register</a>&nbsp;)";
+									}
 
 									var displayInfo = function() {
 										if (currentVersion && availableVersion) {
-											var html = '<ul><li class="x-form-item"><b>Current Version :</b> '
-													+ currentVersion
-													+ '</li><li class="x-form-item"><b>Available Version :</b> '
-													+ availableVersion
-													+ '</li></ul>'
+											var html = '<ul>'
+													+ '<li class="x-form-item"><b>Current Version :</b> ' + currentVersion + '</li>'
+													+ '<li class="x-form-item"><b>Available Version :</b> '	+ availableVersion + '</li>'
+													+ '<li class="x-form-item"><b>Registration :</b> ' + registrationInfo + '</li>'
+													+ '</ul>';
 											panel.body.update(html);
 										}
 									};
@@ -3985,6 +4508,34 @@ Ext.onReady(function() {
 										}
 									});
 
+									// registrationClient.getRegistrationInfo();
+									/*
+									Ext.Ajax.request({
+										url : 'wiff.php',
+										params : {
+											getRegistrationInfo : true
+										},
+										success : function(responseObject) {
+											var response = eval('(' + responseObject.responseText + ')');
+											if( response.error ) {
+												Ext.Msg.alert('Server Error', response.error);
+												registrationInfo = "Can't get registration status";
+											} else {
+												if( response.data.status == 'registered' ) {
+													registrationInfo = '<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;'
+														+ "Registered with '<tt>" + response.data.mid + "/" + response.data.ctrlid + "</tt>' and EEC account '<tt>" + response.data.login + "'</tt>";
+												} else {
+													registrationInfo = '<img src="images/icons/error.png" style="vertical-align: middle;" />&nbsp;'
+														+ "Unregistered '<tt>" + response.data.mid + "/" + response.data.ctrlid + "</tt>' ... (&nbsp;<a href=\"javascript:registrationClient.askRegistration();\">Register</a>&nbsp;)";
+												}
+											}
+											displayInfo();
+										},
+										failure : function(responseObject) {
+										}
+									});
+									*/
+									displayInfo();
 								}
 							},
 							tbar : [{
@@ -4535,6 +5086,18 @@ Ext.onReady(function() {
 
 									});
 
+									panel.remove(panel.registrationCheckbox);
+									panel.registrationCheckbox = new Ext.form.Checkbox({
+										fieldLabel : 'Registration',
+										name : 'register',
+										anchor : '-15',
+										columns : 1,
+										boxLabel: (registrationClient.ctx.status == 'registered') ? 'Register this context with your EEC account?' : 'You cannot register this context because your dynacase-control is not registered with your EEC account...',
+										checked : (registrationClient.ctx.status == 'registered') ? true : false,
+										disabled : (registrationClient.ctx.status == 'registered') ? false : true
+									});
+									panel.registrationCheckbox = panel.add(panel.registrationCheckbox);
+
 									panel.remove(panel.checkBoxGroup);
 
 									panel.checkBoxGroup = new Ext.form.CheckboxGroup(
@@ -4581,4 +5144,4 @@ Ext.onReady(function() {
 
 	updateArchiveList();
 
-});
+};

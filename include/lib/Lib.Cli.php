@@ -726,6 +726,22 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 		$module->cleanupDownload();
 
 		/**
+		 * send context registration statistyics
+		 */
+		$wiff = WIFF::getInstance();
+		$registrationInfo = $wiff->checkInitRegistration();
+		if( $registrationInfo['status'] == 'registered' && $context->register == 'registered' ) {
+			echo sprintf("Sending context configuration... ");
+			$ret = $wiff->sendContextConfiguration($context->name);
+			if( $ret === false ) {
+				$err = sprintf("Error: Could not send context configuration: %s", $wiff->errorMessage);
+				echo sprintf("[%sSKIPPED%s] (%s)\n", fg_blue(), color_reset(), $err);
+			} else {
+				echo sprintf("[%sOK%s]\n", fg_green(), color_reset());
+			}
+		}
+
+		/**
 		 * wstart
 		 */
 		$ret = $context->wstart();
@@ -1198,7 +1214,7 @@ function wiff_mkrepoidx(&$argv) {
 		if( ! preg_match('/\.webinst$/', $file) ) {
 			continue;
 		}
-		$cmd = "tar -zxOf ".escapeshellcmd($repoPath.'/'.$file)." info.xml 2> /dev/null";
+		$cmd = sprintf("tar -zxOf %s info.xml 2> /dev/null", escapeshellarg($repoPath.DIRECTORY_SEPARATOR.$file));
 		$tar = popen($cmd, "r");
 		if( $tar === FALSE ) {
 			error_log(sprintf("Error: running '%s'!\n", $cmd));
