@@ -39,5 +39,5 @@ autoinstall: tarball
 clean:
 	find . -name "*~" -exec rm -f {} \;
 	rm -Rf tmp
-	rm -f $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).tar.gz
-	rm -f $(TAR_DIST_NAME)-$(VERSION)-$(RELEASE).autoinstall.php
+	rm -f $(TAR_DIST_NAME)-*.tar.gz
+	rm -f $(TAR_DIST_NAME)-*.autoinstall.php

@@ -6,6 +6,7 @@
         <link rel="shortcut icon" href="images/icons/dynacase.ico" >
         <title>Dynacase-Control</title>
         <link rel="stylesheet" type="text/css" href="javascript/lib/ext/resources/css/ext-all.css" />
+        <link rel="stylesheet" type="text/css" href="javascript/lib/ext/resources/css/xtheme-gray.css" />
         <link rel="stylesheet" type="text/css" href="javascript/lib/ext-add/GroupTabs.css" />
         <link rel="stylesheet" type="text/css" href="javascript/lib/ext-add/RowActions.css" />
 		<link rel="icon" type="image/png" href="images/icons/dynacase.ico" />
@@ -28,8 +29,10 @@
         <script src="javascript/wiff.js">
         </script>
         <style>
+	  .x-repo-setup { background-image: url('images/icons/link_edit.png') !important; }
+	  .x-repo-delete { background-image: url('images/icons/link_delete.png') !important; }
             .x-icon-create {
-                background-image: url('images/icons/book_add.png') !important;
+                background-image: url('images/icons/context-add.png') !important;
             }
 			.x-icon-create-archive {
 				background-image: url('images/icons/package_add.png') !important;
@@ -37,14 +40,14 @@
 			.x-icon-delete-archive {
 				background-image: url('images/icons/package_delete.png') !important;
 			}
-			.x-icon-setup {
-                background-image: url('images/icons/cog.png') !important;
+			.x-context-modify {
+                background-image: url('images/icons/context-modify.png') !important;
             } 
 			.x-icon-context {
-                background-image: url('images/icons/book.png') !important;
+                background-image: url('images/icons/context.png') !important;
             }
 			.x-icon-delete-context {
-				background-image: url('images/icons/book_delete.png') !important;
+				background-image: url('images/icons/context-delete.png') !important;
 			}
 			.x-icon-archive {
                 background-image: url('images/icons/package.png') !important;
@@ -58,8 +61,14 @@
 			.x-icon-update {
                 background-image: url('images/icons/add.png') !important;
             } 
+			.x-icon-setup {
+                background-image: url('images/icons/application_form_edit.png') !important;
+            } 
 			.x-icon-param {
-                background-image: url('images/icons/cog.png') !important;
+                background-image: url('images/icons/brick_edit.png') !important;
+            } 
+			.x-icon-param-change {
+                background-image: url('images/icons/textfield_rename.png') !important;
             } 
 			.x-icon-remove {
                 background-image: url('images/icons/delete.png') !important;
@@ -97,9 +106,8 @@
 			.x-icon-debug {
 				background-image: url('images/icons/application_form_magnify.png') !important;
 			}
-			.x-icon-import {
-				background-image: url('images/icons/package_go.png') !important;
-			}
+			.x-module-import { background-image: url('images/icons/brick_go.png') !important;			}
+			.x-module-installed, .x-module-available { background-image: url('images/icons/brick.png') !important;			}
 			.x-icon-php {
 				background-image: url('images/icons/page_white_php.png') !important;
 			}
@@ -107,7 +115,7 @@
 				background-image: url('javascript/lib/ext/resources/images/default/grid/loading.gif') !important;
 			}
 			.x-icon-log {
-				background-image: url('images/icons/paste_plain.png') !important;
+				background-image: url('images/icons/page_white_text.png') !important;
 			}
 			.x-tab-strip .x-icon-loading {
 				color: #DFE8F6 !important;
@@ -181,8 +189,8 @@
         </style>
     </head>
     <body>
-        <div style="text-align:center;position:absolute;bottom:15px;left:30px;width:100px;z-index:0;" >
-             <a href="http://www.anakeen.com" target="_blank"><img src=images/logo/anakeen.png /></a>
+        <div style="text-align:center;position:absolute;bottom:15px;left:30px;z-index:0;" >
+             <a href="http://www.anakeen.com" target="_blank"><img style="width:80px;" src=images/logo/anakeen.png /></a>
         </div>
     </body>
 </html>

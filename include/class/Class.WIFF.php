@@ -915,6 +915,7 @@ class WIFF
 							$archiveContext['id'] = $fmatch['basename'];
 							$archiveContext['datetime'] = $context->getAttribute('datetime');
 							$archiveContext['vault'] = $context->getAttribute('vault');
+							$archiveContext['urlfile'] = wiff::archive_filepath.DIRECTORY_SEPARATOR.$file;
 
 
 								$moduleList = array();
@@ -945,6 +946,7 @@ class WIFF
 					$status_handle = fopen($archived_root.DIRECTORY_SEPARATOR.$file,'r');
 					$archiveContext = array();
 					$archiveContext['name'] = fread($status_handle,filesize($archived_root.DIRECTORY_SEPARATOR.$file));
+
 					$archiveContext['inProgress'] = true ;
 					$archivedContextList[] = $archiveContext ;
 

@@ -410,7 +410,7 @@ function updateArchiveList_success(responseObject, select) {
 							}
 						},{
 							text : 'Download',
-							tooltip : 'Download',
+							tooltip : 'Download this archive',
 							iconCls : 'x-icon-archive-download',
 							archive : data[i],
 							    handler : function (button) {

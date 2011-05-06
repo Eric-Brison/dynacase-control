@@ -1585,7 +1585,7 @@ function updateContextList_success(responseObject, select) {
 					buttonOnly : true,
 					buttonCfg : {
 						text : 'Import Module',
-						iconCls : 'x-icon-import',
+						iconCls : 'x-module-import',
 						tooltip : 'Open a local file browser'
 					},
 					listeners : {
@@ -1950,7 +1950,7 @@ function updateContextList_success(responseObject, select) {
 				bodyStyle : 'overflow-y:auto;',
 				items : [{
 					layout : 'anchor',
-					title : 'Context Information',
+					title : 'Informations',
 					style : 'padding:10px;font-size:small;',
 					bodyStyle : 'padding:5px;',
 					xtype : 'panel',
@@ -1959,7 +1959,7 @@ function updateContextList_success(responseObject, select) {
 					tbar : [{
 						text : 'Modify Context',
 						tooltip : 'Modify Context',
-						iconCls : 'x-icon-setup',
+						iconCls : 'x-context-modify',
 						context : data[i],
 						handler : function(button) {
 							var win = new Ext.Window({
@@ -2286,9 +2286,9 @@ function updateContextList_success(responseObject, select) {
 					refresh : function() {
 						var repositoryHtml = '<ul>';
 						var registerHtml = (this.context.register == 'registered') ?
-								'<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;<span style="">Registered</span> (&nbsp;<a href="javascript:registrationClient.showConfiguration(currentContext)">Show configuration</a>&nbsp;|&nbsp;<a href="javascript:forceSendContextConfiguration();">Send configuration</a>&nbsp;)'
+								'<img src="images/icons/tag_green.png" style="vertical-align: middle;" />&nbsp;<span style="">Registered</span> (&nbsp;<a href="javascript:registrationClient.showConfiguration(currentContext)">Show configuration</a>&nbsp;|&nbsp;<a href="javascript:forceSendContextConfiguration();">Send configuration</a>&nbsp;)'
 								:
-								'<img src="images/icons/error.png" style="vertical-align: middle;" />&nbsp;<span style="">Unregistered</span>';
+								'<img src="images/icons/stop.png" style="vertical-align: middle;" />&nbsp;<span style="">Unregistered</span>';
 
 						var needRepoValidationList = new Array();
 						var lenghtRepo = 0;
@@ -2371,6 +2371,7 @@ function updateContextList_success(responseObject, select) {
 				}, {
 					id : data[i].name + '-installed',
 					title : 'Installed',
+					    iconCls : 'x-module-installed',
 					columnWidth : .45,
 					layout : 'fit',
 					style : 'padding:10px;padding-top:0px;',
@@ -2619,6 +2620,7 @@ function updateContextList_success(responseObject, select) {
 				}, {
 					id : data[i].name + '-available',
 					title : 'Available',
+					iconCls : 'x-module-available',
 					columnWidth : .45,
 					layout : 'fit',
 					style : 'padding:10px;padding-top:0px;',
@@ -4443,10 +4445,10 @@ function displayInterface() {
 									var registrationInfo = null;
 
 									if( registrationClient.ctx.status == 'registered' ) {
-										registrationInfo = '<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;'
+										registrationInfo = '<img src="images/icons/tag_green.png" style="vertical-align: middle;" />&nbsp;'
 											+ "Registered with '<tt>" + registrationClient.ctx.mid + "/" + registrationClient.ctx.ctrlid + "</tt>' and EEC account '<tt>" + registrationClient.ctx.login + "'</tt>";
 									} else {
-										registrationInfo = '<img src="images/icons/error.png" style="vertical-align: middle;" />&nbsp;'
+										registrationInfo = '<img src="images/icons/stop.png" style="vertical-align: middle;" />&nbsp;'
 											+ "Unregistered '<tt>" + registrationClient.ctx.mid + "/" + registrationClient.ctx.ctrlid + "</tt>' ... (&nbsp;<a href=\"javascript:registrationClient.askRegistration();\">Register</a>&nbsp;)";
 									}
 
@@ -4508,33 +4510,6 @@ function displayInterface() {
 										}
 									});
 
-									// registrationClient.getRegistrationInfo();
-									/*
-									Ext.Ajax.request({
-										url : 'wiff.php',
-										params : {
-											getRegistrationInfo : true
-										},
-										success : function(responseObject) {
-											var response = eval('(' + responseObject.responseText + ')');
-											if( response.error ) {
-												Ext.Msg.alert('Server Error', response.error);
-												registrationInfo = "Can't get registration status";
-											} else {
-												if( response.data.status == 'registered' ) {
-													registrationInfo = '<img src="images/icons/accept.png" style="vertical-align: middle;" />&nbsp;'
-														+ "Registered with '<tt>" + response.data.mid + "/" + response.data.ctrlid + "</tt>' and EEC account '<tt>" + response.data.login + "'</tt>";
-												} else {
-													registrationInfo = '<img src="images/icons/error.png" style="vertical-align: middle;" />&nbsp;'
-														+ "Unregistered '<tt>" + response.data.mid + "/" + response.data.ctrlid + "</tt>' ... (&nbsp;<a href=\"javascript:registrationClient.askRegistration();\">Register</a>&nbsp;)";
-												}
-											}
-											displayInfo();
-										},
-										failure : function(responseObject) {
-										}
-									});
-									*/
 									displayInfo();
 								}
 							},
@@ -4720,12 +4695,12 @@ function displayInterface() {
 									var actions = new Ext.ux.grid.RowActions({
 												header : '',
 												autoWidth : false,
-												width : 44,
+												width : 50,
 												actions : [{
-															iconCls : 'x-icon-setup',
+															iconCls : 'x-repo-setup',
 															tooltip : 'Modify'
 														}, {
-															iconCls : 'x-icon-cross',
+															iconCls : 'x-repo-delete',
 															tooltip : 'Remove'
 														}]
 											});
@@ -4891,7 +4866,7 @@ function displayInterface() {
 												autoWidth : false,
 												width : 22,
 												actions : [{
-															iconCls : 'x-icon-setup',
+															iconCls : 'x-icon-param-change',
 															tooltip : 'Modify'
 														}]
 											});

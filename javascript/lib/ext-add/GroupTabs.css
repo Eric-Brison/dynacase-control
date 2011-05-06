@@ -7,8 +7,8 @@
  */
 
 .x-tab-panel.x-grouptabs-panel {
-    background-color: #4E78B1;
-    padding: 15px;
+    background-color: #ECECEC;
+    padding: 10px;
 }
 .x-tab-panel-left .x-tab-panel-header,
 .x-tab-panel-right .x-tab-panel-header {
@@ -22,6 +22,7 @@
 .x-tab-panel-left .x-tab-panel-bwrap {
     float: right;
     position: relative;
+    padding:0 15px 15px 0;
 }
 .x-tab-panel-right .x-tab-panel-bwrap {
     float: left;
@@ -68,8 +69,8 @@
 .x-grouptabs-panel .x-tab-strip a.x-grouptabs-text{
     overflow: hidden;
     white-space: nowrap;
-	display: block;
-    color: #DFE8F6;
+    display: block;
+    color:#9CAC89;
     font-family: tahoma, arial, sans-serif;
     font-weight: bold;
     text-decoration: none;
@@ -79,7 +80,7 @@
 }
 
 .x-grouptabs-panel .x-tab-strip-active a.x-grouptabs-text {
-    color: #395B8E;
+    color: #264500;
 }
 
 .x-grouptabs-panel ul.x-grouptabs-sub a.x-grouptabs-text {
@@ -94,7 +95,14 @@
 }
 
 .x-grouptabs-panel .x-tab-panel-body {
-    border: 1px solid #999;
+    border: 1px solid #ccc;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    padding:5px;
+    -moz-box-shadow:4px 4px 10px #CCC;
+    -webkit-box-shadow:4px 4px 10px #CCC;
+    box-shadow:4px 4px 10px #CCC;
 }
 
 .x-grouptabs-panel ul.x-tab-strip li {
@@ -106,15 +114,21 @@
 .x-grouptabs-panel ul.x-tab-strip li.x-tab-strip-active {
     border: 0;
     background: #fff;
-    border-top: 1px solid #999;
-    border-bottom: 1px solid #999;
+    -moz-border-radius: 5px 0px 0px 5px;
+    -webkit-border-radius: 5px 0px 0px 5px;
+    border-radius: 5px 0px 0px 5px;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    -moz-box-shadow:2px 2px 5px #CCC;
+    -webkit-box-shadow:2px 2px 5px #CCC;
+    box-shadow:2px 2px 5px #CCC;
 }
 
 .x-tab-panel-left ul.x-tab-strip li.x-tab-strip-active {
-    border-left: 1px solid #999;
+    border-left: 1px solid #ccc;
 }
 .x-tab-panel-right ul.x-tab-strip li.x-tab-strip-active {
-    border-right: 1px solid #999;
+    border-right: 1px solid #ccc;
 }
 
 .x-grouptabs-panel li.x-tab-strip-active ul.x-grouptabs-sub li.x-tab-strip-active{
@@ -127,11 +141,19 @@
 
 .x-grouptabs-panel li.x-tab-strip-active ul.x-grouptabs-sub li {
     border-color: transparent;
+    -moz-box-shadow:0 0 0;
+    -webkit-box-shadow:0 0 0;
+    box-shadow:0 0 0;
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
 }
 
 /* Tab corners */
 .x-grouptabs-panel .x-grouptabs-corner {
+/*
     background-image: url('x-grouptabs-corners.gif');
+  */
     display: none;
     width: 11px;
     height: 11px;
