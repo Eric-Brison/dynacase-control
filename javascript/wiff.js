@@ -4713,7 +4713,7 @@ function displayInterface() {
 													.get('name');
 
 											switch (action) {
-												case 'x-icon-cross' :
+												case 'x-repo-delete' :
 
 													Ext.Msg
 															.confirm(
@@ -4780,7 +4780,7 @@ function displayInterface() {
 
 													break;
 
-												case 'x-icon-setup' :
+												case 'x-repo-setup' :
 
 													var win = displayRepositoryWindow(
 															grid, record);
@@ -4875,7 +4875,7 @@ function displayInterface() {
 										action : function(grid, record, action,
 												row, col) {
 											switch (action) {
-												case 'x-icon-setup' :
+												 case 'x-icon-param-change' :
 
 													var win = displayParametersWindow(
 															grid, record);
