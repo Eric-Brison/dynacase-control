@@ -61,10 +61,15 @@ class Module
      */
     public $hasParameter = false;
 
-    /**
-     * @var string last error message
-     */
-    private $errorMessage = '';
+	/**
+	 * @var boolean true if module has displayable parameters (e.g. not hidden)
+	 */
+	public $hasDisplayableParameter = false;
+
+	/**
+	 * @var string last error message
+	 */
+	private $errorMessage = '';
 
     public function __construct($context, $repository = null, $xmlNode = null, $isInstalled = false)
     {
@@ -83,7 +88,9 @@ class Module
 
         $this->hasParameter = is_array($parameterList) && (count($parameterList) != 0);
 
-    }
+		$this->hasDisplayableParameter = $this->fGetDisplayableParameterList();
+
+	}
 
     public function __set($property, $value)
     {
@@ -525,10 +532,10 @@ class Module
                 }
                 $pSeen[$paramName]++;
 
-                $p = new Parameter();
-                foreach ( array ('name', 'label', 'default', 'type', 'needed', 'values', 'volatile') as $attr)
-                {
-                    $p->$attr = $param->getAttribute($attr);
+			$p = new Parameter();
+			foreach ( array ('name', 'label', 'default', 'type', 'needed', 'values', 'volatile', 'oninstall', 'onedit', 'onupgrade') as $attr)
+			{
+				$p->$attr = $param->getAttribute($attr);
 
                     // Replace keywords
                     // @CONTEXT_NAME
@@ -562,6 +569,16 @@ class Module
 
             return $plist;
         }
+
+	function fGetDisplayableParameterList() {
+	  $plist = $this->getParameterList();
+	  foreach ($plist as $p) {
+	    if ($p->onedit=='' || $p->onedit=='W' || $p->onedit=='R') return true;
+	  }
+	  return false;
+	}
+
+
 
 	/**
 	 * Try to get parameter value from replaced modules

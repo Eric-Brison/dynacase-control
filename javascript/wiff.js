@@ -2439,7 +2439,7 @@ function updateContextList_success(responseObject, select) {
 												}, {
 													iconCls : 'x-icon-param',
 													tooltip : 'Parameters',
-													hideIndex : '!hasParameter'
+													hideIndex : '!hasDisplayableParameter'
 												}, {
 													iconCls : 'x-icon-log',
 													tooltip : 'Changelog',
@@ -2514,7 +2514,7 @@ function updateContextList_success(responseObject, select) {
 													name : 'canUpdate',
 													type : 'boolean'
 												}, {
-													name : 'hasParameter',
+													name : 'hasDisplayableParameter',
 													type : 'boolean'
 												}, 'changelog'],
 										// autoLoad: true,
@@ -3128,7 +3128,7 @@ function wstop(operation) {
 				},
 				callback : function(option, success, responseObject) {
 
-					getGlobalwin();
+					getGlobalwin(true);
 
 					if (toInstall[0].needphase == 'replaced') {
 						/**
@@ -3143,7 +3143,7 @@ function wstop(operation) {
 			});
 }
 
-function getGlobalwin() {
+function getGlobalwin(display) {
 
 	globalwin = new Ext.Window({
 				title : 'Dynacase Control',
@@ -3182,7 +3182,9 @@ function getGlobalwin() {
 
 	processpanel = [];
 
-	globalwin.show();
+	if( display ) {
+		globalwin.show();
+	}
 
 }
 
@@ -3331,10 +3333,8 @@ function download_failure(module, operation, responseObject) {
 function askParameter(module, operation) {
 
 	if (operation == 'parameter') {
-		getGlobalwin();
+		getGlobalwin(false);
 	}
-
-	modulepanel.setModuleIcon(module.name, 'x-icon-loading');
 
 	Ext.Ajax.request({
 				url : 'wiff.php',
@@ -3363,116 +3363,152 @@ function askParameter_success(module, operation, responseObject) {
 	}
 
 	var data = response.data;
+	var editCount = 0;
+	var readCount = 0;
 
 	if (data.length > 0) {
+		for (var i = 0; i < data.length; i++) {
+			data[i].visibility = computeParamVisibility(data[i], operation);
+			if (data[i].visibility=='W') editCount++;
+			if (data[i].visibility=='R') readCount++;
+		}
+	}
+
+	if (editCount>0 || readCount>0) {
+
+		cancelLabel = 'Cancel';
+		saveLabel = 'Save';
+		if (operation!='parameter') {
+			if (editCount>0) {
+				cancelLabel = 'Cancel and continue';
+				saveLabel = 'Save and continue';
+			} else {
+				cancelLabel = 'Continue';
+			}
+		}
 
 		module.hasParameter = true;
+		if( editCount > 0 ) {
 
 		var form = new Ext.form.FormPanel({
-					id : 'parameter-panel',
-					labelWidth : 200,
-					border : false,
-					frame : true,
-					bodyStyle : 'padding:15px;',
-					monitorValid : true,
-					autoHeight : true,
-					buttons : [{
-						text : 'Save Parameters',
-						formBind : true,
-						handler : function() {
+			id : 'parameter-panel',
+			labelWidth : 200,
+			border : false,
+			frame : true,
+			bodyStyle : 'padding:15px;',
+			monitorValid : true,
+			autoHeight : true,
+			buttons : [{
+				text : operation=='parameter' ? 'Save' : 'Save and continue',
+				formBind : true,
+				handler : function() {
 
-							form = Ext.getCmp('parameter-panel').getForm();
+					form = Ext.getCmp('parameter-panel').getForm();
+					form.submit({
+						url : 'wiff.php',
+						success : function(form, action) {
+							Ext.getCmp('parameter-window')
+								.close();
+							if (operation!='parameter') getPhaseList(module, operation);
+						},
+						failure : function(form, action) {
+							Ext.Msg.alert('Failure',
+								action.result.error);
+						},
+						params : {
+							context : currentContext,
+							module : module.name,
+							operation : operation,
+							storeParameter : true
+						},
+						waitMsg : 'Saving parameters...'
+					});
+				}
 
-							form.submit({
-										url : 'wiff.php',
-										success : function(form, action) {
-											Ext.getCmp('parameter-window')
-													.close();
-											getPhaseList(module, operation);
-										},
-										failure : function(form, action) {
-											Ext.Msg.alert('Failure',
-													action.result.error);
-										},
-										params : {
-											context : currentContext,
-											module : module.name,
-											operation : operation,
-											storeParameter : true
-										},
-										waitMsg : 'Saving Parameters...'
-									});
+			}, {
+				text : cancelLabel,
+				handler : function() {
+					Ext.getCmp('parameter-window').close();
+					if (operation!='parameter') getPhaseList(module, operation);
+				}
+			}]
 
-						}
-					}, {
-						text : 'Cancel',
-						handler : function() {
+			});
+		} else {
+			var form = new Ext.form.FormPanel({
+				id : 'parameter-panel',
+				labelWidth : 200,
+				border : false,
+				frame : true,
+				bodyStyle : 'padding:15px;',
+				monitorValid : true,
+				autoHeight : true,
+				buttons : [{
+					text : cancelLabel,
+					handler : function() {
+						Ext.getCmp('parameter-window').close();
+						if (operation != 'parameter') getPhaseList(module, operation);
+					}
+				}]
 
-							Ext.getCmp('parameter-window').close();
-
-							// Annule tout et ferme la fenetre.
-							/*
-							 * if (Ext.getCmp('module-window')) {
-							 * Ext.getCmp('module-window').close(); }
-							 */
-						}
-					}]
-
-				});
+			});
+		}
 
 		for (var i = 0; i < data.length; i++) {
 
-			if (data[i].type == 'text') {
+			if (data[i].visibility=='W' || data[i].visibility=='R') {
 
-				form.add({
-							xtype : 'textfield',
-							name : data[i].name,
-							fieldLabel : data[i].label,
-							value : data[i].value
-									? data[i].value
-									: data[i]['default'],
+				if (data[i].type == 'text' ) {
+
+					form.add({
+						xtype : 'textfield',
+						name : data[i].name,
+						fieldLabel : data[i].label,
+						value : data[i].value
+							? data[i].value
+							: data[i]['default'],
 							allowBlank : data[i].needed != 'Y' ? true : false,
-							anchor : '-15'
-						});
+							disabled : data[i].visibility!='W' ? true : false,
+						anchor : '-15'
+					});
 
-			}
-
-			if (data[i].type == 'enum') {
-
-				var values = data[i].values.split('|');
-
-				var valuesData = [];
-
-				for (var i = 0; i < values.length; i++) {
-					valuesData.push([values[i]]);
 				}
 
-				form.add({
-							xtype : 'combo',
-							name : data[i].name,
-							fieldLabel : data[i].label,
-							editable : false,
-							disableKeyFilter : true,
-							forceSelection : true,
-							value : data[i]['default'],
-							triggerAction : 'all',
+				if (data[i].type == 'enum') {
 
-							mode : 'local',
+					var values = data[i].values.split('|');
 
-							store : new Ext.data.SimpleStore({
-										fields : ['value'],
-										data : valuesData
-									}),
+					var valuesData = [];
 
-							valueField : 'value',
-							displayField : 'value',
+					for (var i = 0; i < values.length; i++) {
+						valuesData.push([values[i]]);
+					}
 
-							anchor : '-15'
+					form.add({
+						xtype : 'combo',
+						name : data[i].name,
+						fieldLabel : data[i].label,
+						editable : false,
+						disableKeyFilter : true,
+						forceSelection : true,
+						value : data[i]['default'],
+						triggerAction : 'all',
 
-						});
+						disabled : data[i].visibility!='W' ? true : false,
+						mode : 'local',
 
+						store : new Ext.data.SimpleStore({
+							fields : ['value'],
+							data : valuesData
+						}),
+
+						valueField : 'value',
+						displayField : 'value',
+
+						anchor : '-15'
+					});
+				}
 			}
-
 		}
 
 		var parameterWindow = new Ext.Window({
@@ -3481,7 +3517,8 @@ function askParameter_success(module, operation, responseObject) {
 					modal : true,
 					layout : 'fit',
 					width : 400,
-					autoHeight : true
+					autoHeight : true,
+					iconCls : 'x-icon-module-param'
 				});
 
 		parameterWindow.add(form);
@@ -3489,14 +3526,31 @@ function askParameter_success(module, operation, responseObject) {
 		parameterWindow.show();
 
 	} else {
-		if (operation == 'install' || operation == 'upgrade') {
+		if( operation != 'parameter' ) {
 			getPhaseList(module, operation);
 		}
-
 	}
 }
 
 function askParameter_failure(module, operation, responseObject) {
+}
+
+function computeParamVisibility(param, operation) {
+	var visibility = '';
+	switch (operation) {
+	case 'install' :
+	visibility = param.oninstall!='' ? param.oninstall : 'W' ;
+	break;
+	case 'upgrade':
+	visibility = param.onupgrade!='' ? param.onupgrade : 'H' ;
+	if (param.needed=='Y' && param.value=='') visibility = 'W';
+	break;
+	case 'parameter':
+	visibility = param.onedit!='' ? param.onedit : 'R' ;
+	break;
+	default:
+	}
+	return visibility;
 }
 
 /**
@@ -4225,7 +4279,7 @@ function setModuleStatusInstalled(module, operation) {
 					operation : operation,
 					authInfo : Ext.encode(authInfo)
 				},
-				callback : function(option, success, responseObject) {
+				callback : function(option, success, responseObject, operation) {
 
 					// Phase execution is over
 					// Proceed to next module to install

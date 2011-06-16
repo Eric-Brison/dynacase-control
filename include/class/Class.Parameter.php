@@ -15,9 +15,10 @@ class Parameter
 	public $type ;
 	public $needed ;
 	public $volatile ;
-	
+	public $oninstall ;
+	public $onupgrade ;
+	public $onedit ;
 	public $values ; // Used for enum type parameters.
-	
 	public $value ;
 	
 }
