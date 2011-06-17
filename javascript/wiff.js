@@ -722,7 +722,7 @@ function displayAllParametersWindow(grid) {
 						value : records.getAt(i).data.value,
 						width : 200,
 						name : records.getAt(i).data.name
-					})
+					});
 		}
 		i++;
 	}
@@ -893,16 +893,16 @@ function displayParametersWindow(grid, record) {
 	var nameField = new Ext.form.DisplayField({
 				fieldLabel : 'Name',
 				anchor : '-15'
-			})
+			});
 	var valueField = new Ext.form.TextField({
 				fieldLabel : 'Value'
-			})
+			});
 	if (record) {
 		nameField.setValue(record.get('name'));
 		if (record.get('value') == 'yes' || record.get('value') == 'no') {
 			valueField = new Ext.form.Checkbox({
 						fieldLabel : record.get('name') + ' mode?'
-					})
+					});
 			if (record.get('value') == 'yes') {
 				valueField.setValue('on');
 			} else {
@@ -1109,7 +1109,7 @@ function displayRepositoryWindow(grid, record) {
 		var nameField = new Ext.form.DisplayField({
 					fieldLabel : 'Name',
 					anchor : '-15'
-				})
+				});
 	}
 
 	var descriptionField = new Ext.form.TextField({
@@ -1372,7 +1372,7 @@ getCurrentContext = function() {
 	}
 	return false;
 
-}
+};
 
 getCurrentRepo = function(repoName) {
 
@@ -1386,7 +1386,7 @@ getCurrentRepo = function(repoName) {
 	}
 	return false;
 
-}
+};
 
 setRepoAuth = function(name, login, password) {
 
@@ -1402,7 +1402,7 @@ setRepoAuth = function(name, login, password) {
 		repo.password = password;
 	}
 
-}
+};
 
 getRepoAuth = function(name) {
 
@@ -1413,7 +1413,7 @@ getRepoAuth = function(name) {
 	}
 	return false;
 
-}
+};
 
 askRepoAuth = function(repoName) {
 
@@ -1557,7 +1557,7 @@ askRepoAuth = function(repoName) {
 
 	win.show();
 
-}
+};
 
 function updateContextList_success(responseObject, select) {
 	var response = eval('(' + responseObject.responseText + ')');
@@ -2043,7 +2043,7 @@ function updateContextList_success(responseObject, select) {
 															root : button.context.root
 														},
 														waitMsg : 'Saving Context...'
-													})
+													});
 										}
 									}],
 									listeners : {
@@ -2332,7 +2332,7 @@ function updateContextList_success(responseObject, select) {
 									+ '"i style="font-weight: bold;"></span>';
 							repositoryHtml += '</li>';
 						}
-						repositoryHtml += '</ul>'
+						repositoryHtml += '</ul>';
 						var contextInfoHtml = '<ul><li class="x-form-item"><b>Root :</b> '
 								+ this.context.root
 								+ '</li><li class="x-form-item"><b>Description :</b> '
@@ -2807,7 +2807,7 @@ function updateContextList_success(responseObject, select) {
 				}]
 
 			}]
-		})
+		});
 	}
 
 	// Selection of context to display
@@ -3005,7 +3005,7 @@ function installLocal(file) {
 				failure : function(responseObject) {
 					install_failure(responseObject);
 				}
-			})
+			});
 }
 
 /**
@@ -3351,7 +3351,7 @@ function askParameter(module, operation) {
 				failure : function(responseObject) {
 					askParameter_failure(module, operation, responseObject);
 				}
-			})
+			});
 
 }
 
@@ -4098,7 +4098,7 @@ function executeProcessList(module, phase, operation) {
 				label = 'Process ' + rank;
 			}
 			return label;
-		}
+		};
 
 		var labelBefore = getLabel(processList[process], process);
 
@@ -4279,7 +4279,7 @@ function setModuleStatusInstalled(module, operation) {
 					operation : operation,
 					authInfo : Ext.encode(authInfo)
 				},
-				callback : function(option, success, responseObject, operation) {
+				callback : function(option, success, responseObject) {
 
 					// Phase execution is over
 					// Proceed to next module to install
@@ -5069,7 +5069,7 @@ function displayInterface() {
 												createContext : true
 											},
 											waitMsg : 'Creating Context...'
-										})
+										});
 							}
 						}],
 						listeners : {
