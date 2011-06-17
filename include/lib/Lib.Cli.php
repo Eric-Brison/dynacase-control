@@ -587,6 +587,11 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 			}
 
 			foreach( $paramList as $param ) {
+				$visibility = $param->getVisibility($type);
+				if( $visibility != 'W' ) {
+					continue;
+				}
+
 				$pvalue = $param->value==""?$param->default:$param->value;
 
 				if( boolopt('yes', $options) ) {

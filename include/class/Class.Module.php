@@ -572,6 +572,9 @@ class Module
 
 	function fGetDisplayableParameterList() {
 	  $plist = $this->getParameterList();
+	  if( $plist === false ) {
+	  	return false;
+	  }
 	  foreach ($plist as $p) {
 	    if ($p->onedit=='' || $p->onedit=='W' || $p->onedit=='R') return true;
 	  }
