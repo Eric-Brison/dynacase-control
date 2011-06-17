@@ -712,11 +712,11 @@ class Module
             switch($operation)
             {
                 case 'install':
-                    return array ('pre-install', 'unpack', 'post-install');
+                    return array ('pre-install', 'unpack', 'post-install', 'purge-unreferenced-parameters-value');
                     break;
                 case 'upgrade':
 		    if( count($this->replaces) <= 0 ) {
-		      return array ('pre-upgrade', 'clean-unpack', 'post-upgrade');
+		      return array ('pre-upgrade', 'clean-unpack', 'post-upgrade', 'purge-unreferenced-parameters-value');
 		    } else {
 		      return array ('pre-upgrade', 'clean-unpack', 'post-upgrade', 'purge-unreferenced-parameters-value');
 		    }
