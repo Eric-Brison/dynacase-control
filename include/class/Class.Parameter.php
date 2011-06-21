@@ -28,7 +28,7 @@ class Parameter
 				$visibility = ( $this->oninstall != '' ) ? $this->oninstall : 'W';
 				break;
 			case 'upgrade':
-				$visibility = ( $this->onupgrade != '' ) ? $this->onpugrade : 'H';
+				$visibility = ( $this->onupgrade != '' ) ? $this->onupgrade : 'H';
 				if( $this->needed == 'Y' && $this->value == '' ) {
 					$visibility = 'W';
 				}
