@@ -3476,12 +3476,11 @@ function askParameter_success(module, operation, responseObject) {
 
 				if (data[i].type == 'enum') {
 
-					var values = data[i].values.split('|');
+					data[i].values = data[i].values.split('|');
+					data[i].valuesData = [];
 
-					var valuesData = [];
-
-					for (var i = 0; i < values.length; i++) {
-						valuesData.push([values[i]]);
+					for (var j = 0; j < data[i].values.length; j++) {
+						data[i].valuesData.push([data[i].values[j]]);
 					}
 
 					form.add({
@@ -3499,7 +3498,7 @@ function askParameter_success(module, operation, responseObject) {
 
 						store : new Ext.data.SimpleStore({
 							fields : ['value'],
-							data : valuesData
+							data : data[i].valuesData
 						}),
 
 						valueField : 'value',
