@@ -20,7 +20,7 @@ class Repository
     public $host;
     public $path;
 
-    public $authentified;
+    public $authenticated;
     public $login;
     public $password;
     public $default;
@@ -81,13 +81,19 @@ class Repository
                 $this->protocol = $repository->getAttribute('protocol');
                 $this->host = $repository->getAttribute('host');
                 $this->path = $repository->getAttribute('path');
-                $this->authentified = $repository->getAttribute('authentified');
+                // Handle frenglish "authentified" (bug #1681)
+                if( $repository->hasAttribute('authentified') ) {
+                	$this->authenticated = $repository->getAttribute('authentified');
+                }
+                if( $repository->hasAttribute('authenticated') ) {
+                	$this->authenticated = $repository->getAttribute('authenticated');
+                }
                 $this->login = $repository->getAttribute('login');
                 $this->password = $repository->getAttribute('password');
 		$this->default = $repository->getAttribute('default');
             }
 
-            if ($this->authentified)
+            if ($this->authenticated)
             {
                 $info = $wiff->getAuthInfo($this->name);
 				//echo 'INFO '.print_r($info,true);
@@ -115,7 +121,13 @@ class Repository
                 $this->protocol = $xml->getAttribute('protocol');
                 $this->host = $xml->getAttribute('host');
                 $this->path = $xml->getAttribute('path');
-                $this->authentified = $xml->getAttribute('authentified');
+                // Handle frenglish "authentified" (bug #1681)
+                if( $xml->hasAttribute('authentified') ) {
+                	$this->authenticated = $xml->getAttribute('authentified');
+                }
+                if( $xml->hasAttribute('authenticated') ) {
+                	$this->authenticated = $xml->getAttribute('authenticated');
+                }
                 $this->login = $xml->getAttribute('login');
                 $this->password = $xml->getAttribute('password');
 		$this->default = $xml->getAttribute('default');
@@ -156,14 +168,14 @@ class Repository
         {
             $this->url = $this->baseurl;
 			$this->displayUrl = $this->url;
-        } elseif ($this->authentified && $this->login && $this->password)
+        } elseif ($this->authenticated && $this->login && $this->password)
         {
             $this->url = $this->protocol.'://'.$this->login.':'.$this->password.'@'.$this->host.'/'.$this->path;
         } else
         {
             $this->url = $this->protocol.'://'.$this->host.'/'.$this->path;
         }
-		if($this->authentified == 'yes')
+		if($this->authenticated == 'yes')
 		{
 			$this->displayUrl = $this->protocol.'://*******:*******@'.$this->host.'/'.$this->path;
 		} else {
@@ -213,7 +225,7 @@ class Repository
      */
     public function needAuth()
     {
-        if ($this->authentified == 'yes' && !$this->password)
+        if ($this->authenticated == 'yes' && !$this->password)
         {
             $this->needAuth = true;
             return true;

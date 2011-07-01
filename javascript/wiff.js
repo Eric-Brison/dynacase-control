@@ -1132,7 +1132,7 @@ function displayRepositoryWindow(grid, record) {
 				anchor : '-15'
 			});
 
-	var authentifiedBox = new Ext.form.Checkbox({
+	var authenticatedBox = new Ext.form.Checkbox({
 				fieldLabel : 'Authenticated',
 				listeners : {
 					check : function(checkbox, checked) {
@@ -1187,10 +1187,10 @@ function displayRepositoryWindow(grid, record) {
 		protocolField.setValue(record.get('protocol'));
 		hostField.setValue(record.get('host'));
 		pathField.setValue(record.get('path'));
-		if (record.get('authentified') == 'yes') {
-			authentifiedBox.setValue(true);
+		if (record.get('authenticated') == 'yes') {
+			authenticatedBox.setValue(true);
 		} else {
-			authentifiedBox.setValue(false);
+			authenticatedBox.setValue(false);
 		}
 		if (record.get('default') == 'yes') {
 			defaultBox.setValue(true);
@@ -1214,7 +1214,7 @@ function displayRepositoryWindow(grid, record) {
 			border : false,
 			bodyStyle : 'padding:5px;',
 			items : [nameField, descriptionField, protocolField, hostField,
-					pathField, defaultBox, authentifiedBox, loginField,
+					pathField, defaultBox, authenticatedBox, loginField,
 					passwordField, confirmPasswordField],
 			bbar : [{
 				text : 'Save',
@@ -1228,7 +1228,7 @@ function displayRepositoryWindow(grid, record) {
 					var newLogin = loginField.getValue();
 					var newPassword = passwordField.getValue();
 					var confirmNewPassword = confirmPasswordField.getValue();
-					var newAuthentified = authentifiedBox.getValue() == true
+					var newAuthenticated = authenticatedBox.getValue() == true
 							? 'yes'
 							: 'no';
 					var newDefault = defaultBox.getValue() == true
@@ -1265,7 +1265,7 @@ function displayRepositoryWindow(grid, record) {
 								'default' : newDefault,
 								login : newLogin,
 								password : newPassword,
-								authentified : newAuthentified
+								authenticated : newAuthenticated
 							},
 							success : function(responseObject) {
 
@@ -2062,7 +2062,7 @@ function updateContextList_success(responseObject, select) {
 																'protocol',
 																'host', 'path',
 																'url',
-																'authentified',
+																'authenticated',
 																'login',
 																'password',
 																'displayUrl'],
@@ -2385,7 +2385,7 @@ function updateContextList_success(responseObject, select) {
 								var ret = false;
 
 								for (var i = 0; i < context.repo.length; i++) {
-									if (context.repo[i]['authentified'] == 'yes'
+									if (context.repo[i]['authenticated'] == 'yes'
 											&& !context.repo[i]['password']) {
 										ret = true;
 									}
@@ -4739,7 +4739,7 @@ function displayInterface() {
 														'description',
 														'protocol', 'host',
 														'path', 'default',
-														'url', 'authentified',
+														'url', 'authenticated',
 														'login', 'password',
 														'displayUrl', 'label'],
 												autoLoad : true
@@ -5083,7 +5083,7 @@ function displayInterface() {
 											fields : ['name', 'baseurl',
 													'description', 'protocol',
 													'host', 'path', 'url',
-													'authentified', 'login',
+													'authenticated', 'login',
 													'password', 'displayUrl',
 													'label', 'default'],
 											autoLoad : true

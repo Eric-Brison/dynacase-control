@@ -452,7 +452,7 @@ class WIFF
 	 * Add repository to global repo list
 	 * @return boolean
 	 */
-	public function createRepo($name, $description, $protocol, $host, $path, $default, $authentified, $login, $password)
+	public function createRepo($name, $description, $protocol, $host, $path, $default, $authenticated, $login, $password)
 	{
 		require_once ('class/Class.Repository.php');
 
@@ -491,7 +491,7 @@ class WIFF
 		$repository->setAttribute('host', $host);
 		$repository->setAttribute('path', $path);
 		$repository->setAttribute('default', $default);
-		$repository->setAttribute('authentified', $authentified);
+		$repository->setAttribute('authenticated', $authenticated);
 		$repository->setAttribute('login', $login);
 		$repository->setAttribute('password', $password);
 
@@ -603,7 +603,7 @@ class WIFF
 	 * Add repository to global repo list
 	 * @return boolean
 	 */
-	public function modifyRepo($name, $description, $protocol, $host, $path, $default, $authentified, $login, $password)
+	public function modifyRepo($name, $description, $protocol, $host, $path, $default, $authenticated, $login, $password)
 	{
 		require_once ('class/Class.Repository.php');
 
@@ -644,7 +644,7 @@ class WIFF
 		$repository->setAttribute('host', $host);
 		$repository->setAttribute('path', $path);
 		$repository->setAttribute('default', $default);
-		$repository->setAttribute('authentified', $authentified);
+		$repository->setAttribute('authenticated', $authenticated);
 		$repository->setAttribute('login', $login);
 		$repository->setAttribute('password', $password);
 
