@@ -781,6 +781,12 @@ class Context
 		while ($i < count($depsList))
 		{
 			$mod = $depsList[$i];
+
+			if( ! $this->installerMeetsModuleRequiredVersion($mod) ) {
+				$this->errorMessage = sprintf("Module '%s' (%s-%s) requires installer %s", $mod->name, $mod->version, $mod->release, $this->errorMessage);
+				return false;
+			}
+
 			$reqList = $mod->getRequiredModules();
 
 			foreach ($reqList as $req)
@@ -1023,6 +1029,35 @@ class Context
 		{
 			return false;
 		}
+		return true;
+	}
+
+	public function installerMeetsModuleRequiredVersion(&$module) {
+		if( ! isset($module->requires['installer'] ) ) {
+			return true;
+		}
+
+		$wiff = WIFF::getInstance();
+		$wiffVersion = $wiff->getVersion();
+		if( $wiffVersion === false ) {
+			$this->errorMessage = $wiff->errorMessage;
+			return false;
+		}
+		$wiffVersion = preg_split('/\-/', $wiffVersion, 2);
+
+		switch( $module->requires['installer']['comp'] ) {
+			case 'ge':
+				$cmp = $this->cmpVersionReleaseAsc($module->requires['installer']['version'], 0, $wiffVersion[0], 0);
+				if( $cmp > 0 ) {
+					$this->errorMessage = sprintf(">= %s", $wiffVersion[0]);
+					return false;
+				} else {
+					return true;
+				}
+			default:
+				error_log(__CLASS__."::".__FUNCTION_." ".sprintf("Comparison operator '%s' not yet supported.", $module->requires['installer']['comp']));
+		}
+
 		return true;
 	}
 
