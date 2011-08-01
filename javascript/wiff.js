@@ -1655,7 +1655,7 @@ function updateContextList_success(responseObject, select) {
 				mask.show();
 				Ext.Ajax.request({
 					url : 'wiff.php',
-					timeout : 3600,
+					timeout : 3600000,
 					params : {
 						contextToDelete : contextName,
 						deleteContext : 'crontab'
@@ -1681,7 +1681,7 @@ function updateContextList_success(responseObject, select) {
 							}
 							Ext.Ajax.request({
 								url : 'wiff.php',
-								timeout : 3600,
+								timeout : 3600000,
 								params : {
 									contextToDelete : contextName,
 									deleteContext : 'vault'
@@ -1711,7 +1711,7 @@ function updateContextList_success(responseObject, select) {
 										}
 										Ext.Ajax.request({
 											url : 'wiff.php',
-											timeout : 3600,
+											timeout : 3600000,
 											params : {
 												contextToDelete : contextName,
 												deleteContext : 'database'
@@ -1744,7 +1744,7 @@ function updateContextList_success(responseObject, select) {
 													}
 													Ext.Ajax.request({
 														url : 'wiff.php',
-														timeout : 3600,
+														timeout : 3600000,
 														params : {
 															contextToDelete : contextName,
 															deleteContext : 'root'
@@ -1781,7 +1781,7 @@ function updateContextList_success(responseObject, select) {
 																		.request(
 																				{
 																					url : 'wiff.php',
-																					timeout : 3600,
+																					timeout : 3600000,
 																					params : {
 																						contextToDelete : contextName,
 																						deleteContext : 'unregister'
