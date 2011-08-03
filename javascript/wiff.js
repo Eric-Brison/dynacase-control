@@ -721,7 +721,8 @@ function displayAllParametersWindow(grid) {
 						fieldLabel : records.getAt(i).data.name,
 						value : records.getAt(i).data.value,
 						width : 200,
-						name : records.getAt(i).data.name
+						name : records.getAt(i).data.name,
+						inputType : records.getAt(i).data.name.match(/password$/) ? 'password' : 'text'
 					});
 		}
 		i++;
@@ -895,7 +896,8 @@ function displayParametersWindow(grid, record) {
 				anchor : '-15'
 			});
 	var valueField = new Ext.form.TextField({
-				fieldLabel : 'Value'
+				fieldLabel : 'Value',
+				inputType : record.get('name').match(/password$/) ? 'password' : 'text'
 			});
 	if (record) {
 		nameField.setValue(record.get('name'));
@@ -4966,7 +4968,10 @@ function displayInterface() {
 													id : 'ParamsValue',
 													header : 'Parameters value',
 													dataIndex : 'value',
-													width : 140
+													width : 140,
+													renderer : function(value, metadata, record, rowIndex, colIndex, store) {
+														return (record.get('name').match(/password$/) && record.get('value').length > 0) ? '******' : value;
+													}
 												}],
 										autoExpandColumn : 'ParamsValue',
 										autoHeight : true,

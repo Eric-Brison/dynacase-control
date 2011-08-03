@@ -59,9 +59,11 @@ class WIFF
 
 		$this->updateParam();
 
-		$this->available_host = $this->getParam('wiff-update-host');
-		$this->available_url = $this->getParam('wiff-update-path');
-		$this->available_file = $this->getParam('wiff-update-file');
+		$this->update_host = $this->getParam('wiff-update-host');
+		$this->update_url = $this->getParam('wiff-update-path');
+		$this->update_file = $this->getParam('wiff-update-file');
+		$this->update_login = $this->getParam('wiff-update-login');
+		$this->update_password = $this->getParam('wiff-update-password');
 
 	}
 
@@ -113,12 +115,43 @@ class WIFF
 	}
 
 	/**
+	 * Compose and get the update URL
+	 * @return string
+	 */
+	public function getUpdateBaseURL() {
+		$url = $this->update_host.$this->update_url;
+		$pUrl = parse_url($url);
+		if( $pUrl === false ) {
+			$this->errorMessage = sprintf("Error parsing URL '%s'", $url);
+			return false;
+		}
+		if( $this->update_login != '' ) {
+			$pUrl['user'] = $this->update_login;
+			$pUrl['pass'] = $this->update_password;
+		}
+		$url = $pUrl['scheme']."://";
+		if( $pUrl['user'] != '' ) {
+			$url .= urlencode($pUrl['user']).":".urlencode($pUrl['pass'])."@";
+		}
+		if( $pUrl['host'] != '' ) {
+			$url .= $pUrl['host'];
+		}
+		if( $pUrl['port'] != '' ) {
+			$url .= ":".$pUrl['port'];
+		}
+		if( $pUrl['path'] != '' ) {
+			$url .= $pUrl['path'];
+		}
+		return $url;
+	}
+
+	/**
 	 * Get current available WIFF version
 	 * @return string
 	 */
 	public function getAvailVersion()
 	{
-		$tmpfile = $this->downloadUrl($this->available_host.$this->available_url.'content.xml');
+		$tmpfile = $this->downloadUrl($this->getUpdateBaseURL().'content.xml');
 
 		if ($tmpfile === false)
 		{
@@ -295,7 +328,7 @@ class WIFF
 	 */
 	private function download()
 	{
-		$this->archiveFile = $this->downloadUrl($this->available_host.$this->available_url.$this->available_file);
+		$this->archiveFile = $this->downloadUrl($this->getUpdateBaseURL.$this->update_file);
 		return $this->archiveFile;
 	}
 
@@ -357,20 +390,28 @@ class WIFF
 
 	public function updateParam()
 	{
-		$available_host = $this->getParam('wiff-update-host');
-		if (!$available_host || $available_host === 'ftp://ftp.freedom-ecm.org/')
+		$update_host = $this->getParam('wiff-update-host');
+		if (!$update_host || $update_host === 'ftp://ftp.freedom-ecm.org/')
 		{
 			$this->setParam('wiff-update-host', 'ftp://ftp.dynacase.org/');
 		}
-		$available_url = $this->getParam('wiff-update-path');
-		if (!$available_url)
+		$update_url = $this->getParam('wiff-update-path');
+		if (!$update_url)
 		{
 			$this->setParam('wiff-update-path', '2.14/tarball/');
 		}
-		$available_file = $this->getParam('wiff-update-file');
-		if (!$available_file || $available_file === 'freedom-wiff-current.tar.gz')
+		$update_file = $this->getParam('wiff-update-file');
+		if (!$update_file || $update_file === 'freedom-wiff-current.tar.gz')
 		{
 			$this->setParam('wiff-update-file', 'dynacase-control-current.tar.gz');
+		}
+		$update_login = $this->getParam('wiff-update-login');
+		if( $update_login === false ) {
+			$this->setParam('wiff-update-login', '');
+		}
+		$update_password = $this->getParam('wiff-update-password');
+		if( $update_password === false ) {
+			$this->setParam('wiff-update-password', '');
 		}
 	}
 

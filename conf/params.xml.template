@@ -2,14 +2,16 @@
 <wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="AGPL3" lang="fr|en">
 
   <repositories>
-	<access name="freedom" description="freedom 3.0" protocol="http" host="ftp.dynacase.org" path="3.0/webinst/" authenticated="no" login="" password="" default="yes" />
-	<access name="third-party" description="third-party modules" protocol="http" host="ftp.dynacase.org" path="third-party/webinst/" authenticated="no" login="" password="" default="yes" />
+    <access name="freedom" description="freedom 3.0" protocol="http" host="ftp.dynacase.org" path="3.0/webinst/" authenticated="no" login="" password="" default="yes" />
+    <access name="third-party" description="third-party modules" protocol="http" host="ftp.dynacase.org" path="third-party/webinst/" authenticated="no" login="" password="" default="yes" />
   </repositories>
 
   <parameters>
-	<param name="wiff-update-host" value="ftp://ftp.dynacase.org/" /> 
-	<param name="wiff-update-path" value="3.0/tarball/" />
-	<param name="wiff-update-file" value="dynacase-control-current.tar.gz" />
+    <param name="wiff-update-host" value="ftp://ftp.dynacase.org/" />
+    <param name="wiff-update-path" value="3.0/tarball/" />
+    <param name="wiff-update-file" value="dynacase-control-current.tar.gz" />
+    <param name="wiff-update-login" value="" />
+    <param name="wiff-update-password" value="" />
     <param name="use-proxy" value="no" />
     <param name="proxy-host" value="" />
     <param name="proxy-port" value="" />
