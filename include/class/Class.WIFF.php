@@ -26,9 +26,11 @@ class WIFF
 	const params_filepath = 'conf/params.xml';
 	const archive_filepath = 'archived-contexts/';
 
-	public $available_host;
-	public $available_url;
-	public $available_file;
+	public $update_host;
+	public $update_url;
+	public $update_file;
+	public $update_login;
+	public $update_password;
 
 	public $contexts_filepath = '';
 	public $params_filepath = '';
