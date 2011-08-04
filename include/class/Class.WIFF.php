@@ -144,7 +144,7 @@ class WIFF
 		if( $pUrl['path'] != '' ) {
 			$url .= $pUrl['path'];
 		}
-		return $url;
+		return $url."/";
 	}
 
 	/**
@@ -330,7 +330,7 @@ class WIFF
 	 */
 	private function download()
 	{
-		$this->archiveFile = $this->downloadUrl($this->getUpdateBaseURL.$this->update_file);
+		$this->archiveFile = $this->downloadUrl($this->getUpdateBaseURL().$this->update_file);
 		return $this->archiveFile;
 	}
 
