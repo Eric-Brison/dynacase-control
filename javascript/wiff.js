@@ -5044,6 +5044,8 @@ function displayInterface() {
 
 						buttons : [{
 							text : 'Create',
+							id : 'create-context-create',
+							disabled : true,
 							handler : function() {
 								Ext.getCmp('create-context-form').getForm()
 										.submit({
@@ -5145,7 +5147,7 @@ function displayInterface() {
 									panel.checkBoxGroup = panel
 											.add(panel.checkBoxGroup);
 									panel.doLayout();
-
+									Ext.getCmp('create-context-create').enable();
 								});
 
 							}
