@@ -1389,10 +1389,49 @@ class Context
 			$repositories = $context->getElementsByTagName('repositories')->item(0);
 			if ($repositories) deleteNode($repositories);
 
-
+			// Identify and exclude vaults located below the context directory
+			$vaultList = $this->getVaultList();
+			if( $vaultList === false ) {
+				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
+				unlink($status_file);
+				return false;
+			}
+			$realContextRootPath = realpath($this->root);
+			if( $realContextRootPath === false ) {
+				$this->errorMessage = sprintf("Error getting real path for '%s'", $this->root);
+				$zip->close();
+				if (file_exists($archived_root."/$archiveId.fcz")) {
+					unlink($archived_root."/$archiveId.fcz");
+				}
+				unlink($status_file);
+				return false;
+			}
+			$tarExcludeOpts = '';
+			$tarExcludeList = array();
+			foreach( $vaultList as $vault ) {
+				$r_path = $vault['r_path'];
+				if( $r_path[0] != '/' ) {
+					$r_path = $this->root.DIRECTORY_SEPARATOR.$r_path;
+				}
+				$real_r_path = realpath($r_path);
+				if( $real_r_path === false ) {
+					continue;
+				}
+				if( strpos($real_r_path, $realContextRootPath) === 0 ) {
+					$relative_r_path = "." . substr($real_r_path, strlen($realContextRootPath));
+					$tarExcludeList []= sprintf("--exclude %s", escapeshellarg($relative_r_path));
+				}
+			}
+			if( count($tarExcludeList) > 0 ) {
+				$tarExcludeOpts = join(' ', $tarExcludeList);
+			}
+			error_log(__METHOD__." ".sprintf("tarExcludeOpts = [%s]", $tarExcludeOpts));
 
 			// --- Generate context tar.gz --- //
-			$script = sprintf("tar -C %s -czf $tmp/context.tar.gz .", escapeshellarg($this->root));
+			$script = sprintf("tar -C %s -czf $tmp/context.tar.gz %s .", escapeshellarg($this->root), $tarExcludeOpts);
 			$result = system($script,$retval);
 			if($retval != 0){
 				$this->errorMessage = "Error when making context tar :: ".$result;
@@ -1465,9 +1504,8 @@ class Context
 
 			if ($vaultExclude != 'on') {
 				// --- Generate vaults tar.gz files --- //
-				$dbconnect = pg_connect("service=$pgservice_core");
-				if ($dbconnect === false) {
-					$this->errorMessage = "Error when trying to connect to database";
+				$vaultList = $this->getVaultList();
+				if( $vaultList === false ) {
 					if (file_exists("$tmp/context.tar.gz")) {
 						unlink("$tmp/context.tar.gz");
 					}
@@ -1479,29 +1517,12 @@ class Context
 						unlink($archived_root."/$archiveId.fcz");
 					}
 					unlink($status_file);
-					return false;
-				}
-				$result = pg_query("SELECT id_fs, r_path FROM vaultdiskfsstorage ;");
-				if ($result === false) {
-					$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
-					if (file_exists("$tmp/context.tar.gz")) {
-						unlink("$tmp/context.tar.gz");
-					}
-					if (file_exists("$dump")) {
-						unlink("$dump");
-					}
-					$zip->close();
-					if (file_exists($archived_root."/$archiveId.fcz")) {
-						unlink($archived_root."/$archiveId.fcz");
-					}
-					unlink($status_file);
-					return false;
 				}
 
 				$vaultDirList = array();
-				while ($row = pg_fetch_row($result)) {
-					$id_fs = $row[0];
-					$r_path = $row[1];
+				foreach( $vaultList as $vault ) {
+					$id_fs = $vault['id_fs'];
+					$r_path = $vault['r_path'];
 					if (is_dir($r_path)) {
 						$vaultDirList[] = array("id_fs" => $id_fs, "r_path" => $r_path);
 						$vaultExclude = 'Vaultexists';
@@ -1650,6 +1671,22 @@ class Context
 
 	}
 
+	private function getVaultList() {
+		$pgservice_core = $this->getParamByName('core_db');
+		$dbconnect = pg_connect("service=$pgservice_core");
+		if ($dbconnect === false) {
+			$this->errorMessage = "Error when trying to connect to database";
+			return false;
+		}
+		$result = pg_query("SELECT id_fs, r_path FROM vaultdiskfsstorage ;");
+		if ($result === false) {
+			$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
+			return false;
+		}
+		$vaultList = pg_fetch_all($result);
+		pg_close($dbconnect);
+		return $vaultList;
+	}
 
 	/**
 	 * Store the manifest of a downloaded module
