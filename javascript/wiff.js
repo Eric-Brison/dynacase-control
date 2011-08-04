@@ -2596,7 +2596,10 @@ function updateContextList_success(responseObject, select) {
 											id : 'available-version',
 											header : 'Available<br/>Version',
 											dataIndex : 'availableversionrelease',
-											width : 60
+											width : 60,
+											renderer : function(value, metadata, record, rowIndex, colIndex, store) {
+												return (value != record.get('versionrelease')) ? value : '';
+											}
 										}, status, {
 											id : 'description',
 											header : 'Description',
