@@ -891,7 +891,7 @@ class WIFF
 				if(preg_match('/^(?P<basename>.+)\.fcz$/',$file,$fmatch)){
 
 					$zipfile = $archived_root.DIRECTORY_SEPARATOR.$file;
-					$size = filesize($zipfile);
+					$size = $this->filesize_stat($zipfile);
 
 
 					$zip = new ZipArchiveCmd();
@@ -998,6 +998,21 @@ class WIFF
 
 		return $archivedContextList;
 
+	}
+
+	/**
+	 * Compute file size based on the number of blocks
+	 * (of 512 bytes) returned by stat().
+	 *
+	 * @param string $file filename
+	 * @return float size or boolean false on error
+	 */
+	public function filesize_stat($file) {
+		$stat = stat($file);
+		if( $stat === false ) {
+			return false;
+		}
+		return (float)($stat['blocks'] * 512);
 	}
 
 	public function createContextFromArchive($archiveId, $name, $root, $desc, $url, $vault_root, $pgservice, $remove_profiles, $user_login, $user_password, $clean_tmp_directory = false)
