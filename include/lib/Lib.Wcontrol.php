@@ -478,6 +478,65 @@ function wcontrol_msg_pgversion($process)
 }
 
 /**
+ * phpversion check
+ */
+
+function wcontrol_check_phpversion( & $process)
+{
+
+    $predicate = $process->getAttribute('predicate');
+    $version = $process->getAttribute('version');
+
+    switch($predicate)
+    {
+        case 'eq':
+            $op = "equal to";
+            $return = (version_compare(PHP_VERSION, $version) === 0)?true:false;
+        break;
+        case 'ne':
+            $op = "not equal to";
+            $return = (version_compare(PHP_VERSION, $version) !== 0)?true:false;
+        break;
+        case 'lt':
+            $op = "less than";
+            $return = (version_compare(PHP_VERSION, $version) < 0)?true:false;
+        break;
+        case 'le':
+            $op = "less than or equal to";
+            $return = (version_compare(PHP_VERSION, $version) <= 0)?true:false;
+        break;
+        case 'gt':
+            $op = "greater than";
+            $return = (version_compare(PHP_VERSION, $version) > 0)?true:false;
+        break;
+        case 'ge':
+            $op = "greater or equal to";
+            $return = (version_compare(PHP_VERSION, $version) >= 0)?true:false;
+        break;
+    }
+
+    if (!$return)
+    {
+        $process->errorMessage = "PHP version (currently ".PHP_VERSION.") must be ".$op." ".$version.".";
+        return false;
+    }
+
+    return true;
+}
+
+function wcontrol_msg_phpversion($process)
+{
+    if ($process->errorMessage)
+    {
+        return $process->errorMessage;
+    }
+    else
+    {
+        return "";
+    }
+}
+
+/**
  * pgempty check
  */
 
