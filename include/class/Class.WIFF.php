@@ -395,12 +395,12 @@ class WIFF
 		$update_host = $this->getParam('wiff-update-host');
 		if (!$update_host || $update_host === 'ftp://ftp.freedom-ecm.org/')
 		{
-			$this->setParam('wiff-update-host', 'ftp://ftp.dynacase.org/');
+			$this->setParam('wiff-update-host', 'http://ftp.dynacase.org/');
 		}
 		$update_url = $this->getParam('wiff-update-path');
 		if (!$update_url)
 		{
-			$this->setParam('wiff-update-path', '2.14/tarball/');
+			$this->setParam('wiff-update-path', 'stable/tarball/');
 		}
 		$update_file = $this->getParam('wiff-update-file');
 		if (!$update_file || $update_file === 'freedom-wiff-current.tar.gz')
