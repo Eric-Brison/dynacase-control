@@ -4474,12 +4474,46 @@ function displayInterface() {
 				mainItem : 0,
 				items : [{
 					title : 'Control',
-					html : "<div style='padding:30px;'><img src='images/logo/dynacase.png' style='height:80px; float:left; margin-right:20px;' /><h1 style='margin-bottom:30px;font-size:large;'>Welcome to Dynacase Control</h1>"
-							+ "<p style='margin-bottom:30px;'>If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>"
-							+ "<ul style='margin-left:30px;list-style-type: square;' >"
-							+ "<li><a href='http://www.dynacase.org/wiff' target='_blank'><h2>Documentation</h2></a></li>"
-							+ "</ul></div>"
-
+					html : '<div style="padding: 30px"><img src="images/icons/loading.gif" /></div>',
+					listeners : {
+						render : function(panel) {
+							Ext.Ajax.request({
+								scope : panel,
+								url : 'wiff.php',
+								params : {
+									version : true
+								},
+								success : function(responseObject) {
+									var response = eval('(' + responseObject.responseText + ')');
+									var html;
+									if (response.error) {
+										return Ext.Msg.alert('Error: could not get WIFF version', response.error);
+									}
+									var currentVersion = response.data.match(/^(\d+\.\d+)/) ? RegExp.$1 : '';
+									if( currentVersion != '' ) {
+										html = '<div style="padding: 30px;">'
+											+ '<img src="images/logo/dynacase.png" style="height:80px; float:left; margin-right:20px;" />'
+											+ '<h1 style="margin-bottom:30px;font-size:large;">Welcome to Dynacase Control</h1>'
+											+ '<p style="margin-bottom:30px;">If you need help, follow this link to documentation wiki. Subscriptions and contributions are much appreciated.</p>'
+											+ '<ul style="margin-left:30px;list-style-type: square;">'
+											+ '<li><a id="documentation-link" href="http://www.dynacase.org/dynacase-control/' + encodeURIComponent(currentVersion) + '" target="_blank" title="Version ' + Ext.util.Format.htmlEncode(currentVersion) + '"><h2>Documentation</h2></a></li>'
+											+ '</ul></div>';
+									} else {
+										html = '<div style="padding: 30px;">'
+											+ '<p style="margin-bottom: 30px;">Invalid version number &quot;' + Ext.util.Format.htmlEncode(response.data) + '&quot;</p>';
+										+ '</div>';
+									}
+									this.body.update(html);
+								},
+								failure : function(responseObject) {
+									var html = '<div style="padding: 30px;">'
+										+ '<p style="margin-bottom: 30px;">Could not get current version number.</p>'
+										+ '</div>';
+									this.body.update(html);
+								}
+							});
+						}
+					}
 				}, {
 					title : 'Setup',
 					iconCls : 'x-icon-setup',
