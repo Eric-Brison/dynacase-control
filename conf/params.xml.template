@@ -7,8 +7,8 @@
   </repositories>
 
   <parameters>
-    <param name="wiff-update-host" value="http://ftp.dynacase.org/" />
-    <param name="wiff-update-path" value="stable/tarball/" />
+    <param name="wiff-update-host" value="http://eec.anakeen.com" />
+    <param name="wiff-update-path" value="/public/control/" />
     <param name="wiff-update-file" value="dynacase-control-current.tar.gz" />
     <param name="wiff-update-login" value="" />
     <param name="wiff-update-password" value="" />
