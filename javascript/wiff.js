@@ -3205,25 +3205,11 @@ function wstart(module, operation) {
 					authInfo : Ext.encode(authInfo)
 				},
 				callback : function(option, success, responseObject) {
-					if (toInstall[0]) {
-						if (toInstall[0].needphase == 'replaced') {
-							/**
-							 * Skip parameter prompt and perform the replacement
-							 * processes
-							 */
-							getPhaseList(toInstall[0], operation);
-						} else {
-							askParameter(toInstall[0], operation);
-						}
-					} else {
-						var context = getCurrentContext();
-						if( context.register == 'registered' ) {
-							return sendContextConfiguration();
-						}
-						return installHappyEnd();
+					var context = getCurrentContext();
+					if( context.register == 'registered' ) {
+						return sendContextConfiguration();
 					}
-					// })
-
+					return installHappyEnd();
 					// The end
 				}
 			});
@@ -4298,7 +4284,19 @@ function setModuleStatusInstalled(module, operation) {
 					// Set proper icon
 					modulepanel.setModuleIcon(module.name, 'x-icon-ok');
 
-					wstart(module, operation);
+					if( toInstall[0] ) {
+						if (toInstall[0].needphase == 'replaced') {
+							/**
+							 * Skip parameter prompt and perform the replacement
+							 * processes
+							 */
+							getPhaseList(toInstall[0], operation);
+						} else {
+							askParameter(toInstall[0], operation);
+						}
+					} else {
+						wstart(module, operation);
+					}
 				}
 			});
 }
