@@ -69,10 +69,10 @@ class StatCollector  {
 	 *   <name>Context Name</name>
 	 *   <wiff version="1.2.3" />
 	 *   <modules>
-	 *     <module name="foo" version="1.0.03 [É] />
-	 *     [É]
+	 *     <module name="foo" version="1.0.0" [...] />
+	 *     [...]
 	 *   </modules>
-	 *   [É]
+	 *   [...]
 	 * </stat>
 	 * -->8--
 	 *
@@ -270,6 +270,10 @@ class StatCollector  {
 		$hwaddr = $this->getMachineMacAddr_Linux();
 		$cpucount = $this->getMachineCPUCount_Linux();
 
+		if( $hwaddr === false ) {
+			/* Use the system node name as a fallback if no ether MAC addr was found.*/
+			$hwaddr = php_uname("n");
+		}
 		if( $hwaddr === false || $cpucount === false ) {
 			$this->last_error = sprintf("Could not compute machine ID for Linux host type");
 			return false;
