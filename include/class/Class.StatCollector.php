@@ -14,6 +14,14 @@ class StatCollector  {
 	private $wiff = null;
 	private $context = null;
 
+	/**
+	 * The last error message.
+	 * 
+	 * Whenever a method returns a boolean false value, you ought to
+	 * get the complete error message here.
+	 * 
+	 * @var string
+	 */
 	public $last_error = '';
 	
 	/**
@@ -24,7 +32,7 @@ class StatCollector  {
 	 *
 	 * @return the current object ($this)
 	 */
-	function __construct(&$wiff = null, &$context = null) {
+	public function __construct(&$wiff = null, &$context = null) {
 		$this->wiff = $wiff;
 		$this->context = $context;
 
@@ -36,7 +44,7 @@ class StatCollector  {
 	 *
 	 * @return the current object ($this)
 	 */
-	function collect() {
+	public function collect() {
 		if( $this->wiff === null || $this->context === null ) {
 			return false;
 		}
@@ -58,27 +66,13 @@ class StatCollector  {
 	}
 
 	/**
-	 * Get the statistics XML document
+	 * Get the statistics as a XML string serialization.
 	 *
-	 * @return string XML <stat></stat> document
-	 *
-	 * Exemple of XML document :
-	 *
-	 * --8<--
-	 * <stat>
-	 *   <name>Context Name</name>
-	 *   <wiff version="1.2.3" />
-	 *   <modules>
-	 *     <module name="foo" version="1.0.03 [É] />
-	 *     [É]
-	 *   </modules>
-	 *   [É]
-	 * </stat>
-	 * -->8--
-	 *
+	 * @return string containing a XML <stat></stat> document
 	 */
-	function getXML() {
+	public function getXML() {
 		if( $this->dom === null ) {
+			$this->last_error = "No stat has been collected yet.";
 			return false;
 		}
 		
@@ -161,14 +155,17 @@ class StatCollector  {
 	private function _collect_contextPostgresql() {
 		$pgservice_core = $this->context->getParamByName('core_db');
 		if( $pgservice_core == '' ) {
+			$this->last_error = sprintf("Undefined or empty core_db parameter in context '%s'.", $this->context->name);
 			return false;
 		}
 		$conn = pg_connect(sprintf('service=%s', $pgservice_core));
 		if( $conn === false ) {
+			$this->last_error = sprintf("Could not connect to pg service '%s'.", $pgservice_core);
 			return false;
 		}
 		$version = pg_version($conn);
 		if( $version === false ) {
+			$this->last_error = sprintf("Could not get pg version: %s", pg_last_error($conn));
 			return false;
 		}
 
@@ -253,7 +250,13 @@ class StatCollector  {
 		return $this;
 	}
 
-	function getMachineId() {
+	/**
+	 * Get a machine ID (which should be persistent and identify the machine
+	 * on which Control is running).
+	 * 
+	 * @return string|false the ID string or boolean false in case of error
+	 */
+	public function getMachineId() {
 		$uname_s = php_uname("s");
 		switch( $uname_s ) {
 			case 'Linux':
@@ -263,13 +266,23 @@ class StatCollector  {
 				return $this->getMachineId_Darwin();
 				break;
 		}
+		$this->last_error = sprintf("Unknown system '%s'.", $uname_s);
 		return false;
 	}
 
-	function getMachineId_Linux() {
+	/**
+	 * Get a machine ID for Linux systems.
+	 * 
+	 * @return string|false the ID string or boolean false in case of error
+	 */
+	public function getMachineId_Linux() {
 		$hwaddr = $this->getMachineMacAddr_Linux();
 		$cpucount = $this->getMachineCPUCount_Linux();
 
+		if( $hwaddr === false ) {
+			/* Use the system node name as a fallback if no ether MAC addr was found.*/
+			$hwaddr = php_uname("n");
+		}
 		if( $hwaddr === false || $cpucount === false ) {
 			$this->last_error = sprintf("Could not compute machine ID for Linux host type");
 			return false;
@@ -279,7 +292,12 @@ class StatCollector  {
 		return sha1($mid);
 	}
 	
-	function getMachineId_Darwin() {
+	/**
+	 * Get a machine ID for Darwin (Mac OS X) systems
+	 * 
+	 * @return string|false the ID string or boolean false in case of error
+	 */
+	public function getMachineId_Darwin() {
 		$hwaddr = $this->getMachineMacAddr_Darwin();
 		$cpucount = $this->getMachineCPUCount_Darwin();
 
@@ -292,7 +310,15 @@ class StatCollector  {
 		return sha1($mid);
 	}
 
-	function getMachineMacAddr_Linux() {
+	/**
+	 * Get the "main" MAC address of a Linux system.
+	 * 
+	 * It returns the MAC address of eth0 (if present), or the MAC address of
+	 * the first ethernet interface.
+	 * 
+	 * @return string|false the MAC addr string or boolean false in case of error
+	 */
+	public function getMachineMacAddr_Linux() {
 		$hwaddr = false;
 
 		$hwaddr = $this->getMachineMacAddr_Linux_iproute2();
@@ -307,7 +333,13 @@ class StatCollector  {
 		return strtolower($hwaddr);
 	}
 
-	function getMachineMacAddr_Linux_iproute2() {
+	/**
+	 * Get the "main" MAC address of a Linux system using the `ip' command
+	 * from `iproute2'.
+	 * 
+	 * @return string|false the MAC addr string or boolean false in case of error
+	 */
+	public function getMachineMacAddr_Linux_iproute2() {
 		include_once('lib/Lib.System.php');
 		
 		$ip = WiffLibSystem::getCommandPath('ip');
@@ -324,6 +356,7 @@ class StatCollector  {
 		exec(sprintf("%s link show", $ip), $out, $ret);
 		putenv(sprintf("LC_ALL=%s", $locale));
 		if( $ret != 0 ) {
+			$this->last_error = sprintf("Error executing '%s link show': %s", $ip, join(' / ', $out));
 			return false;
 		}
 
@@ -347,7 +380,13 @@ class StatCollector  {
 		return $hwaddr;
 	}
 
-	function getMachineMacAddr_Linux_ifconfig() {
+	/**
+	 * Get the "main" MAC address of a Linux system using the `ifconfig' command
+	 * from `net-tools'.
+	 * 
+	 * @return string|false the MAC addr string or boolean false in case of error
+	 */
+	public function getMachineMacAddr_Linux_ifconfig() {
 		include_once('lib/Lib.System.php');
 
 		$ifconfig = WiffLibSystem::getCommandPath('ifconfig');
@@ -364,6 +403,7 @@ class StatCollector  {
 		exec(sprintf("%s", $ifconfig), $out, $ret);
 		putenv(sprintf("LC_ALL=%s", $locale));
 		if( $ret != 0 ) {
+			$this->last_error = sprintf("Error executing '%s': %s", $ifconfig, join(' / ', $out));
 			return false;
 		}
 
@@ -382,7 +422,12 @@ class StatCollector  {
 		return $hwaddr;
 	}
 
-	function getMachineCPUCount_Linux() {
+	/**
+	 * Get the number of CPUs of a Linux system.
+	 * 
+	 * @return int|false the number of CPUs or boolean false in case of error
+	 */
+	public function getMachineCPUCount_Linux() {
 		include_once('lib/Lib.System.php');
 		
 		$grep = WiffLibSystem::getCommandPath('grep');
@@ -394,6 +439,7 @@ class StatCollector  {
 		$out = array();
 		exec(sprintf("%s -c '^processor' /proc/cpuinfo", $grep), $out, $ret);
 		if( $ret != 0 ) {
+			$this->last_error = sprintf("Error grepping /proc/cpuinfo: %s", join(' / ', $out));
 			return false;
 		}
 		
@@ -410,7 +456,14 @@ class StatCollector  {
 		return $processors_count;
 	}
 	
-	function getMachineMacAddr_Darwin() {
+	/**
+	 * Get the "main" MAC address of a Darwin system.
+	 * 
+	 * It returns the MAC address of the en0 interface.
+	 * 
+	 * @return string|false the MAC addr string or boolean false in case of error
+	 */
+	public function getMachineMacAddr_Darwin() {
 		include_once('lib/Lib.System.php');
 		
 		$netstat = WiffLibSystem::getCommandPath('netstat');
@@ -442,7 +495,12 @@ class StatCollector  {
 		return strtolower($hwaddr);
 	}
 	
-	function getMachineCPUCount_Darwin() {
+	/**
+	 * Get the number of CPUs of a Darwin system.
+	 * 
+	 * @return int|false the number of CPUs or boolean false in case of error
+	 */
+	public function getMachineCPUCount_Darwin() {
 		include_once('lib/Lib.System.php');
 		
 		$sysctl = WiffLibSystem::getCommandPath('sysctl');
@@ -471,6 +529,5 @@ class StatCollector  {
 	}
 	
 }
-
 
 ?>
