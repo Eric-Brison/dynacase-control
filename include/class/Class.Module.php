@@ -69,7 +69,7 @@ class Module
 	/**
 	 * @var string last error message
 	 */
-	private $errorMessage = '';
+	public $errorMessage = '';
 
     public function __construct($context, $repository = null, $xmlNode = null, $isInstalled = false)
     {
