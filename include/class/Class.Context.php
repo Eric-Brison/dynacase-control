@@ -31,7 +31,7 @@ class Context
 	public $repo;
 	public $register;
 
-	private $errorMessage = null;
+	public $errorMessage = null;
 
 	public function __construct($name, $desc, $root, $repo, $url, $register)
 	{
@@ -1268,7 +1268,7 @@ class Context
 		}
 
 		for( $i = 0; $i < $moduleDom->length; $i++ ) {
-			$module = $moduleDom->item(0);
+			$module = $moduleDom->item($i);
 			$ret = $module->parentNode->removeChild($module);
 		}
 
