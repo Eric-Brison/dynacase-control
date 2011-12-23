@@ -25,7 +25,7 @@ function wcontrol_eval_process($process)
                 eval ("\$msg = wcontrol_msg_".$process->getAttribute('type')."(\$process);");
             } else
             {
-                $msg = generic_message($process);
+                $msg = generic_msg($process);
             }
 
             return array (
@@ -227,7 +227,7 @@ function wcontrol_check_exec($process)
     return ($ret === 0)?true:false;
 }
 
-function wcontrol_msg_check_exec($process)
+function wcontrol_msg_exec($process)
 {
     return sprintf("Checking if the command '%s' returns a success exit code", $process->getAttribute('cmd'));
 }
@@ -282,7 +282,7 @@ function wcontrol_check_file($process)
     }
 }
 
-function wcontrol_msg_check_file($process)
+function wcontrol_msg_file($process)
 {
     return sprintf("Checking if the file '%s' validate the predicate '%s'", $process->getAttribute('file'), $process->getAttribute('predicate'));
 }
@@ -670,7 +670,7 @@ function wcontrol_check_phpbug40926(&$process) {
 	$service = $wiff->expandParamValue($service);
 
 	$php = WiffLibSystem::getCommandPath('php');
-	if( $ret === false ) {
+	if( $php === false ) {
 		error_log(__FUNCTION__." ".sprintf("PHP CLI not found."));
 		return false;
 	}
