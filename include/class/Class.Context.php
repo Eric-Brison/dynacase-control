@@ -1049,7 +1049,7 @@ class Context
 			case 'ge':
 				$cmp = $this->cmpVersionReleaseAsc($module->requires['installer']['version'], 0, $wiffVersion[0], 0);
 				if( $cmp > 0 ) {
-					$this->errorMessage = sprintf(">= %s", $wiffVersion[0]);
+					$this->errorMessage = sprintf(">= %s", $module->requires['installer']['version']);
 					return false;
 				} else {
 					return true;
