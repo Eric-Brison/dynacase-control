@@ -1,6 +1,6 @@
 <?php
 
-set_include_path(get_include_path().PATH_SEPARATOR.getcwd().'/../../include');
+set_include_path(getcwd().'/../'.PATH_SEPARATOR.getcwd().'/../../include'.PATH_SEPARATOR.get_include_path());
 
 function __autoload($class_name) {
     require_once 'class/Class.' . $class_name . '.php';

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<repo label="Dynacase AGPL 3.2 (integration)">
+    <modules>
+
+        <module name="foo" version="1.0.0" release="0">
+            <requires>
+                <module name="bar" comp="ge" version="2.0.0" />
+            </requires>
+        </module>
+
+        <module name="bar" version="2.0.0" release="0">
+            <requires>
+                <module name="dynacase-platform" comp="ge" version="3.2.0" />
+            </requires>
+        </module>
+
+        <module name="dynacase-platform" version="3.2.0" release="0" />
+
+    </modules>
+</repo>

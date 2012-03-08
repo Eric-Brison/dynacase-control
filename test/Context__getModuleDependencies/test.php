@@ -9,7 +9,9 @@ if( $ctx === false ) {
   exit( 1 );
 }
 
-$depsList = $ctx->getModuleDependencies('freedom-webdesk');
+$phase = 'install';
+
+$depsList = $ctx->getModuleDependencies(array('foo'));
 if( $depsList === false ) {
   echo "ERROR\n";
   echo $ctx->errorMessage."\n";
@@ -17,10 +19,10 @@ if( $depsList === false ) {
 }
 echo "--- dependencies ---\n";
 foreach( $depsList as $dep ) {
-  echo sprintf("%s %s-%s\n", $dep->name, $dep->version, $dep->release);
+  echo sprintf("%s %s-%s for %s\n", $dep->name, $dep->version, $dep->release, ($dep->needphase!='')?$dep->needphase:$phase);
 }
 echo "--- dependencies ---\n";
-echo "OK found ".count($despList)." dependencies.\n";
+echo "OK found ".count($depsList)." dependencies.\n";
 echo "\n";
 
 exit( 0 );
