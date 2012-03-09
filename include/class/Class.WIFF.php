@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * Web Installer for Freedom Class
  * @author Anakeen
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
@@ -253,7 +253,7 @@ class WIFF
 
 	/**
 	 * Compare WIFF versions
-	 * @return
+	 * @return int|string
 	 * @param string $v1
 	 * @param string $r1
 	 * @param string $v2
@@ -284,7 +284,6 @@ class WIFF
 		 *   str vs. str => string comparison
 		 *   num vs. str => string is < to num
 		 */
-		$cmp_rel = 0;
 		if( is_numeric($rel1) && is_numeric($rel2) ) {
 			/* standard numeric comparison */
 			$cmp_rel = $rel1-$rel2;
@@ -644,6 +643,15 @@ class WIFF
 
 	/**
 	 * Add repository to global repo list
+	 * @param string $name
+	 * @param string $description
+	 * @param string $protocol
+	 * @param string $host
+	 * @param string $path
+	 * @param string $default
+	 * @param string $authenticated
+	 * @param string $login
+	 * @param string $password
 	 * @return boolean
 	 */
 	public function modifyRepo($name, $description, $protocol, $host, $path, $default, $authenticated, $login, $password)
@@ -704,6 +712,7 @@ class WIFF
 
 	/**
 	 * Delete repository from global repo list
+	 * @param string $name
 	 * @return boolean
 	 */
 	public function deleteRepo($name)
@@ -730,7 +739,7 @@ class WIFF
 		}
 
 		// Delete repository from this context
-		$repository = $xml->getElementsByTagName('repositories')->item(0)->removeChild($wiffRepoList->item(0));
+		$xml->getElementsByTagName('repositories')->item(0)->removeChild($wiffRepoList->item(0));
 
 		$ret = $xml->save($this->params_filepath);
 		if ($ret === false)
@@ -1202,7 +1211,7 @@ class WIFF
 
 					$script = sprintf("tar -zxf %s -C %s", escapeshellarg($context_tar), escapeshellarg($root));
 
-					$result = exec($script,$output,$retval);
+					exec($script,$output,$retval);
 
 					if($retval != 0){
 						$this->errorMessage = "Error when extracting context.tar.gz to $root";
@@ -1258,7 +1267,7 @@ class WIFF
 					$dump = $temporary_extract_root.DIRECTORY_SEPARATOR."core_db.pg_dump.gz";
 
 					$script = sprintf("gzip -dc %s | PGSERVICE=%s psql", escapeshellarg($dump), escapeshellarg($pgservice));
-					$result = exec($script,$output,$retval);
+					exec($script,$output,$retval);
 
 					if($retval != 0){
 						$this->errorMessage = "Error when restoring core_db.pg_dump.gz";
@@ -1295,7 +1304,7 @@ class WIFF
 
 								$script = sprintf("tar -zxf %s -C %s", escapeshellarg($vault_tar), escapeshellarg($vault_subdir));
 
-								$result = exec($script,$output,$retval);
+								exec($script,$output,$retval);
 
 								if($retval != 0){
 									$this->errorMessage = "Error when extracting vault to $vault_root";
@@ -1363,7 +1372,7 @@ class WIFF
 		$context->setAttribute('name',$name);
 		$context->setAttribute('root',$root);
 		$context->setAttribute('url', $url);
-		$context = $contextList->item(0)->appendChild($context);
+		$contextList->item(0)->appendChild($context);
 
 		// Modify core_db in xml
 		$paramList = $xmlXPath->query("/contexts/context[@name='".$name."']/parameters-value/param[@name='core_db']");
@@ -1423,17 +1432,17 @@ class WIFF
 				$paramRemoveProfiles = $xml->createElement('param');
 				$paramRemoveProfiles->setAttribute('name','remove_profiles');
 				$paramRemoveProfiles->setAttribute('value',true);
-				$paramRemoveProfiles = $paramValueList->item(0)->appendChild($paramVaultRoot);
+				$paramValueList->item(0)->appendChild($paramVaultRoot);
 
 				$paramUserLogin = $xml->createElement('param');
 				$paramUserLogin->setAttribute('name','user_login');
 				$paramUserLogin->setAttribute('value',$user_login);
-				$paramUserLogin = $paramValueList->item(0)->appendChild($paramUserLogin);
+				$paramValueList->item(0)->appendChild($paramUserLogin);
 
 				$paramUserPassword = $xml->createElement('param');
 				$paramUserPassword->setAttribute('name','user_password');
 				$paramUserPassword->setAttribute('value',$user_password);
-				$paramUserPassword = $paramValueList->item(0)->appendChild($paramUserPassword);
+				$paramValueList->item(0)->appendChild($paramUserPassword);
 
 			}
 		}
@@ -1543,7 +1552,7 @@ class WIFF
 	/**
 	 * Get an url to download an archived context.
 	 * @return string Archive url
-	 * @param integer $archivedId
+	 * @param string $archiveId Archive Id
 	 */
 	public function downloadArchive($archiveId){
 
@@ -1557,6 +1566,7 @@ class WIFF
 	 * Get Context by name
 	 * @return object Context or boolean false
 	 * @param string $name context name
+	 * @param bool $opt (default false)
 	 */
 	public function getContext($name, $opt = false)
 	{
@@ -1621,6 +1631,7 @@ class WIFF
 	 * @param string $name context name
 	 * @param string $root context root folder
 	 * @param string $desc context description
+	 * @param string $url context url
 	 */
 	public function createContext($name, $root, $desc, $url)
 	{
@@ -1710,6 +1721,10 @@ class WIFF
 
 	/**
 	 * Save Context
+	 * @param string $name
+	 * @param string $root
+	 * @param string $desc
+	 * @param string $url
 	 * @return object Context or boolean false
 	 */
 	public function saveContext($name, $root, $desc, $url)
@@ -1747,7 +1762,7 @@ class WIFF
 
 	/**
 	 * Get parameters list
-	 * @return array() containing 'key' => 'value' pairs
+	 * @return array containing 'key' => 'value' pairs
 	 */
 	public function getParamList()
 	{
@@ -1805,6 +1820,7 @@ class WIFF
 	 * @return return the value or false in case of errors
 	 * @param string $paramName the name of the parameter to set
 	 * @param string $paramValue the value of the parameter to set
+	 * @param bool $create
 	 */
 	public function setParam($paramName, $paramValue, $create = true)
 	{
@@ -1853,9 +1869,9 @@ class WIFF
 
 	/**
 	 * download the file pointed by the URL to a temporary file
-	 * @ return the name of a temporary file holding the retrieved data
-	 *   or false in case of error
-	 * @ params the URL of the file to retrieve
+	 * @param string $url the URL of the file to retrieve
+	 * @return bool|string the name of a temporary file holding the
+	 *         retrieved data or false in case of error
 	 */
 	public function downloadUrl($url)
 	{
@@ -2155,10 +2171,6 @@ class WIFF
 		$fromVer = $v[0];
 		$fromRel = $v[1];
 
-		$v = preg_split('/-/', $toVersion, 2);
-		$toVer = $v[0];
-		$toRel = $v[1];
-
 		$wiff_root = getenv('WIFF_ROOT');
 		if( $wiff_root !== false ) {
 			$wiff_root = $wiff_root.DIRECTORY_SEPARATOR;
@@ -2298,7 +2310,6 @@ class WIFF
 			$this->unlock($lock);
 			return false;
 		}
-		$contextNode = $contextNodeList->item(0);
 
 		$licensesNode = null;
 		$query = sprintf("/contexts/context[@name='%s']/licenses", $ctxName);
@@ -2359,6 +2370,8 @@ class WIFF
 
 	/**
 	 * Check repo validity
+	 * @param string $name
+	 * @return array|bool
 	 */
 	public function checkRepoValidity($name) {
 		$repo = $this->getRepo($name);
@@ -2375,6 +2388,7 @@ class WIFF
 
 	/**
 	 * Get WIFF root path
+	 * @return string
 	 */
 	public function getWiffRoot() {
 		$wiff_root = getenv('WIFF_ROOT');
@@ -2386,6 +2400,10 @@ class WIFF
 
 	/**
 	 * Delete a context
+	 * @param string $contextName
+	 * @param boolean $result the result of the operation (boolean false|true)
+	 * @param string|boolean $opt (default false)
+	 * @return null|string
 	 */
 	public function deleteContext($contextName, &$result, $opt = false) {
 		$result = true;
@@ -2536,7 +2554,7 @@ class WIFF
 	/**
 	 * Set/store registration info
 	 *
-	 * @param array() $info containing the registration information
+	 * @param array $info containing the registration information
 	 *
 	 *   array(
 	 *     'uuid' => $uuid || '',
@@ -2653,5 +2671,3 @@ class WIFF
 	}
 
 }
-
-?>

@@ -61,15 +61,15 @@ class Module
      */
     public $hasParameter = false;
 
-	/**
-	 * @var boolean true if module has displayable parameters (e.g. not hidden)
-	 */
-	public $hasDisplayableParameter = false;
+    /**
+     * @var boolean true if module has displayable parameters (e.g. not hidden)
+     */
+    public $hasDisplayableParameter = false;
 
-	/**
-	 * @var string last error message
-	 */
-	public $errorMessage = '';
+    /**
+     * @var string last error message
+     */
+    public $errorMessage = '';
 
     public function __construct($context, $repository = null, $xmlNode = null, $isInstalled = false)
     {
@@ -88,9 +88,9 @@ class Module
 
         $this->hasParameter = is_array($parameterList) && (count($parameterList) != 0);
 
-		$this->hasDisplayableParameter = $this->fGetDisplayableParameterList();
+        $this->hasDisplayableParameter = $this->fGetDisplayableParameterList();
 
-	}
+    }
 
     public function __set($property, $value)
     {
@@ -194,7 +194,7 @@ class Module
         $changelogNodeList = $xmlNode->getElementsByTagName('version');
         if ($changelogNodeList->length > 0)
         {
-	    $this->changelog = array();
+        $this->changelog = array();
 
             foreach ($changelogNodeList as $changelogNode)
             {
@@ -314,7 +314,6 @@ class Module
         $modulesNode = $modulesNodeList->item(0);
 
         // Look for an existing <module> node
-	$query = '';
 	if( $status == 'downloaded' ) {
 	  $query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->context->name, $this->name);
 	} else {
@@ -582,9 +581,11 @@ class Module
 	}
 
 
-
 	/**
 	 * Try to get parameter value from replaced modules
+	 * @param DOMXPath $contextsXpath DOMXPath object
+	 * @param string $paramName
+	 * @return string the parameters value
 	 */
 	public function getParameterValueFromReplacedModules(&$contextsXpath, $paramName) {
 	  $value = '';
@@ -794,9 +795,12 @@ class Module
 	  return $this->replaces;
 	}
 
-        /**
-         * Set the status of a module
-         */
+	/**
+	 * Set the status of a module
+	 * @param string $status the modules status
+	 * @param string $errorstatus the modules error status (default null)
+	 * @return bool
+	 */
         public function setStatus($status, $errorstatus = null)
         {
             require_once ('class/Class.WIFF.php');
@@ -843,7 +847,8 @@ class Module
 
         /**
          * Delete the tmpfile associated with a module
-         */
+		 * @return bool false on error or string containing the temporary file pathname
+		 */
         public function deleteTmpFile()
         {
             require_once ('class/Class.WIFF.php');
@@ -902,5 +907,3 @@ class Module
 	}
 
 }
-
-?>

@@ -21,5 +21,3 @@ class JSONAnswer {
     return json_encode($this);
   }
 }
-
-?>

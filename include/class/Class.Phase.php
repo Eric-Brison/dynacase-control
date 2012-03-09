@@ -15,10 +15,11 @@ class Phase
 
 	public $module;
 
-    /**
-     * @param $module object Module
-     * @param $phaseName the name of the phase
-     */
+	/**
+	 * @param string $phaseName the name of the phase
+	 * @param XMLNode $xmlNode XMLNode object
+	 * @param Module $module object Module
+	 */
     public function __construct($phaseName, $xmlNode, $module)
     {
         $this->name = $phaseName;
@@ -123,5 +124,3 @@ class Phase
 
 
 }
-
-?>

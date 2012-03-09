@@ -59,7 +59,6 @@ class Process
 	}
 
 	private function computeLabel() {
-		$label = "";
 		if( $this->name == 'check' ) {
 			if( $this->attributes['type'] == 'syscommand' ) {
 				$label = sprintf('Check system command %s', $this->attributes['command']);
@@ -96,8 +95,6 @@ class Process
 		require_once ('lib/Lib.Wcontrol.php');
 		require_once('class/Class.Debug.php');
 
-		$wiff = WIFF::getInstance();
-
 		putenv("WIFF_CONTEXT_NAME=".$this->phase->module->context->name);
 		putenv("WIFF_CONTEXT_ROOT=".$this->phase->module->context->root);
 
@@ -116,7 +113,7 @@ class Process
 
 		chdir($cwd);
 
-		if(!$return){
+		if(!$result['ret']){
 			Debug::log($this->errorMessage);
 		}
 
@@ -138,4 +135,3 @@ class Process
 	}
 
 }
-?>

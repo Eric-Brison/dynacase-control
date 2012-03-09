@@ -12,6 +12,8 @@ global $wiff_lock;
 
 /**
  * wiff help
+ * @param $argv
+ * @return int
  */
 function wiff_help(&$argv) {
 	echo "\n";
@@ -35,6 +37,7 @@ function wiff_help(&$argv) {
 
 /**
  * wiff (un)lock
+ * @return mixed $lock
  */
 function wiff_lock() {
 	global $wiff_lock;
@@ -58,6 +61,8 @@ function wiff_unlock() {
 
 /**
  * wiff list
+ * @param $argv
+ * @return int
  */
 function wiff_list(&$argv) {
 	$op = array_shift($argv);
@@ -78,6 +83,8 @@ function wiff_list(&$argv) {
 
 /**
  * wiff list context
+ * @param $argv
+ * @return int
  */
 function wiff_list_context(&$argv) {
 	$options = parse_argv_options($argv);
@@ -117,6 +124,8 @@ function wiff_list_help(&$argv) {
 
 /**
  * wiff context
+ * @param $argv
+ * @return int
  */
 function wiff_context(&$argv) {
 	if (!is_array($argv)) return 0;
@@ -169,6 +178,9 @@ function wiff_context(&$argv) {
 
 /**
  * wiff context help
+ * @param Context $context
+ * @param $argv
+ * @return int
  */
 function wiff_context_help(&$context, &$argv) {
 	echo "\n";
@@ -196,6 +208,9 @@ function wiff_context_help(&$context, &$argv) {
 
 /**
  * wiff context <ctxName> exportenv
+ * @param Context $context
+ * @param $argv
+ * @return int
  */
 function wiff_context_exportenv(&$context, &$argv) {
 	echo "export wpub=".$context->root.";\n";
@@ -208,6 +223,9 @@ function wiff_context_exportenv(&$context, &$argv) {
 
 /**
  * wiff context <ctxName> shell
+ * @param Context $context
+ * @param $argv
+ * @return int
  */
 function wiff_context_shell(&$context, &$argv) {
 	if( ! function_exists("posix_setuid") ) {
@@ -249,7 +267,6 @@ function wiff_context_shell(&$context, &$argv) {
 		return 1;
 	}
 
-	$http_pw = false;
 	if( is_numeric($httpuser) ) {
 		$http_pw = posix_getpwuid($httpuser);
 	} else {
@@ -298,6 +315,9 @@ function wiff_context_shell(&$context, &$argv) {
 
 /**
  * wiff context <ctxName> module
+ * @param Context $context
+ * @param $argv
+ * @return int
  */
 function wiff_context_module(&$context, &$argv) {
 	$op = array_shift($argv);
@@ -326,7 +346,6 @@ function wiff_context_module(&$context, &$argv) {
 			wiff_context_module_help($context, $argv);
 			break;
 	}
-	$wiff = WIFF::getInstance();
 
 	return 0;
 }
@@ -562,7 +581,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 			if( $license != '' && $licenseAgreement != 'yes' ) {
 				$agree = license_ask($module->name, $module->license, $license);
 				if( $agree == 'yes' ) {
-					$ret = $module->storeLicenseAgreement($agree);
+					$module->storeLicenseAgreement($agree);
 				} else {
 					error_log(sprintf("Notice: you did not agreed to '%s' for module '%s'.", $module->license, $module->name));
 					exit( 1 );
@@ -573,7 +592,7 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 		/**
 		 * wstop
 		 */
-		$ret = $context->wstop();
+		$context->wstop();
 
 		/**
 		 * ask module parameters
@@ -761,6 +780,9 @@ function wiff_context_module_install_deplist(&$context, &$options, &$argv, &$dep
 
 /**
  * wiff context <ctxName> module upgrade
+ * @param Context $context
+ * @param $argv
+ * @return int
  */
 function wiff_context_module_upgrade(&$context, &$argv) {
 	$options = parse_argv_options($argv);
@@ -897,6 +919,9 @@ function wiff_context_module_upgrade_remote(&$context, &$options, &$modName, &$a
 
 /**
  * wiff context <ctxName> module extract
+ * @param Context $context
+ * @param $argv
+ * @return int
  */
 function wiff_context_module_extract(&$context, &$argv) {
 	return 0;
@@ -1032,6 +1057,9 @@ function wiff_context_module_list_available(&$context, &$argv) {
 
 /**
  * wiff context <ctxName> param
+ * @param Context $context
+ * @param $argv
+ * @return int
  */
 function wiff_context_param(&$context, &$argv) {
 	$op = array_shift($argv);
@@ -1173,7 +1201,7 @@ function wiff_context_param_set(&$context, &$argv) {
 
 	$parameter = $module->getParameter($paramName);
 	if( $parameter === false ) {
-		error_log(sprintf("Error: could not get back parameter '%s' for module '%s': %s", $paramName, $modNAme, $module->errorMessage));
+		error_log(sprintf("Error: could not get back parameter '%s' for module '%s': %s", $paramName, $modName, $module->errorMessage));
 		return 1;
 	}
 
@@ -1184,6 +1212,8 @@ function wiff_context_param_set(&$context, &$argv) {
 
 /**
  * wiff mkrepoidx <repoPath>
+ * @param $argv
+ * @return int
  */
 function wiff_mkrepoidx(&$argv) {
 	$repoPath = array_shift($argv);
@@ -1335,7 +1365,7 @@ function wiff_whattext(&$argv) {
 	}
 
 	$cmd = sprintf("%s", escapeshellarg($whattext));
-	$out = system($cmd, $ret);
+	system($cmd, $ret);
 
 	return $ret;
 }
@@ -1358,7 +1388,7 @@ function wiff_wstop(&$argv) {
 	}
 
 	$cmd = sprintf("%s", escapeshellarg($wstart));
-	$out = system($cmd, $ret);
+	system($cmd, $ret);
 
 	return $ret;
 }
@@ -1381,7 +1411,7 @@ function wiff_wstart(&$argv) {
 	}
 
 	$cmd = sprintf("%s", escapeshellarg($wstart));
-	$out = system($cmd, $ret);
+	system($cmd, $ret);
 
 	return $ret;
 }
@@ -1394,8 +1424,6 @@ function wiff_default(&$argv) {
 }
 
 function wiff_default_getValue(&$argv) {
-	global $wiff_root;
-
 	$paramName =  substr($argv[0], 11);
 
 	$value = wiff_getParamValue($paramName);
@@ -1481,7 +1509,6 @@ function license_ask($moduleName, $licenseName, $license) {
 	}
 	$max_lines -= 5;
 
-	$ans = "";
 	while( true ) {
 		$lines = array_splice($licenseLines, 0, $max_lines);
 		echo join("\n", $lines);
@@ -1511,6 +1538,7 @@ function license_ask($moduleName, $licenseName, $license) {
 
 /**
  * ANSI colors
+ * @return string
  */
 function fg_black() {
 	return chr(0x1b).'[30m';
@@ -1566,6 +1594,8 @@ function color_reset() {
 
 /**
  * change UID to the owner of the wiff script
+ * @param $path
+ * @return bool
  */
 function setuid_wiff($path) {
 	$stat = stat($path);
@@ -1597,6 +1627,8 @@ function setuid_wiff($path) {
 
 /**
  * Delete context
+ * @param $argv
+ * @return int
  */
 function wiff_delete(&$argv) {
   $op = array_shift($argv);
@@ -1632,6 +1664,7 @@ function wiff_delete_context(&$argv) {
   }
 
   $wiff = WIFF::getInstance();
+  $res = 0;
   $ret = $wiff->deleteContext($ctx_name, $res);
   if( $res === false ) {
     error_log(sprintf("Error: cound not delete context '%s': %s\n", $ctx_name, $wiff->errorMessage));
@@ -1640,6 +1673,3 @@ function wiff_delete_context(&$argv) {
 
   return 0;
 }
-
-
-?>

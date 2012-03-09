@@ -23,14 +23,14 @@ class StatCollector  {
 	 * @var string
 	 */
 	public $last_error = '';
-	
+
 	/**
 	 * StatCollector constructor
 	 *
-	 * @param object of class WIFF $wiff
-	 * @param object of class Context $context
+	 * @param WIFF $wiff WIFF object (default null)
+	 * @param Context $context Context object (default null)
 	 *
-	 * @return the current object ($this)
+	 * @return \StatCollector current object ($this)
 	 */
 	public function __construct(&$wiff = null, &$context = null) {
 		$this->wiff = $wiff;
@@ -319,8 +319,6 @@ class StatCollector  {
 	 * @return string|false the MAC addr string or boolean false in case of error
 	 */
 	public function getMachineMacAddr_Linux() {
-		$hwaddr = false;
-
 		$hwaddr = $this->getMachineMacAddr_Linux_iproute2();
 		if( $hwaddr === false ) {
 			$hwaddr = $this->getMachineMacAddr_Linux_ifconfig();
@@ -529,5 +527,3 @@ class StatCollector  {
 	}
 	
 }
-
-?>
