@@ -714,6 +714,41 @@ class Context
 		return false;
 	}
 
+    public function compSymbol($comp) {
+        $symbol = array(
+            'gt' => '>',
+            'ge' => '>=',
+            'lt' => '<',
+            'le' => '<=',
+            'eq' => '==',
+            'ne' => '!='
+        );
+        return (isset($symbol[$comp]))?$symbol[$comp]:"??";
+    }
+
+    public function getModuleAvailSatisfying($name, $comp, $version) {
+        $moduleList = array();
+        foreach ($this->repo as $repository) {
+            $repoModuleList = $repository->getModuleList();
+            if ($repoModuleList === false) {
+                $this->errorMessage = sprintf("Error fetching index for repository '%s'.", $repository->name);
+                continue;
+            }
+            foreach ($repoModuleList as $module) {
+                if ($module->name == $name && $this->moduleMeetsRequiredVersion($module, $comp, $version)) {
+                    array_push($moduleList, $module);
+                }
+            }
+        }
+        usort($moduleList, array($this, "cmpModuleByVersionReleaseDesc"));
+        if (isset($moduleList[0])) {
+            $mod = $moduleList[0];
+            $mod->context = $this;
+            return $mod;
+        }
+        return false;
+    }
+
 	public function getModuleAvailReplaced($name) {
 		$modAvails = $this->getAvailableModuleList();
 		if( $modAvails === false ) {
@@ -799,27 +834,34 @@ class Context
 				if( $reqMod !== false ) {
 					// Found an installed module
 					if( $this->moduleMeetsRequiredVersion($reqMod, $reqModComp, $reqModVersion) ) {
-						// The installed module satify the required version
+						// The installed module satisfy the required version
 						// Keep it
 						continue;
 					} else {
-						// Installed module does not satify required version
+						// Installed module does not satisfy required version
 						// so try looking for a matching module in repositories
-						$reqMod = $this->getModuleAvail($reqModName);
-						if( $reqMod !== false ) {
-							if( $this->moduleMeetsRequiredVersion($reqMod, $reqModComp, $reqModVersion) ) {
-								$reqMod->needphase = 'upgrade';
+						$currentInstalledMod = $reqMod;
+						$satisfyingMod = $this->getModuleAvailSatisfying($reqModName, $reqModComp, $reqModVersion);
+						if( $satisfyingMod !== false ) {
+							if ($this->cmpModuleByVersionReleaseAsc($satisfyingMod, $currentInstalledMod) > 0) {
+								$satisfyingMod->needphase = 'upgrade';
+							} else {
+								$this->errorMessage = sprintf("Module %s (%s %s) required by %s is not compatible with current set of installed and available modules.", $reqModName, $this->compSymbol($reqModComp), $reqModVersion, $mod->name);
+								return false;
 							}
+							// Keep the satisfying module as the required module for install/upgrade
+							$reqMod = $satisfyingMod;
+						} else {
+							// No satisfying module has been found
+							$reqMod = false;
 						}
 					}
 				} else {
 					// Module is not already installed
 					// so lookup in repositories for a matching module
-					$reqMod = $this->getModuleAvail($reqModName);
+					$reqMod = $this->getModuleAvailSatisfying($reqModName, $reqModComp, $reqModVersion);
 					if( $reqMod !== false ) {
-						if( $this->moduleMeetsRequiredVersion($reqMod, $reqModComp, $reqModVersion) ) {
-							$reqMod->needphase = 'install';
-						}
+						$reqMod->needphase = 'install';
 					}
 				}
 
@@ -838,7 +880,7 @@ class Context
 				}
 
 				if( $reqMod === false ) {
-					$this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+					$this->errorMessage = sprintf("Module '%s' (%s %s) required by '%s' could not be found in repositories.", $reqModName, $this->compSymbol($reqModComp), $reqModVersion, $mod->name);
 					return false;
 				}
 
@@ -1074,7 +1116,47 @@ class Context
 					return false;
 				}
 				break;
-		}
+            case 'gt':
+                $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+                if( $cmp > 0 ) {
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            case 'le':
+                $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+                if( $cmp <= 0 ) {
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            case 'lt':
+                $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+                if( $cmp < 0 ) {
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            case 'eq':
+                $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+                if( $cmp == 0 ) {
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+            case 'ne':
+                $cmp = $this->cmpVersionReleaseAsc($v, $r, $version, 0);
+                if( $cmp != 0 ) {
+                    return true;
+                } else {
+                    return false;
+                }
+                break;
+        }
 
 		return true;
 	}
