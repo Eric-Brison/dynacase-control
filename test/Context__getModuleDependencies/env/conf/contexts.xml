@@ -1,14 +1,15 @@
 <?xml version="1.0"?>
 <contexts>
-  <context name="ctx1" description="Context One" root="ctx1">
+    <context name="ctx1" description="Context One" root="ctx1">
 
-    <repositories>
-      <!-- <access name="test" description="Test repo" baseurl="http://localhost:8080/~jerome/testrepo/" /> -->
-      <access name="repository-installer" description="Online Repository Installer" baseurl="http://ftp.freedom-ecm.org/frdom/wiff/webinst/test"/>
-    </repositories>
+        <repositories>
+            <access name="test" description="test" baseurl="repo/"/>
+        </repositories>
 
-    <modules>
-    </modules>
+        <modules>
+            <module name="dynacase-platform" version="3.0.0" release="0" status="installed" />
+            <!-- <module name="bar" version="1.0.0" release="0" status="installed" /> -->
+        </modules>
 
-  </context>
+    </context>
 </contexts>
