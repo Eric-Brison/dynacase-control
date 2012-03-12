@@ -330,8 +330,6 @@ class ZipArchiveCmd {
 	 * @return boolean false on error or a string containing the content of the file
 	 */
 	public function getFileContentFromName($name) {
-		$data = false;
-
 		$tmpfile = $this->getTmpFileFromName($name);
 		if( $tmpfile === false ) {
 			return false;
@@ -356,8 +354,6 @@ class ZipArchiveCmd {
 	 * @return boolean false on error or a string containing the temporary filename holding the extracted content
 	 */
 	public function getTmpFileFromName($name) {
-		$data = false;
-
 		$tmpfile = WiffLibSystem::tempnam(null, __CLASS__);
 		if( $tmpfile === false ) {
 			$this->last_error = sprintf("Error creating temporary file.");
@@ -390,5 +386,3 @@ class ZipArchiveCmd {
 		$this->mode = 0;
 	}
 }
-
-?>

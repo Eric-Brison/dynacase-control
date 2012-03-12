@@ -40,5 +40,3 @@ class Parameter
 		return $visibility;
 	}
 }
-
-?>

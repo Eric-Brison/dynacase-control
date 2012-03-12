@@ -1298,5 +1298,3 @@ if ( isset ($argv))
 }
 
 answer(null, "Unrecognized or incomplete call");
-
-?>

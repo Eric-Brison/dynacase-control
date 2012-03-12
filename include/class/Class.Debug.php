@@ -11,11 +11,11 @@ class Debug
 
     const log_filepath = 'conf/wiff.log';
 
-    private $errorMessage = null;
+    static $errorMessage = null;
 
     /**
      * Add a log to the log file
-     * @return
+     * @return bool
      * @param object $string
      */
     public static function log($string)
@@ -34,7 +34,7 @@ class Debug
 
             if (!$flog = fopen($wiff_root.self::log_filepath, 'a'))
             {
-                $this->errorMessage = sprintf("Error when opening LOG file.");
+                self::$errorMessage = sprintf("Error when opening LOG file.");
                 return false;
             }
 
@@ -45,7 +45,7 @@ class Debug
 
     /**
      * Mail log file to a given mail address
-     * @return
+     * @return void
      */
     public static function mailLog()
     {
@@ -53,5 +53,3 @@ class Debug
     }
 
 }
-
-?>

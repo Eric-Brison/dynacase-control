@@ -184,10 +184,10 @@ class Repository
         return $this->url;
     }
 
-    /**
-     * Return true if repository has a content.xml file
-     * @return
-     */
+	/**
+	 * Return true if repository has a content.xml file
+	 * @return bool success
+	 */
     public function isValid()
     {
         require_once ('class/Class.WIFF.php');
@@ -219,10 +219,10 @@ class Repository
         return true;
     }
 
-    /**
-     * Return true if repository needs authentification
-     * @return
-     */
+	/**
+	 * Return true if repository needs authentification
+	 * @return bool success
+	 */
     public function needAuth()
     {
         if ($this->authenticated == 'yes' && !$this->password)
@@ -267,7 +267,7 @@ class Repository
         $moduleList = array ();
         foreach ($modules as $module)
         {
-            $moduleList[] = new Module($context, $this, $module, false);
+            $moduleList[] = new Module(null, $this, $module, false);
         }
 
         unlink($tmpfile);
@@ -275,5 +275,3 @@ class Repository
     }
 
 }
-
-?>

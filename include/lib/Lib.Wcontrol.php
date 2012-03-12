@@ -10,6 +10,8 @@ require_once ('lib/Lib.System.php');
 
 /**
  * evaluate a Process object
+ * @param Process $process
+ * @return array
  */
 function wcontrol_eval_process($process)
 {
@@ -17,6 +19,7 @@ function wcontrol_eval_process($process)
     {
         if (function_exists("wcontrol_check_".$process->getAttribute('type')))
         {
+            $ret = false;
             # error_log(sprintf("%s Running wcontrol_check_%s()", __FUNCTION__ , $process->getAttribute('type')));
             eval ("\$ret = wcontrol_check_".$process->getAttribute('type')."(\$process);");
 
@@ -51,9 +54,9 @@ function wcontrol_eval_process($process)
 }
 
 /**
- *
- * @return
- * @param object $process
+ * Execute Process
+ * @return array
+ * @param Process $process
  */
 function wcontrol_process($process)
 {
@@ -197,6 +200,8 @@ function wcontrol_download(&$process) {
 
 /**
  * generic message
+ * @param Process $process
+ * @return string
  */
 function generic_msg($process)
 {
@@ -205,6 +210,8 @@ function generic_msg($process)
 
 /**
  * phpfunction check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_phpfunction($process)
@@ -219,11 +226,13 @@ function wcontrol_msg_phpfunction($process)
 
 /**
  * exec check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_exec($process)
 {
-    $out = system($process->getAttribute('cmd'), $ret);
+    system($process->getAttribute('cmd'), $ret);
     return ($ret === 0)?true:false;
 }
 
@@ -234,6 +243,8 @@ function wcontrol_msg_exec($process)
 
 /**
  * file check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_file($process)
@@ -289,6 +300,8 @@ function wcontrol_msg_file($process)
 
 /**
  * syscommand check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_syscommand($process)
@@ -308,6 +321,8 @@ function wcontrol_msg_syscommand($process)
 
 /**
  * pearmodule check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_pearmodule($process)
@@ -345,6 +360,8 @@ function wcontrol_msg_phpclass($process)
 
 /**
  * apachemodule check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_apachemodule($process)
@@ -368,6 +385,8 @@ function wcontrol_msg_apachemodule($process)
 
 /**
  * pgversion check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_pgversion( & $process)
@@ -424,7 +443,7 @@ function wcontrol_check_pgversion( & $process)
     {
         case 'eq':
             $op = "equal to";
-            $predic = ($verstr_server = $verstr_target)?true:false;
+            $return = ($verstr_server == $verstr_target)?true:false;
         break;
         case 'ne':
             $op = "not equal to";
@@ -479,6 +498,8 @@ function wcontrol_msg_pgversion($process)
 
 /**
  * phpversion check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_phpversion( & $process)
@@ -538,6 +559,8 @@ function wcontrol_msg_phpversion($process)
 
 /**
  * pgempty check
+ * @param Process $process
+ * @return bool
  */
 
 function wcontrol_check_pgempty( & $process)
@@ -632,6 +655,8 @@ function wcontrol_msg_ncurses($process)
 
 /**
  * PHP bug #45996
+ * @param Process $process
+ * @return bool
  */
 function wcontrol_check_phpbug45996(&$process) {
   $expected = "a'b";
@@ -660,6 +685,8 @@ function wcontrol_msg_phpbug45996(&$process) {
 
 /**
  * PHP bug #40926
+ * @param Process $process
+ * @return bool
  */
 function wcontrol_check_phpbug40926(&$process) {
 	require_once ('lib/Lib.System.php');
@@ -711,5 +738,3 @@ EOF;
 function wcontrol_msg_phpbug40926(&$process) {
     return sprintf("Checking for PHP bug #40926");
 }
-
-?>

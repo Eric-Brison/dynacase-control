@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * Context Class
  * @author Anakeen
  * @license http://www.fsf.org/licensing/licenses/agpl-3.0.html GNU Affero General Public License
@@ -47,11 +47,11 @@ class Context
 		}
 	}
 
-	/**
-	 * Check if context repositories are valid.
-	 * Populate repositories object with appropriate attributes.
-	 * @return
-	 */
+    /**
+     * Check if context repositories are valid.
+     * Populate repositories object with appropriate attributes.
+     * @return void
+     */
 	public function isValid()
 	{
 		foreach ($this->repo as $repository)
@@ -80,11 +80,13 @@ class Context
 		return true;
 	}
 
-	/**
-	 * Import archive in Context
-	 * @return
-	 * @param object $name
-	 */
+    /**
+     * Import archive in Context
+     * @return bool|string boolean false on error or the archive pathname
+     * @param string $archive the archive pathname
+     * @param string $status the status to which the imported archive will be set to (default = 'downloaded')
+     * @internal param object $name
+     */
 	public function importArchive($archive, $status = 'downloaded')
 	{
 		require_once ('class/Class.WIFF.php');
@@ -151,7 +153,6 @@ class Context
 		$modulesNode = $modulesNodeList->item(0);
 
 		// Look for an existing <module> node
-		$query = '';
 		if($status == 'downloaded') {
 			$query = sprintf("/contexts/context[@name='%s']/modules/module[@name='%s' and @status='downloaded']", $this->name, $module->name);
 		} else if($status == 'installed') {
@@ -190,12 +191,12 @@ class Context
 		return $module->tmpfile;
 	}
 
-	/**
-	 * Activate repository for Context
-	 * @return boolean success
-	 * @param string $name repository name
-	 * @param string $url repository url
-	 */
+    /**
+     * Activate repository for Context
+     * @return boolean success
+     * @param string $name repository name
+     * @internal param string $url repository url
+     */
 	public function activateRepo($name)
 	{
 		require_once ('class/Class.WIFF.php');
@@ -297,7 +298,7 @@ class Context
 		$contextRepoList = $xpath->query("/contexts/context[@name='".$this->name."']/repositories/access[@name='".$name."']");
 		if ($contextRepoList->length == 1)
 		{
-			$contextRepo = $xpath->query("/contexts/context[@name='".$this->name."']/repositories")->item(0)->removeChild($contextRepoList->item(0));
+			$xpath->query("/contexts/context[@name='".$this->name."']/repositories")->item(0)->removeChild($contextRepoList->item(0));
 			$ret = $xml->save($wiff->contexts_filepath);
 			if ($ret === false)
 			{
@@ -323,7 +324,10 @@ class Context
 	}
 
 
-
+    /**
+     * Deactivate all repositories
+     * @return bool success
+     */
 	public function deactivateAllRepo()
 	{
 
@@ -362,8 +366,6 @@ class Context
 	 */
 	public function getModuleList()
 	{
-
-		$moduleList = array ();
 
 		$availableModuleList = $this->getAvailableModuleList();
 		if ($availableModuleList === false)
@@ -419,9 +421,9 @@ class Context
 		{
 			$availableModuleList = $this->getAvailableModuleList();
 
-			foreach ($availableModuleList as $availableKey=>$availableModule)
+			foreach ($availableModuleList as $availableModule)
 			{
-				foreach ($moduleList as $moduleKey=>$module)
+				foreach ($moduleList as $module)
 				{
 					if ($availableModule->name == $module->name)
 					{
@@ -474,7 +476,7 @@ class Context
 		{
 			$installedModuleList = $this->getInstalledModuleList();
 
-			foreach ($installedModuleList as $installedKey=>$installedModule)
+			foreach ($installedModuleList as $installedModule)
 			{
 				foreach ($moduleList as $moduleKey=>$module)
 				{
@@ -494,7 +496,7 @@ class Context
 	/**
 	 * Merge two module lists, sort and keep modules with highest version-release
 	 *   (kinda sort|uniq).
-	 * @return an array containing unique module Objects
+	 * @return array containing unique module Objects
 	 * @param first array of module Objects
 	 * @param second array of module Objects
 	 */
@@ -557,7 +559,6 @@ class Context
 		 *   str vs. str => string comparison
 		 *   num vs. str => string is < to num
 		 */
-		$cmp_rel = 0;
 		if( is_numeric($rel1) && is_numeric($rel2) ) {
 			/* standard numeric comparison */
 			$cmp_rel = $rel1-$rel2;
@@ -579,10 +580,9 @@ class Context
 
 	/**
 	 * Compare two module Objects by ascending version-release
-	 * @return < 0 if mod1 is less than mod2, > 0 if mod1 is greater than mod2,
-	 *         and 0 if they are equal
-	 * @param module Object 1
-	 * @param module Object 2
+	 * @return int < 0 if mod1 is less than mod2, > 0 if mod1 is greater than mod2,
+	 * @param Module $module1
+	 * @param Module $module2
 	 */
 	public function cmpModuleByVersionReleaseAsc( & $module1, & $module2)
 	{
@@ -594,10 +594,9 @@ class Context
 
 	/**
 	 * Compare two module Objects by descending version-release
-	 * @return > 0 if mod1 is less than mod2, < 0 if mod1 is greater than mod2,
-	 *         and 0 if they are equal
-	 * @param module Object 1
-	 * @param module Object 2
+	 * @return int > 0 if mod1 is less than mod2, < 0 if mod1 is greater than mod2,
+	 * @param Module $module1
+	 * @param Module $module2
 	 */
 	public function cmpModuleByVersionReleaseDesc( & $module1, & $module2)
 	{
@@ -615,7 +614,8 @@ class Context
 	/**
 	 * Get Module by name
 	 * @return object Module or boolean false
-	 * @param object $name Module name
+	 * @param Module $name Module name
+	 * @param bool $status
 	 */
 	public function getModule($name, $status = false)
 	{
@@ -736,6 +736,7 @@ class Context
 	 * @return array containing a list of Module objects ordered by their
 	 *         install order, or false in case of error
 	 * @param the module name list
+	 * @param bool $local
 	 */
 	public function getModuleDependencies($namelist, $local = false)
 	{
@@ -756,7 +757,7 @@ class Context
 				$module = $this->getModuleAvail($name);
 				if ($module === false)
 				{
-					$this->errorMessage = sprintf("Module '%s' required by '%s' could not be found in repositories.", $reqModName, $mod->name);
+					$this->errorMessage = sprintf("Module '%s' could not be found in repositories.", $name);
 					return false;
 				}
 
@@ -773,9 +774,6 @@ class Context
 			}
 
 		}
-
-
-		$modMovedBy = array ();
 
 		$i = 0;
 		while ($i < count($depsList))
@@ -960,10 +958,10 @@ class Context
 
 	/**
 	 * Move a module at position $pos after position $pivot
-	 * @return (nothing)
-	 * @param array of Module
-	 * @param position of actual module to move
-	 * @param position after which the module should be moved
+	 * @return void (nothing)
+	 * @param array $depsList array of Modules
+	 * @param int $pos actual module to move
+	 * @param int $pivot position which the module should be moved to
 	 */
 	private function moveDepToRight( & $depsList, $pos, $pivot)
 	{
@@ -973,6 +971,8 @@ class Context
 
 	/**
 	 * Check if a module is installed
+	 * @param Module $module the Module object
+	 * @return bool|\Module|object
 	 */
 	private function moduleIsInstalled( & $module)
 	{
@@ -986,6 +986,10 @@ class Context
 
 	/**
 	 * Check if the given module Object is already installed and up-to-date
+	 * @param Module $targetModule the Module object
+	 * @param string $operator comparison operator (e.g. 'gt', 'le', etc.)
+	 * @param string $version comparison version (e.g. '1.2.3', '3.6.9', etc.)
+	 * @return bool
 	 */
 	private function moduleIsInstalledAndUpToDateWith( & $targetModule, $operator = '', $version = '')
 	{
@@ -1110,6 +1114,7 @@ class Context
 	{
 		$wstop = sprintf("%s/wstop", $this->root);
 		# error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstop));
+		$ret = 0;
 		system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstop), $ret));
 		return $ret;
 	}
@@ -1118,6 +1123,7 @@ class Context
 	{
 		$wstart = sprintf("%s/wstart", $this->root);
 		# error_log( __CLASS__ ."::". __FUNCTION__ ." ".sprintf("%s", $wstart));
+		$ret = 0;
 		system(sprintf("%s 1> /dev/null 2>&1", escapeshellarg($wstart), $ret));
 		return $ret;
 	}
@@ -1269,7 +1275,7 @@ class Context
 
 		for( $i = 0; $i < $moduleDom->length; $i++ ) {
 			$module = $moduleDom->item($i);
-			$ret = $module->parentNode->removeChild($module);
+			$module->parentNode->removeChild($module);
 		}
 
 		$ret = $xml->save($wiff->contexts_filepath);
@@ -1599,7 +1605,7 @@ class Context
 			else {
 				$archive->setAttribute('vault', 'Yes');
 			}
-			$archive = $root->appendChild($archive);
+			$root->appendChild($archive);
 
 			$xml = $doc->saveXML();
 
@@ -1690,6 +1696,8 @@ class Context
 
 	/**
 	 * Store the manifest of a downloaded module
+	 * @param Module $module a Module object
+	 * @return bool
 	 */
 	public function storeManifestForModule($module) {
 		if( ! is_object($module) ) {
@@ -1746,10 +1754,12 @@ class Context
 
 	/**
 	 * get the manifest of a module name
+	 * @param Module $moduleName a Module object
+	 * @return bool|string boolean false on error or the manifests content
 	 */
 	public function getManifestForModule($moduleName) {
 		if( is_object($moduleName) ) {
-			$moduleName = $module->name;
+			$moduleName = $moduleName->name;
 		}
 
 		$manifestFile = sprintf("%s/%s.manifest", $this->root, $moduleName);
@@ -1771,10 +1781,12 @@ class Context
 
 	/**
 	 * Delete the manifest file of a module name
+	 * @param Module $moduleName a Module object
+	 * @return bool|string boolean false on error or the manifests content
 	 */
 	public function deleteManifestForModule($moduleName) {
 		if( is_object($moduleName) ) {
-			$moduleName = $module->name;
+			$moduleName = $moduleName->name;
 		}
 
 		$manifestFile = sprintf("%s/%s.manifest", $this->root, $moduleName);
@@ -1794,15 +1806,17 @@ class Context
 			return false;
 		}
 
-		return $manifestfile;
+		return $manifestFile;
 	}
 
 	/**
 	 * Delete files from the given module name
+	 * @param Module $moduleName a Module object
+	 * @return bool success
 	 */
 	public function deleteFilesFromModule($moduleName) {
 		if( is_object($moduleName) ) {
-			$moduleName = $module->name;
+			$moduleName = $moduleName->name;
 		}
 
 		$manifestEntries = $this->getManifestEntriesForModule($moduleName);
@@ -1829,7 +1843,6 @@ class Context
 				continue;
 			}
 
-			$ret = false;
 			if( ! is_link($fpath) && is_dir($fpath) ) {
 				if( $mentry['type'] != 'd' ) {
 					error_log(__CLASS__."::".__FUNCTION__." ".sprintf("Type mismatch for file '%s' from module '%s': type is 'd' while manifest says '%s'.", $fpath, $moduleName, $mentry['type']));
@@ -1851,9 +1864,12 @@ class Context
 		return true;
 	}
 
-	/**
-	 * Sort helper function for manifest entries
-	 */
+    /**
+     * Sort helper function for manifest entries
+     * @param array $a a manifest entry array structure
+     * @param array $b a manifest entry array structure
+     * @return int
+     */
 	private function sortManifestEntriesByNameReverse($a, $b) {
 		return strcmp($b['name'], $a['name']);
 	}
@@ -1877,6 +1893,7 @@ class Context
 	/**
 	 * Purge/remove parameters value that are associated
 	 * with a module that is no more present in the context.
+	 * @return bool success
 	 */
 	public function purgeUnreferencedParametersValue() {
 		require_once ('class/Class.WIFF.php');
@@ -1939,6 +1956,9 @@ class Context
 
 	/**
 	 * Delete context
+	 * @param boolean $res the result of the operation: boolean false|true
+	 * @param boolean $opt
+	 * @return string the error message
 	 */
 	public function delete(&$res, $opt = false) {
 		$err_msg = '';
@@ -2052,7 +2072,7 @@ class Context
 	public function getContextVaultPathList(&$err) {
 		$pgservice_core = $this->getParamByName('core_db');
 		if( $pgservice_core == "" ) {
-			$err = sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
+			$err = sprintf("Parameter 'core_db' not found or empty in context '%s'.\n", $this->name);
 			$this->errorMessage .= $err;
 			return false;
 		}
@@ -2196,7 +2216,7 @@ class Context
 		$pgservice_core = $this->getParamByName('core_db');
 
 		if( $pgservice_core == "" ) {
-			$this->errorMessage .= sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
+			$this->errorMessage .= sprintf("Parameter 'core_db' not found or empty in context '%s'.\n", $this->name);
 			return false;
 			// return sprintf("Empty pgservice_core after include of '%s'.\n", $dbaccess);
 		}
@@ -2240,11 +2260,6 @@ class Context
 		}
 
 		$wiff = WIFF::getInstance();
-
-		$paramsXml = new DOMDocument();
-		$paramsXml->load($wiff->params_filepath);
-
-		$paramsXPath = new DOMXPath($paramsXml);
 
 		$contextsXml = new DOMDocument();
 		$contextsXml->load($wiff->contexts_filepath);
@@ -2336,5 +2351,3 @@ class Context
 	}
 
 }
-
-?>

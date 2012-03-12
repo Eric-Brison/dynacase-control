@@ -31,6 +31,7 @@ class RegistrationClient  {
 	 * Set the registration URL
 	 *
 	 * @param string $url the registration URL
+	 * @return \RegistrationClient
 	 */
 	public function setRegistrationUrl($url) {
 		$this->registration_url = $url;
@@ -39,6 +40,7 @@ class RegistrationClient  {
 
 	/**
 	 * Get the registration URL
+	 * @return string
 	 */
 	public function getRegistrationUrl() {
 		return $this->registration_url;
@@ -82,7 +84,7 @@ class RegistrationClient  {
 	 * @param string $url the URL on which the data will be POST'ed
 	 * @param string $data the XML to POST
 	 *
-	 * @return boolean false on error or an array() on success
+	 * @return array() or boolean false on error or an array() on success
 	 *
 	 * The returned array has the following structure :
 	 *
@@ -288,9 +290,10 @@ class RegistrationClient  {
 	 *
 	 * @param string $mid the machine ID
 	 * @param string $ctrlid the control ID
+	 * @param $contextid
 	 * @param DOMDocument $stats the DOMDocument from StatCollector::getXML()
 	 *
-	 * @ return boolean false on error of an array() on success (see ::register())
+	 * @return array|bool boolean false on error of an array() on success (see ::register())
 	 */
 	public function add_context($mid, $ctrlid, $contextid, &$stats) {
 		$dom = new DOMDocument('1.0', 'utf-8');
@@ -381,5 +384,3 @@ class RegistrationClient  {
 	}
 	
 }
-
-?>

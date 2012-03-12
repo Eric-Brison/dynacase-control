@@ -67,6 +67,12 @@ class WiffLibSystem {
 		return WiffLibSystem::getServerAddr();
 	}
 
+	/**
+	 * system() à la Perl's system(@cmd)
+	 * @param $args
+	 * @param array|null $opt
+	 * @return int
+	 */
 	function ssystem($args, $opt=null) {
 		$pid = pcntl_fork();
 		if( $pid == -1 ) {
@@ -127,5 +133,3 @@ class WiffLibSystem {
 	}
 
 }
-
-?>
