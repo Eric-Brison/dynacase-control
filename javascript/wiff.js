@@ -3359,7 +3359,11 @@ function askParameter_success(module, operation, responseObject) {
 
 	if (data.length > 0) {
 		for (var i = 0; i < data.length; i++) {
-			data[i].visibility = computeParamVisibility(data[i], operation);
+			if (module.needphase != '') {
+				data[i].visibility = computeParamVisibility(data[i], module.needphase);
+			} else {
+				data[i].visibility = computeParamVisibility(data[i], operation);
+			}
 			if (data[i].visibility=='W') editCount++;
 			if (data[i].visibility=='R') readCount++;
 		}
