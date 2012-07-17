@@ -1503,25 +1503,6 @@ class WIFF
 				$process->execute();
 			}
 		}
-		$htaccess = $context->root.'/.htaccess';
-		if (file_exists($htaccess)) {
-			$searchLine = '';
-			$fileLines = file($htaccess);
-			foreach ($fileLines as $line) {
-				$searchCount = substr_count($line, 'php_value session.save_path');
-				if($searchCount > 0) {
-					$searchLine = $line;
-					break;
-				}
-			}
-			if ($searchLine != '') {
-				$resLine = 'php_value session.save_path '."\"$context->root"."/session\"\n";
-				$str=implode('',file($htaccess));
-				$fp=fopen($htaccess,'w');
-				$str=str_replace($searchLine,$resLine,$str);
-				fwrite($fp,$str,strlen($str));
-			}
-		}
 	}
 
 	/**
