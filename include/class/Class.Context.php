@@ -1018,7 +1018,7 @@ class Context
 	 */
 	private function moduleIsInstalled( & $module)
 	{
-		$installedModule = $this->getModule($module->name);
+		$installedModule = $this->getModuleInstalled($module->name);
 		if ($installedModule === false)
 		{
 			return false;
@@ -1038,7 +1038,7 @@ class Context
 
 		$installedModule = $this->moduleIsInstalled($targetModule);
 
-		if ($installedModule->status != 'installed')
+		if ($installedModule === false || $installedModule->status != 'installed')
 		{
 			return false;
 		}
