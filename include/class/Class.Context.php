@@ -1519,8 +1519,8 @@ class Context
 			error_log(__METHOD__." ".sprintf("tarExcludeOpts = [%s]", $tarExcludeOpts));
 
 			// --- Generate context tar.gz --- //
-			$script = sprintf("tar -C %s -czf $tmp/context.tar.gz %s .", escapeshellarg($this->root), $tarExcludeOpts);
-			$result = system($script,$retval);
+			$script = sprintf("tar -C %s -czf %s/context.tar.gz %s .", escapeshellarg($this->root), escapeshellarg($tmp), $tarExcludeOpts);
+			$result = system($script, $retval);
 			if($retval != 0){
 				$this->errorMessage = "Error when making context tar :: ".$result;
 				if (file_exists("$tmp/context.tar.gz")) {
@@ -1553,8 +1553,8 @@ class Context
 
 			$dump = $tmp.DIRECTORY_SEPARATOR.'core_db.pg_dump.gz';
 
-			$script = "PGSERVICE=\"$pgservice_core\" pg_dump > $dump --compress=9 --no-owner";
-			$result = system($script,$retval);
+			$script = sprintf("PGSERVICE=%s pg_dump > %s --compress=9 --no-owner", escapeshellarg($pgservice_core), escapeshellarg($dump));
+			$result = system($script, $retval);
 
 			if( $retval != 0 ){
 				$this->errorMessage = "Error when making database dump :: ".$result;
@@ -1614,8 +1614,8 @@ class Context
 					if (is_dir($r_path)) {
 						$vaultDirList[] = array("id_fs" => $id_fs, "r_path" => $r_path);
 						$vaultExclude = 'Vaultexists';
-						$script = sprintf("tar -C %s -czf %s/vault_$id_fs.tar.gz .", escapeshellarg($r_path), $tmp);
-						$res = system($script,$retval);
+						$script = sprintf("tar -C %s -czf  %s/vault_$id_fs.tar.gz .", escapeshellarg($r_path), escapeshellarg($tmp));
+						$res = system($script, $retval);
 						if($retval != 0){
 							$this->errorMessage = "Error when making vault tar :: ".$res;
 							if (file_exists("$tmp/context.tar.gz")) {
@@ -2024,7 +2024,7 @@ class Context
 
 
 	public function wsh($api_name, $args) {
-		$cmd = sprintf('%s/wsh.php --api=%s', $this->root, escapeshellarg($api_name));
+		$cmd = sprintf('%s/wsh.php --api=%s', escapeshellarg($this->root), escapeshellarg($api_name));
 		foreach ($args as $name => $value) {
 			$cmd .= sprintf(' --%s=%s', $name, escapeshellarg($value));
 		}

@@ -81,7 +81,7 @@ function wcontrol_process($process)
             'output'=>'WIFF_CONTEXT_ROOT env variable is not defined.'
             );
         }
-        $cmd = sprintf("%s/%s", $ctx_root, $cmd);
+        $cmd = sprintf("%s/%s", escapeshellarg($ctx_root), $cmd);
     }
 
     $current_version = false;
