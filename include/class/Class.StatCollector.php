@@ -351,7 +351,7 @@ class StatCollector  {
 		$ret = 0;
 		$locale = getenv("LC_ALL");
 		putenv("LC_ALL=C");
-		exec(sprintf("%s link show", $ip), $out, $ret);
+		exec(sprintf("%s link show", escapeshellarg($ip)), $out, $ret);
 		putenv(sprintf("LC_ALL=%s", $locale));
 		if( $ret != 0 ) {
 			$this->last_error = sprintf("Error executing '%s link show': %s", $ip, join(' / ', $out));
@@ -398,7 +398,7 @@ class StatCollector  {
 		$ret = 0;
 		$locale = getenv("LC_ALL");
 		putenv("LC_ALL=C");
-		exec(sprintf("%s", $ifconfig), $out, $ret);
+		exec(sprintf("%s", escapeshellarg($ifconfig)), $out, $ret);
 		putenv(sprintf("LC_ALL=%s", $locale));
 		if( $ret != 0 ) {
 			$this->last_error = sprintf("Error executing '%s': %s", $ifconfig, join(' / ', $out));
@@ -435,7 +435,7 @@ class StatCollector  {
 		
 		$ret = 0;
 		$out = array();
-		exec(sprintf("%s -c '^processor' /proc/cpuinfo", $grep), $out, $ret);
+		exec(sprintf("%s -c '^processor' /proc/cpuinfo", escapeshellarg($grep)), $out, $ret);
 		if( $ret != 0 ) {
 			$this->last_error = sprintf("Error grepping /proc/cpuinfo: %s", join(' / ', $out));
 			return false;
@@ -471,7 +471,7 @@ class StatCollector  {
 		
 		$out = array();
 		$ret = 0;
-		exec(sprintf("%s -I en0", $netstat), $out, $ret);
+		exec(sprintf("%s -I en0", escapeshellarg($netstat)), $out, $ret);
 		if( $ret != 0 ) {
 			$this->last_error = sprintf("Could not get en0 MAC addr with netstat '%s'.", $netstat);
 			return false;
@@ -508,7 +508,7 @@ class StatCollector  {
 		
 		$ret = 0;
 		$out = array();
-		exec(sprintf("%s hw.ncpu", $sysctl), $out, $ret);
+		exec(sprintf("%s hw.ncpu", escapeshellarg($sysctl)), $out, $ret);
 		if( $ret != 0 ) {
 			$this->last_error = sprintf("Could not get hw.ncpu with sysctl '%s'.", $sysctl);
 			return false;

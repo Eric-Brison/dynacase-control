@@ -1932,7 +1932,7 @@ class WIFF
 		}
 
 		$wget_opts = array ();
-		$wget_opts[] = $wget_path;
+		$wget_opts[] = escapeshellarg($wget_path);
 		$wget_opts[] = '--no-check-certificate';
 		$wget_opts[] = "-q";
 		$wget_opts[] = "-O";
@@ -2182,7 +2182,8 @@ class WIFF
 				return false;
 			}
 
-			$cmd = sprintf("%s/%s/%s > %s 2>&1", $wiff_root, 'migr', $migr['migr'], $temp);
+			$migrScript = sprintf("%s/%s/%s", $wiff_root, 'migr', $migr['migr']);
+			$cmd = sprintf("%s > %s 2>&1", escapeshellarg($migrScript), escapeshellarg($temp));
 			system($cmd, $ret);
 			$output = file_get_contents($temp);
 			if( $ret !== 0 ) {
