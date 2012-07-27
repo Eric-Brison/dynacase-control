@@ -1457,19 +1457,7 @@ class WIFF
 			return false;
 		}
 
-
-		// --- checking if reconfigure script exists --- //
-		$context = $this->getContext($name);
-		if (!file_exists($context->root.'/programs/toolbox_reconfigure')) {
-			$this->errorMessage = sprintf("Reconfigure script doesn't exists");
-			error_log('reconfigure script not found :: '.$context->root.'/programs/toolbox_reconfigure');
-			$result = true;
-			// --- Delete status file --- //
-			unlink($status_file);
-			$context->delete($result);
-			return false;
-		}
-
+		// Run reconfigure phase
 		$this->reconfigure($name);
 
 		if ($clean_tmp_directory === 'on') {
@@ -2402,6 +2390,7 @@ class WIFF
 			return $this->errorMessage;
 		}
 
+		$res = false;
 		$err = $context->delete($res, $opt);
 		if( $res === false ) {
 			$result = false;
