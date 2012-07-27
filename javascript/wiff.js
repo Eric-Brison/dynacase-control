@@ -4296,7 +4296,7 @@ function setModuleStatusInstalled(module, operation) {
 							 */
 							getPhaseList(toInstall[0], operation);
 						} else {
-							askParameter(toInstall[0], operation);
+							getLicenseAgreement(toInstall[0], operation);
 						}
 					} else {
 						wstart(module, operation);
