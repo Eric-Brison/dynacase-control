@@ -1498,7 +1498,9 @@ class Context
 				return false;
 			}
 			$tarExcludeOpts = '';
-			$tarExcludeList = array();
+			$tarExcludeList = array(
+				sprintf("--exclude %s", escapeshellarg('.'.DIRECTORY_SEPARATOR.'var'))
+			);
 			foreach( $vaultList as $vault ) {
 				$r_path = $vault['r_path'];
 				if( $r_path[0] != '/' ) {
@@ -1768,7 +1770,7 @@ class Context
 		}
 		$result = pg_query("SELECT id_fs, r_path FROM vaultdiskfsstorage ;");
 		if ($result === false) {
-			$this->errorMessage = "Error when trying to get databse info :: ".pg_last_erro();
+			$this->errorMessage = "Error when trying to get databse info :: ".pg_last_error();
 			return false;
 		}
 		$vaultList = pg_fetch_all($result);
