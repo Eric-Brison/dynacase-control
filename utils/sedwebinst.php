@@ -23,7 +23,7 @@ function sedwebinst($directory, $pattern, $replacement, $opts)
         }
         $path = $directory . DIRECTORY_SEPARATOR . $file;
         if ($opts['recursive'] && is_dir($path)) {
-            sedwebinst($path, $pattern, $replacement, $opts['recursive'], $opts);
+            sedwebinst($path, $pattern, $replacement, $opts);
         }
         if (is_file($path) && preg_match('/\.webinst$/', $path)) {
             sedwebinst_file($path, $pattern, $replacement, $opts);
