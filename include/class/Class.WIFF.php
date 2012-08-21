@@ -132,16 +132,16 @@ class WIFF
 			$pUrl['pass'] = $this->update_password;
 		}
 		$url = $pUrl['scheme']."://";
-		if( $pUrl['user'] != '' ) {
+		if( isset($pUrl['user']) && $pUrl['user'] != '' ) {
 			$url .= urlencode($pUrl['user']).":".urlencode($pUrl['pass'])."@";
 		}
-		if( $pUrl['host'] != '' ) {
+		if( isset($pUrl['host']) && $pUrl['host'] != '' ) {
 			$url .= $pUrl['host'];
 		}
-		if( $pUrl['port'] != '' ) {
+		if( isset($pUrl['port']) && $pUrl['port'] != '' ) {
 			$url .= ":".$pUrl['port'];
 		}
-		if( $pUrl['path'] != '' ) {
+		if( isset($pUrl['path']) && $pUrl['path'] != '' ) {
 			$url .= $pUrl['path'];
 		}
 		return $url."/";
