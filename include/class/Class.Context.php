@@ -519,7 +519,7 @@ class Context
 				continue ;
 			}
 			array_push($list, $module);
-			$seen[$module->name]++;
+			$seen[$module->name] = isset($seen[$module->name]) ? $seen[$module->name] + 1 : 1;
 		}
 
 		return $list;

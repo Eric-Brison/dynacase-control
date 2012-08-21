@@ -185,7 +185,7 @@ class Module
         $document = $node->ownerDocument;
         $nodeAsString = $document->saveXML($node);
         preg_match('!\<.*?\>(.*)\</.*?\>!s', $nodeAsString, $match);
-        return $match[1];
+        return isset($match[1]) ? $match[1] : '';
     }
 
     public function parseXmlChangelogNode($xmlNode)
@@ -497,7 +497,7 @@ class Module
 
             $plist = array ();
 
-            if ($this->context->name == null)
+            if (!isset($this->context->name) || $this->context->name == null)
             {
                 $this->errorMessage = sprintf("Can't call '%s' method with null '%s'.", __FUNCTION__ , 'context');
                 return false;
@@ -529,7 +529,8 @@ class Module
                 {
                     continue ;
                 }
-                $pSeen[$paramName]++;
+                $pSeen[$paramName] = isset($pSeen[$paramName]) ? $pSeen[$paramName] + 1 : 1;
+
 
 			$p = new Parameter();
 			foreach ( array ('name', 'label', 'default', 'type', 'needed', 'values', 'volatile', 'oninstall', 'onedit', 'onupgrade') as $attr)

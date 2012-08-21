@@ -48,8 +48,10 @@ class Process
 		{
 			$this->attributes[$attr->name] = $attr->value;
 		}
-		$this->label = $node->getElementsByTagName('label')->item(0)->nodeValue;
-		$this->help = $node->getElementsByTagName('help')->item(0)->nodeValue;
+		$elmt = $node->getElementsByTagName('label')->item(0);
+		$this->label = isset($elmt) ? $elmt->nodeValue : '';
+		$elmt = $node->getElementsByTagName('help')->item(0);
+		$this->help = isset($elmt) ? $elmt->nodeValue : '';
 
 		if( $this->label == "" ) {
 			$this->label = $this->computeLabel();
@@ -67,9 +69,9 @@ class Process
 			} elseif( $this->attributes['type'] == 'phpclass' ) {
 				$label = sprintf('Check php class %s', $this->attributes['class']);
 			} elseif( $this->attributes['type'] == 'pearmodule' ) {
-				$label = sprintf('Check pear module %s', $this->attributes['module']);
+				$label = sprintf('Check pear module %s%s', $this->attributes['class'], isset($this->attributes['include']) ? sprintf(' in %s', $this->attributes['include']) : '');
 			} elseif( $this->attributes['type'] == 'apachemodule' ) {
-				$label = sprintf('Check apache module %s', $this->atributes['module']);
+				$label = sprintf('Check apache module %s', $this->attributes['module']);
 			} else {
 				$label = sprintf("Check %s", $this->attributes['type']);
 			}
