@@ -1959,8 +1959,8 @@ class WIFF
 		if (($out === false) || ($ret != 0))
 		{
 			unlink($tmpfile);
-			error_log(sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error fetching '%s' with '%s'.", $url, $cmd));
-			$this->errorMessage = sprintf("Error fetching '%s' with '%s'.", $url, $cmd);
+			error_log(sprintf( __CLASS__ ."::". __FUNCTION__ ." "."Error fetching '%s' with '%s'.", WIFF::anonymizeUrl($url), WIFF::strAnonymizeUrl($url, $cmd)));
+			$this->errorMessage = sprintf("Error fetching '%s' with '%s'.", WIFF::anonymizeUrl($url), WIFF::strAnonymizeUrl($url, $cmd));
 			return false;
 		}
 
@@ -2641,4 +2641,39 @@ class WIFF
 		return true;
 	}
 
+	static function anonymizeUrl($url) {
+		$u = parse_url($url);
+		if ($u === false) {
+			return $url;
+		}
+		$url = '';
+		if (isset($u['scheme'])) {
+			$url = sprintf('%s://', $u['scheme']);
+		}
+		if (isset($u['user'])) {
+			$url .= sprintf('%s:***@', $u['user']);
+		}
+		if (isset($u['host'])) {
+			$url .= $u['host'];
+		}
+		if (isset($u['port'])) {
+			$url .= sprintf(':%s', $u['port']);
+		}
+		if (isset($u['path'])) {
+			$url .= $u['path'];
+		} else {
+			$url .= '/';
+		}
+		if (isset($u['query'])) {
+			$url .= sprintf('?%s', $u['query']);
+		}
+		if (isset($u['fragment'])) {
+			$url .= sprintf('#%s', $u['fragment']);
+		}
+		return $url;
+	}
+
+	static function strAnonymizeUrl($url, $str) {
+		return str_replace($url, self::anonymizeUrl($url), $str);
+	}
 }
