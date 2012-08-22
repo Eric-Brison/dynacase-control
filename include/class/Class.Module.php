@@ -539,11 +539,7 @@ class Module
 
                     // Replace keywords
                     // @CONTEXT_NAME
-                    if ($p->$attr == "@CONTEXT_NAME")
-                    {
-                        $p->$attr = strtolower(preg_replace("/[^A-Za-z0-9]/", "", $this->context->name));
-                    }
-
+				$p->$attr = $this->context->expandParamsValues($p->$attr);
                 }
 
                 $storedParamValue = $contextsXpath->query("/contexts/context[@name='".$this->context->name."']/parameters-value/param[@name='".$p->name."' and @modulename='".$this->name."']");

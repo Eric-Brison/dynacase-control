@@ -1785,7 +1785,7 @@ class Context
 
 		$manifest = $module->getManifest();
 		if( $manifest == '' ) {
-			$err = sprinf(__CLASS__."::".__FUNCTION__." "."empty manifest for '%s'", $module->name);
+			$err = sprintf(__CLASS__."::".__FUNCTION__." "."empty manifest for '%s'", $module->name);
 			$this->errorMessage = $err;
 			return $manifest;
 		}
@@ -2427,4 +2427,120 @@ class Context
 		return false;
 	}
 
+	/**
+	 * Expand "@PARAM_NAME" variables in a string.
+	 *
+	 * Supported notations:
+	 * - "@PARAM_NAME" -> value of PARAM_NAME
+	 * - "@{PARAM_NAME}" -> value of PARAM_NAME
+	 * - "@@" -> literal "@"
+	 *
+	 * @param $str
+	 * @return string
+	 */
+	public function expandParamsValues($str) {
+		return self::_expandParamsValues($str, array(
+			'escape' => '@',
+			'begin' => '{',
+			'allow_shorthand' => true,
+			'vars' => array($this, '_expandParamsValuesHandler')
+		));
+	}
+
+	/**
+	 * Get the value of the given parameters name
+	 *
+	 * @param string $varName parameters name to expand
+	 * @return string the value of the parameter
+	 * @throws WIFFException
+	 */
+	private function _expandParamsValuesHandler($varName) {
+		$staticVars = array(
+			'CONTEXT_NAME' => $this->name,
+		);
+		if (isset($staticVars[$varName])) {
+			return $staticVars[$varName];
+		}
+		$value = $this->getParamByName($varName);
+		if ($value === false) {
+			return '';
+		}
+		return $value;
+	}
+
+	/**
+	 * Generic and configurable method to expand variables in a string.
+	 *
+	 * Behaviour is configured though the $conf hash argument:
+	 * - 'escape' => the character that trigger variable expansion (default "@")
+	 * - 'begin' => the variable beginning delimiter character (default "{")
+	 * - 'end' => the variable ending delimiter character (default is the corresponding closing brace/paren/braquet of the 'begin' char)
+	 * - 'allow_shorthand' => allow var expansion without begin/end delimiters (default "false")
+	 * - 'vars' => an array containing ("VAR_name" => "value") associations, or a callback function
+	 *             that will perform the expansion
+	 *
+	 * @param string $str the string to expand
+	 * @param array $conf the config
+	 * @return string the resulting string with expanded values
+	 */
+	private function _expandParamsValues($str, $conf = array()) {
+		/* Config check */
+		if (!isset($conf['escape'])) {
+			$conf['escape'] = '@';
+		}
+		if (!isset($conf['begin'])) {
+			$conf['begin'] = '{';
+		}
+		if (!isset($conf['end'])) {
+			$conf['end'] = $conf['begin'];
+			foreach (array('{}', '()', '[]', '<>') as $t) {
+				if ($conf['begin'] == $t[0]) {
+					$conf['end'] = $t[1];
+					break;
+				}
+			}
+		}
+		if (!isset($conf['allow_shorthand']) || !is_bool($conf['allow_shorthand'])) {
+			$conf['allow_shorthand'] = false;
+		}
+		if (!isset($conf['vars']) || (!is_array($conf['vars']) && !is_callable($conf['vars']))) {
+			$conf['vars'] = array();
+		}
+		/* Parse the string */
+		$tokens = preg_split('/([' . preg_quote($conf['escape'] . $conf['begin'] . $conf['end'], '/') . '])/', $str, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+		$stack = array();
+		$var = null;
+		$len = count($tokens);
+		for ($i = 0; $i < $len; $i++) {
+			if ($var === null) {
+				if ($tokens[$i] == $conf['escape'] && $i < ($len - 1)) {
+					if ($tokens[$i+1] == $conf['escape']) {
+						$stack [] = $conf['escape'];
+						$i++;
+					} else if ($tokens[$i+1] == $conf['begin']) {
+						$var = '';
+						$i++;
+					} else if ($conf['allow_shorthand']) {
+						if (preg_match('/^(?<var>[a-zA-Z_][a-zA-Z0-9_]*)(?<remaining>.*)$/', $tokens[$i+1], $m)) {
+							$stack [] = is_callable($conf['vars']) ? call_user_func_array($conf['vars'], array($m['var'])) : ((isset($conf['vars'][$m['var']])) ? $conf['vars'][$m['var']] : '');
+							$tokens[$i+1] = $m['remaining'];
+						}
+					} else {
+						$stack [] = $tokens[$i];
+					}
+				} else {
+					$stack [] = $tokens[$i];
+				}
+			} else {
+				if ($tokens[$i] == $conf['end']) {
+					$stack [] = is_callable($conf['vars']) ? call_user_func_array($conf['vars'], array($var)) : ((isset($conf['vars'][$var])) ? $conf['vars'][$var] : '');
+					$var = null;
+				} else {
+					$var .= $tokens[$i];
+				}
+			}
+		}
+
+		return join('', $stack);
+	}
 }
