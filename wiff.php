@@ -294,7 +294,7 @@ if (isset($_REQUEST['changeAllParams']))
 if (isset($_REQUEST['changeParams'])) 
 {
 	$result = $wiff->changeParams($_REQUEST['name'], $_REQUEST['value']);
-	if (!$wiff->errorMesssage) {
+	if (!$wiff->errorMessage) {
 		answer($result);
 	}
 	else {
@@ -1192,7 +1192,7 @@ if( isset($_REQUEST['tryRegister']) && isset($_REQUEST['mid']) && isset($_REQUES
 
 if( isset($_REQUEST['continueUnregistered']) ) {
 	$info = $wiff->getRegistrationInfo();
-	if( $ret === false ) {
+	if( $info === false ) {
 		$answer = new JSONAnswer(null, sprintf("Error reading registration information: %s", $wiff->errorMessage));
 		echo $answer->encode();
 		exit( 1 );
@@ -1212,7 +1212,7 @@ if( isset($_REQUEST['continueUnregistered']) ) {
 
 if( isset($_REQUEST['getRegistrationInfo']) ) {
 	$info = $wiff->getRegistrationInfo();
-	if( $ret === false ) {
+	if( $info === false ) {
 		$answer = new JSONAnswer(null, sprintf("Error reading registration information: %s", $wiff->errorMessage));
 		echo $answer->encode();
 		exit( 1 );
@@ -1225,7 +1225,7 @@ if( isset($_REQUEST['getRegistrationInfo']) ) {
 
 if( isset($_REQUEST['sendContextConfiguration']) && isset($_REQUEST['context']) ) {
 	$info = $wiff->getRegistrationInfo();
-	if( $ret === false ) {
+	if( $info === false ) {
 		$answer = new JSONAnswer(null, sprintf("Could not get registration info: %s", $wiff->errorMessage));
 		echo $answer->encode();
 		exit( 1 );

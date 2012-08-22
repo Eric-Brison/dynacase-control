@@ -99,7 +99,7 @@ class Module
 
     public function __get($property)
     {
-        return $this->$property;
+        return isset($this->$property) ? $this->$property : null;
     }
 
     public function parseXmlNode($xmlNode)
