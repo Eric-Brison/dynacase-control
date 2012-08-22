@@ -63,7 +63,9 @@ function wcontrol_process($process)
 
     require_once ('lib/Lib.System.php');
 
-    $cmd = $process->getAttribute('command');
+	$wiff = WIFF::getInstance();
+
+	$cmd = $process->getAttribute('command');
     if( $cmd == '' ) {
         return array (
             'ret'=>false,
@@ -84,7 +86,9 @@ function wcontrol_process($process)
         $cmd = sprintf("%s/%s", escapeshellarg($ctx_root), $cmd);
     }
 
-    $current_version = false;
+	$cmd = $process->phase->module->context->expandParamsValues($cmd);
+
+	$current_version = false;
     $installedModule = $process->phase->module->context->getModuleInstalled($process->phase->module->name);
     if( $installedModule !== false ) {
       $current_version = $installedModule->version;
@@ -167,7 +171,7 @@ function wcontrol_download(&$process) {
   $wiff = WIFF::getInstance();
 
   $href = $process->getAttribute('href');
-  $href = $wiff->expandParamValue($href);
+  $href = $process->phase->module->context->expandParamsValues($href);
   $action = $process->getAttribute('action');
   
   $localFile = $wiff->downloadUrl($href);
@@ -232,7 +236,9 @@ function wcontrol_msg_phpfunction($process)
 
 function wcontrol_check_exec($process)
 {
-    system($process->getAttribute('cmd'), $ret);
+	$cmd = $process->getAttribute('cmd');
+	$cmd = $process->phase->module->context->expandParamsValues($cmd);
+    system($cmd, $ret);
     return ($ret === 0)?true:false;
 }
 
